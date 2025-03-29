@@ -158,6 +158,16 @@ func (sm *SyncManager) Init() error {
 		return err
 	}
 
+	// Ensure .cursor/ is in gitignore
+	utils.Debug("Ensuring .cursor/ is in gitignore | project=" + currentDir)
+	if err := utils.EnsureGitIgnoreEntry(currentDir, ".cursor/"); err != nil {
+		utils.Warn("Failed to update gitignore | project=" + currentDir + ", error=" + err.Error())
+		// Don't fail the operation just for gitignore issues
+		// Just log a warning
+	} else {
+		utils.Info("Updated gitignore to exclude .cursor/ directory")
+	}
+
 	utils.Info("Rules initialized successfully | project=" + currentDir)
 	ui.Success("Successfully initialized rules in %s", targetPath)
 	return nil
