@@ -19,15 +19,16 @@ import (
 
 // Exit codes
 const (
-	ExitSuccess    = 0
-	ExitUsageError = 1
-	ExitInitError  = 10
-	ExitMergeError = 11
-	ExitSyncError  = 12
-	ExitListError  = 13
-	ExitCleanError = 14
-	ExitAgentError = 15
-	ExitSetupError = 20
+	ExitSuccess     = 0
+	ExitUsageError  = 1
+	ExitInitError   = 10
+	ExitMergeError  = 11
+	ExitSyncError   = 12
+	ExitListError   = 13
+	ExitCleanError  = 14
+	ExitAgentError  = 15
+	ExitSetupError  = 20
+	ExitImportError = 16 // Add exit code for import command
 )
 
 // getTerminalWidth returns the width of the terminal in characters
@@ -133,6 +134,8 @@ func main() {
 		handleClean(manager)
 	case "agent":
 		handleAgent(manager, appPaths)
+	case "import":
+		handleImport(manager)
 	default:
 		utils.Warn("Unknown command received | command=" + command)
 		ui.Warning("Unknown command: %s", command)
@@ -166,6 +169,7 @@ func printUsage() {
 	ui.Plain("  list         Display all registered projects")
 	ui.Plain("  clean        Remove non-existent projects from registry")
 	ui.Plain("  agent        Interactively select and use agents")
+	ui.Plain("  import       Import agent rules from a URL")
 }
 
 func handleInit(manager *core.SyncManager) {
@@ -650,4 +654,43 @@ func printAgentUsage() {
 	ui.Plain("  crules agent info wizard   # Show detailed info about the wizard agent")
 	ui.Plain("  crules agent info 1        # Show detailed info about the first agent in the list")
 	ui.Plain("\nYou can also reference agents in the chatbox using @ (example: @wizard.mdc)")
+}
+
+// Add handler for import command
+func handleImport(manager *core.SyncManager) {
+	utils.Debug("Handling import command")
+
+	// Check if URL is provided
+	if len(os.Args) < 3 {
+		ui.Error("Import URL is required")
+		ui.Plain("Usage: crules import <url> [options]")
+		ui.Plain("Options:")
+		ui.Plain("  -f, --force   Force overwrite existing rules")
+		ui.Plain("  -w, --web     Enable web parsing mode (optimized for HTML content)")
+		os.Exit(ExitUsageError)
+	}
+
+	// Get URL parameter
+	url := os.Args[2]
+
+	// Check for flags
+	force := false
+	webMode := false
+
+	for i := 3; i < len(os.Args); i++ {
+		switch os.Args[i] {
+		case "-f", "--force":
+			force = true
+		case "-w", "--web":
+			webMode = true
+		}
+	}
+
+	// Call import function with options
+	if err := core.ImportRules(url, force, webMode); err != nil {
+		handleCommandError("Import", err, ExitImportError)
+	}
+
+	utils.Info("Import command completed successfully")
+	ui.Success("Successfully imported rules from URL")
 }
