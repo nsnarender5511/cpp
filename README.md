@@ -76,4 +76,13 @@ crules sync
 
 # Display all registered projects
 crules list
+
+# Remove non-existent projects from registry
+crules clean
+
+# Show more detailed output
+crules --verbose <command>
+
+# Show debug information
+crules --debug <command>
 ``` 
