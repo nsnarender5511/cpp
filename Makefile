@@ -105,7 +105,7 @@ release:
 		if [ $$TOKEN_LENGTH -lt 30 ]; then \
 			echo "⚠️  Warning: Token looks suspiciously short ($$TOKEN_LENGTH chars)"; \
 		fi; \
-		# Show first 4 chars as a hint without exposing full token \
+		echo "📝 Showing first 4 chars of token as a hint..."; \
 		TOKEN_PREFIX=$$(echo $$TOKEN | cut -c1-4); \
 		echo "🔑 Using token: $$TOKEN_PREFIX**** ($$TOKEN_LENGTH chars)"; \
 		echo "🔍 Testing GitHub API access..."; \
@@ -127,7 +127,7 @@ release:
 			if [ $$TOKEN_LENGTH -lt 30 ]; then \
 				echo "⚠️  Warning: Token looks suspiciously short ($$TOKEN_LENGTH chars)"; \
 			fi; \
-			# Show first 4 chars as a hint without exposing full token \
+			echo "📝 Showing first 4 chars of token as a hint..."; \
 			TOKEN_PREFIX=$$(echo $$GITHUB_TOKEN | cut -c1-4); \
 			echo "🔑 Using token: $$TOKEN_PREFIX**** ($$TOKEN_LENGTH chars)"; \
 			echo "🔍 Testing GitHub API access..."; \
