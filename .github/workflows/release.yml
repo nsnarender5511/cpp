@@ -52,6 +52,11 @@ jobs:
           echo "Homebrew repo access: $(echo "$REPO_ACCESS" | grep -q "permissions" && echo "Has access" || echo "No access")"
           echo "Write permission: $(echo "$REPO_ACCESS" | grep -q '"push": *true' && echo "Yes" || echo "No")"
           
+          echo "Testing scoop-bucket repo access..."
+          SCOOP_ACCESS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/nsnarender5511/scoop-bucket)
+          echo "Scoop repo access: $(echo "$SCOOP_ACCESS" | grep -q "permissions" && echo "Has access" || echo "No access")"
+          echo "Write permission: $(echo "$SCOOP_ACCESS" | grep -q '"push": *true' && echo "Yes" || echo "No")"
+          
           # Print environment for debugging
           echo "Environment variables:"
           env | grep -i git | sort || echo "No Git-related env vars found"
@@ -64,16 +69,16 @@ jobs:
             echo "✅ GITHUB_TOKEN is set (length: ${#GITHUB_TOKEN})"
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
 
       - name: Verify Secret Before GoReleaser
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          echo "Checking if GITHUB_TOKEN secret exists..."
-          if [[ "${{ secrets.GITHUB_TOKEN }}" != "" ]]; then
-            echo "✅ GITHUB_TOKEN secret is configured"
+          echo "Checking if PAT_GITHUB_TOKEN secret exists..."
+          if [[ "${{ secrets.PAT_GITHUB_TOKEN }}" != "" ]]; then
+            echo "✅ PAT_GITHUB_TOKEN secret is configured"
           else
-            echo "⚠️ GITHUB_TOKEN secret is not configured"
+            echo "⚠️ PAT_GITHUB_TOKEN secret is not configured"
             exit 1
           fi
 
@@ -85,7 +90,8 @@ jobs:
           version: latest
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use personal access token with cross-repo access
+          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
           # This adds additional debug output from goreleaser
           GORELEASER_DEBUG: 1
           # This adds debug output from GitHub CLI
