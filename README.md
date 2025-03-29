@@ -18,15 +18,43 @@ crules (Cursor Rules) is a command-line tool that helps you manage AI agent rule
 
 ## Installation
 
-### Using Go
+### Using Homebrew (macOS and Linux)
+
+Once the Homebrew tap is available, you can install crules with:
 
 ```bash
-go install github.com/yourusername/crules/cmd/crules@latest
+# Add the tap
+brew tap nsnarender5511/tap
+
+# Install crules
+brew install crules
 ```
 
-### From Binary Releases
+### Manual Installation
 
-Download the appropriate binary for your platform from the [Releases](https://github.com/yourusername/crules/releases) page.
+1. Download the appropriate binary for your operating system from the [Releases page](https://github.com/nsnarender5511/crules/releases).
+2. Extract the archive (if applicable).
+3. Move the `crules` binary to a location in your PATH.
+
+## Homebrew Tap Setup (for maintainers)
+
+To set up the Homebrew tap repository:
+
+1. Create a new GitHub repository named `homebrew-tap` under your GitHub account.
+2. Initialize it with a README.md file.
+3. Once the repository is created, you can release crules using GoReleaser:
+
+```bash
+# Tag the release
+git tag -a v1.0.0 -m "Release v1.0.0"
+git push origin v1.0.0
+
+# Run GoReleaser (requires a GITHUB_TOKEN)
+export GITHUB_TOKEN=your_github_token
+goreleaser release --clean
+```
+
+This will automatically build the binaries, create the release on GitHub, and update the Homebrew tap.
 
 ## Quick Start
 
