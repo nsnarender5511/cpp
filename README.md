@@ -2,25 +2,27 @@
 
 > 🧩 A powerful tool for managing AI agent rules across multiple projects
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/yourusername/crules)](https://goreportcard.com/report/github.com/yourusername/crules)
+[![Go Report Card](https://goreportcard.com/badge/github.com/nsnarender5511/crules)](https://goreportcard.com/report/github.com/nsnarender5511/crules)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## Overview
 
 crules (Cursor Rules) is a command-line tool that helps you manage AI agent rules across multiple projects. It provides commands for initializing, syncing, and merging rule files, as well as an interactive agent selection system.
 
-## Features
+**Features Overview**: Command-line tool for managing AI agent rules across projects
+
+## 🌟 Features
 
 - **Rule Synchronization**: Keep rules in sync across multiple projects
 - **Agent System**: Work with specialized AI agents for different tasks
 - **Interactive Selection**: Choose agents through an intuitive terminal UI
 - **Project Management**: Register and track projects with rule directories
 
-## Installation
+**Try it out!** The tool provides an intuitive interface for working with AI agent rules.
+
+## 📦 Installation
 
 ### Using Homebrew (macOS and Linux)
-
-Once the Homebrew tap is available, you can install crules with:
 
 ```bash
 # Add the tap
@@ -30,11 +32,15 @@ brew tap nsnarender5511/tap
 brew install crules
 ```
 
+**Note**: Follow these commands to install via Homebrew.
+
 ### Manual Installation
 
 1. Download the appropriate binary for your operating system from the [Releases page](https://github.com/nsnarender5511/crules/releases).
 2. Extract the archive (if applicable).
 3. Move the `crules` binary to a location in your PATH.
+
+**Note**: These steps will install crules manually on your system.
 
 ## Homebrew Tap Setup (for maintainers)
 
@@ -56,7 +62,7 @@ goreleaser release --clean
 
 This will automatically build the binaries, create the release on GitHub, and update the Homebrew tap.
 
-## Quick Start
+## 🚀 Quick Start
 
 ```bash
 # Initialize rules in the current directory
@@ -81,22 +87,30 @@ crules merge
 crules list
 ```
 
-## Agent System
+**Quick Start Guide**: These commands will help you get started with crules quickly.
+
+## 🤖 Agent System
 
 The Agent System allows you to work with specialized AI agents for different tasks in software development:
 
-- **Technical Wizard**: Provides high-level technical guidance
-- **Feature Planner**: Breaks down requirements into implementation tasks
-- **Fix Planner**: Analyzes issues and develops fix strategies
-- **Implementer**: Translates plans into code
-- **Runner**: Executes and tests code
-- **Documentation**: Creates and maintains documentation
+| Agent | Description |
+|-------|-------------|
+| **Technical Wizard** | Provides high-level technical guidance and coordinates other agents |
+| **Feature Planner** | Breaks down requirements into implementation tasks |
+| **Fix Planner** | Analyzes issues and develops fix strategies |
+| **Implementer** | Translates plans into code |
+| **Runner** | Executes and tests code |
+| **Documentation** | Creates and maintains documentation |
+| **Code Reviewer** | Performs thorough code reviews |
+| **Git Committer** | Creates conventional format commit messages |
+
+**Note**: Use the agent selection interface to choose the right agent for your task.
+
+![Agent Selection](./docs/assets/gifs/usage/agent-selection.gif)
 
 Learn more about the Agent System in the [documentation](./docs/user-guide/agents.md).
 
-## Commands
-
-crules provides several commands to manage your rules:
+## 📋 Commands
 
 | Command | Description |
 |---------|-------------|
@@ -109,70 +123,87 @@ crules provides several commands to manage your rules:
 | `agent info <id>` | Shows detailed information about a specific agent |
 | `agent select` | Interactively selects and loads an agent |
 
+**Note**: See the command documentation for detailed usage information.
+
+![Command Usage](./docs/assets/gifs/usage/command-usage.gif)
+
 For detailed information about commands, see the [Command Reference](./docs/user-guide/commands.md).
 
-## Configuration
+## ⚙️ Configuration
 
 crules stores its configuration in `~/.config/crules/config.json`. This file contains:
 
 - The main rules location
 - Registered project locations
 
-## Documentation
+You can view your current configuration with:
 
-For comprehensive documentation, visit the [docs](./docs) directory:
+```bash
+crules config show
+```
 
-- [User Guide](./docs/user-guide): Instructions for using crules
-- [Developer Guide](./docs/developer-guide): Information for developers
-- [Examples](./docs/examples): Usage examples and workflows
-- [API Reference](./docs/api): API documentation
+**Note**: Use configuration commands to manage your crules setup.
 
-## Contributing
+![Configuration](./docs/assets/gifs/usage/configuration.gif)
 
-Contributions are welcome! Please see our [Contributing Guidelines](./docs/developer-guide/contributing.md) for more information.
+## 📋 Documentation
 
-## License
+Our comprehensive documentation is available in the [docs](./docs) directory:
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- **[Documentation Map](./docs/documentation-map.md)**: Complete overview of all documentation
+- **[User Guide](./docs/user-guide/)**: Instructions for using crules
+  - [Installation](./docs/user-guide/installation.md)
+  - [Configuration](./docs/user-guide/configuration.md)
+  - [Commands](./docs/user-guide/commands.md)
+  - [Agent System](./docs/user-guide/agents.md)
+  - [Troubleshooting](./docs/user-guide/troubleshooting.md)
 
-## Developer Guide
+- **[Developer Guide](./docs/developer-guide/)**: Information for developers
+  - [Architecture](./docs/developer-guide/architecture.md)
+  - [Code Structure](./docs/developer-guide/code-structure.md)
+  - [Contributing](./docs/developer-guide/contributing.md)
+  - [Testing](./docs/developer-guide/testing.md)
+  - [Extending Agents](./docs/developer-guide/extending-agents.md)
 
-### Release Process
+- **[Examples](./docs/examples/)**: Usage examples and workflows
+  - [Basic Usage](./docs/examples/basic-usage.md)
+  - [Advanced Usage](./docs/examples/advanced-usage.md)
+  - [Agent Workflows](./docs/examples/agent-workflows.md)
+
+- **[API Reference](./docs/api-reference/)**: Technical reference for the internal APIs
+  - [Core API](./docs/api-reference/core-api.md)
+  - [Agent API](./docs/api-reference/agent-api.md)
+  - [UI API](./docs/api-reference/ui-api.md)
+  - [Utils API](./docs/api-reference/utils-api.md)
+  - [Git API](./docs/api-reference/git-api.md)
+  - [Version API](./docs/api-reference/version-api.md)
+
+The documentation includes detailed explanations, examples, screenshots, and animated GIFs to help you understand how to use crules effectively.
+
+## 👥 Contributing
+
+Contributions are welcome! Please see our [Contributing Guidelines](./docs/developer-guide/contributing.md) for more information on how to get started.
+
+## 📋 Release Process
 
 There are two ways to create a new release:
 
-#### 1. Local Release (using GoReleaser locally)
+### 1. Local Release (using GoReleaser locally)
 
-1. Create a `.env` file based on `.env.example` with your GitHub token:
-   ```
-   GITHUB_TOKEN=your_github_personal_access_token
-   ```
+```bash
+# Create a .env file with your GitHub token
+make release TAG=v0.0.1
+```
 
-2. Run the release make target with your desired version:
-   ```bash
-   make release TAG=v0.0.1
-   ```
+### 2. GitHub Actions Release (recommended)
 
-#### 2. GitHub Actions Release (recommended)
+```bash
+# Trigger the GitHub Actions release workflow
+make release-github TAG=v0.0.1
+```
 
-This method leverages GitHub Actions to handle the release process:
+For detailed release instructions, see [RELEASING.md](RELEASING.md).
 
-1. Ensure all your changes are committed and pushed
-2. Run:
-   ```bash
-   make release-github TAG=v0.0.1
-   ```
+## 📜 License
 
-This will:
-- Verify your working directory is clean
-- Create and push a git tag
-- Automatically trigger the GitHub Actions workflow
-- Build and publish the release using GitHub's infrastructure
-
-The GitHub Actions workflow will:
-- Build binaries for all supported platforms
-- Create a GitHub release
-- Update the Homebrew formula
-- Update the Scoop manifest
-
-You can monitor the progress at GitHub Actions tab in your repository. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
