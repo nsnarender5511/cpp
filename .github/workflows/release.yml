@@ -69,16 +69,16 @@ jobs:
             echo "✅ GITHUB_TOKEN is set (length: ${#GITHUB_TOKEN})"
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.DEPLOY_GITHUB_PAT }}
 
       - name: Verify Secret Before GoReleaser
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          echo "Checking if PAT_GITHUB_TOKEN secret exists..."
-          if [[ "${{ secrets.PAT_GITHUB_TOKEN }}" != "" ]]; then
-            echo "✅ PAT_GITHUB_TOKEN secret is configured"
+          echo "Checking if DEPLOY_GITHUB_PAT secret exists..."
+          if [[ "${{ secrets.DEPLOY_GITHUB_PAT }}" != "" ]]; then
+            echo "✅ DEPLOY_GITHUB_PAT secret is configured"
           else
-            echo "⚠️ PAT_GITHUB_TOKEN secret is not configured"
+            echo "⚠️ DEPLOY_GITHUB_PAT secret is not configured"
             exit 1
           fi
 
@@ -91,7 +91,7 @@ jobs:
           args: release --clean
         env:
           # Use personal access token with cross-repo access
-          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.DEPLOY_GITHUB_PAT }}
           # This adds additional debug output from goreleaser
           GORELEASER_DEBUG: 1
           # This adds debug output from GitHub CLI
