@@ -73,4 +73,7 @@ crules merge
 
 # Force sync from main location to current directory
 crules sync
+
+# Display all registered projects
+crules list
 ``` 
