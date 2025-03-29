@@ -29,6 +29,31 @@ jobs:
       - name: Run tests
         run: go test ./...
 
+      - name: Debug Token Info
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "Token info for debugging:"
+          echo "Token prefix: ${GITHUB_TOKEN:0:4}..."
+          echo "Token length: ${#GITHUB_TOKEN} characters"
+          echo "Token type: $(if [[ $GITHUB_TOKEN == ghp_* ]]; then echo "Classic PAT"; elif [[ $GITHUB_TOKEN == github_pat_* ]]; then echo "Fine-grained PAT"; else echo "GITHUB_TOKEN or unknown"; fi)"
+          
+          echo "Attempting to test token validity..."
+          USER_INFO=$(curl -s -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user)
+          HTTP_CODE=$?
+          echo "GitHub API authentication result: $(echo "$USER_INFO" | grep -q "login" && echo "Valid (authenticated)" || echo "Invalid (not authenticated)")"
+          echo "Token owner: $(echo "$USER_INFO" | grep -o '"login": *"[^"]*"' | cut -d'"' -f4)"
+          
+          echo "Testing permission scopes..."
+          SCOPES=$(curl -s -I -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/nsnarender5511/homebrew-tap | grep -i x-oauth-scopes | cut -d':' -f2-)
+          echo "Token scopes: $SCOPES"
+          
+          echo "Testing homebrew-tap repo access..."
+          REPO_ACCESS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/nsnarender5511/homebrew-tap)
+          echo "Homebrew repo access: $(echo "$REPO_ACCESS" | grep -q "permissions" && echo "Has access" || echo "No access")"
+          echo "Write permission: $(echo "$REPO_ACCESS" | grep -q '"push": *true' && echo "Yes" || echo "No")"
+        env:
+          GITHUB_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
+
       - name: Run GoReleaser
         if: startsWith(github.ref, 'refs/tags/v')
         uses: goreleaser/goreleaser-action@v4
@@ -37,4 +62,4 @@ jobs:
           version: latest
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.HOMEBREW_TOKEN }} 
