@@ -70,7 +70,7 @@ release:
 	@if git tag | grep -q "^$(TAG)$$"; then \
 		echo "⚠️  Warning: Tag $(TAG) already exists."; \
 		read -p "Do you want to delete and recreate it? [y/N] " answer; \
-		if [ "$${answer,,}" = "y" ]; then \
+		if [ "$$answer" = "y" ] || [ "$$answer" = "Y" ]; then \
 			echo "🔄 Deleting existing tag $(TAG)..."; \
 			git tag -d $(TAG); \
 			if git ls-remote --tags origin | grep -q "$(TAG)"; then \
