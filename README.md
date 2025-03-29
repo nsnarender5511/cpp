@@ -2,6 +2,79 @@
 
 A tool for managing and synchronizing Cursor rules across multiple projects.
 
+## Installation
+
+### macOS
+
+Using Homebrew:
+
+```bash
+brew install username/tap/crules
+```
+
+### Linux
+
+#### Using pre-built binaries
+
+```bash
+# Download and extract
+curl -L https://github.com/username/crules/releases/latest/download/crules_Linux_x86_64.tar.gz | tar xz
+# Move to a directory in your PATH
+sudo mv crules /usr/local/bin/
+```
+
+#### Using packages (Debian/Ubuntu)
+
+```bash
+# Download the .deb package
+curl -LO https://github.com/username/crules/releases/latest/download/crules_amd64.deb
+# Install the package
+sudo dpkg -i crules_amd64.deb
+```
+
+#### Using packages (RHEL/Fedora)
+
+```bash
+# Download the .rpm package
+curl -LO https://github.com/username/crules/releases/latest/download/crules_amd64.rpm
+# Install the package
+sudo rpm -i crules_amd64.rpm
+```
+
+### Windows
+
+#### Using Scoop
+
+```powershell
+# Add the bucket
+scoop bucket add username https://github.com/username/scoop-bucket
+# Install crules
+scoop install crules
+```
+
+#### Manual installation
+
+1. Download the latest Windows archive from the [Releases page](https://github.com/username/crules/releases)
+2. Extract the archive
+3. Add the location to your PATH or move the binary to a directory in your PATH
+
+### Building from source
+
+```bash
+# Clone the repository
+git clone https://github.com/username/crules.git
+cd crules
+
+# Build the binary
+go build -o crules cmd/main.go
+
+# Make it executable (macOS/Linux)
+chmod +x crules
+
+# Move to a directory in your PATH (optional)
+sudo mv crules /usr/local/bin/
+```
+
 ## Configuration
 
 crules can be configured using environment variables. Create a `.env` file in the project root with any of the following variables:
@@ -65,6 +138,9 @@ crules follows platform-specific conventions for storing files. The actual paths
 ## Usage
 
 ```bash
+# Show version information
+crules --version
+
 # Initialize current directory with rules from main location
 crules init
 

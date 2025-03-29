@@ -7,6 +7,7 @@ import (
 	"crules/internal/core"
 	"crules/internal/ui"
 	"crules/internal/utils"
+	"crules/internal/version"
 )
 
 // Exit codes
@@ -43,6 +44,12 @@ func main() {
 
 	// Replace os.Args with filtered args
 	os.Args = args
+
+	// Check for version flag
+	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
+		fmt.Printf("crules version %s\n", version.GetVersion())
+		os.Exit(ExitSuccess)
+	}
 
 	// Get app paths and initialize logger
 	appName := os.Getenv("APP_NAME")
@@ -112,6 +119,8 @@ func printUsage() {
 	ui.Plain("\nOptions:")
 	ui.Plain("  --verbose    Show informational messages on console")
 	ui.Plain("  --debug      Show debug messages on console")
+	ui.Plain("  --version    Show version information")
+	ui.Plain("  -v           Show version information")
 
 	ui.Plain("\nCommands:")
 	ui.Plain("  init         Initialize current directory with rules from main location")
