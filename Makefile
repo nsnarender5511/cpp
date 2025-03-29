@@ -69,30 +69,26 @@ release:
 	@echo "🏷️  Checking tag $(TAG)..."
 	@if git tag | grep -q "^$(TAG)$$"; then \
 		echo "⚠️  Warning: Tag $(TAG) already exists."; \
-		read -p "Do you want to delete and recreate it? [y/N] " answer; \
+		read -p "Delete and recreate tag? [y/N] " answer; \
 		if [ "$$answer" = "y" ] || [ "$$answer" = "Y" ]; then \
-			echo "🔄 Deleting existing tag $(TAG)..."; \
-			git tag -d $(TAG); \
-			if git ls-remote --tags origin | grep -q "$(TAG)"; then \
+			echo "🔄 Deleting local tag $(TAG)..."; \
+			git tag -d $(TAG) || { echo "❌ Failed to delete local tag"; exit 1; }; \
+			if git ls-remote --tags origin refs/tags/$(TAG) | grep -q ""; then \
 				echo "🔄 Deleting remote tag $(TAG)..."; \
-				git push --delete origin $(TAG); \
+				git push --delete origin $(TAG) || { echo "❌ Failed to delete remote tag"; exit 1; }; \
 			fi; \
+			echo "✅ Existing tags deleted successfully."; \
 			echo "🔄 Creating new tag $(TAG)..."; \
-			if ! git tag -a $(TAG) -m "Release $(TAG)"; then \
-				echo "❌ Error: Failed to create tag $(TAG)"; \
-				exit 1; \
-			fi; \
-			echo "✅ Tag $(TAG) created."; \
+			git tag -a $(TAG) -m "Release $(TAG)" || { echo "❌ Failed to create tag"; exit 1; }; \
+			echo "✅ New tag created successfully."; \
 		else \
-			echo "ℹ️  Using existing tag $(TAG)."; \
+			echo "❌ Cannot proceed with existing tag. Please choose a different tag or confirm deletion."; \
+			exit 1; \
 		fi; \
 	else \
 		echo "🔄 Creating new tag $(TAG)..."; \
-		if ! git tag -a $(TAG) -m "Release $(TAG)"; then \
-			echo "❌ Error: Failed to create tag $(TAG)"; \
-			exit 1; \
-		fi; \
-		echo "✅ Tag $(TAG) created."; \
+		git tag -a $(TAG) -m "Release $(TAG)" || { echo "❌ Failed to create tag"; exit 1; }; \
+		echo "✅ Tag created successfully."; \
 	fi
 	
 	@# Run GoReleaser
