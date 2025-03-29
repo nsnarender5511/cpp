@@ -133,4 +133,35 @@ Contributions are welcome! Please see our [Contributing Guidelines](./docs/devel
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Developer Guide
+
+### Release Process
+
+To create a new release:
+
+1. Create a `.env` file based on `.env.example` with your GitHub token:
+   ```
+   GITHUB_TOKEN=your_github_personal_access_token
+   ```
+
+2. Run the release make target with your desired version:
+   ```bash
+   make release TAG=v0.0.1
+   ```
+
+The release command:
+- Ensures your git workspace is clean
+- Updates `.gitignore` if needed
+- Runs tests to verify everything works
+- Creates and pushes a new git tag
+- Builds binaries for all supported platforms
+- Creates a GitHub release
+- Updates the Homebrew formula
+
+You can also set the `GITHUB_TOKEN` in your environment instead of using a `.env` file:
+```bash
+export GITHUB_TOKEN=your_github_token
+make release TAG=v0.0.1
+``` 
