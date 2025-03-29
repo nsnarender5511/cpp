@@ -83,11 +83,8 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --clean --debug
-          # Try passing token directly to the action
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          args: release --clean
         env:
-          # Also set it as an environment variable
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # This adds additional debug output from goreleaser
           GORELEASER_DEBUG: 1
