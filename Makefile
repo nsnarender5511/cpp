@@ -96,9 +96,15 @@ release:
 	@# Debug token information
 	@if [ -f .env ] && [ -z "$$GITHUB_TOKEN" ]; then \
 		echo "ℹ️  Using GITHUB_TOKEN from .env file"; \
-		TOKEN=$$(grep -E "^GITHUB_TOKEN=" .env | cut -d= -f2); \
+		echo "📄 Contents of .env file (with sensitive data masked):"; \
+		cat .env | sed 's/\(GITHUB_TOKEN=\)[^ ]*/\1********/g'; \
+		echo "🔍 Extracting token..."; \
+		TOKEN=$$(grep -E "^\s*GITHUB_TOKEN=" .env | sed 's/^\s*GITHUB_TOKEN=//'); \
+		echo "🔄 Extracted token status: $${TOKEN:+found}$${TOKEN:-not found}"; \
 		if [ -z "$$TOKEN" ]; then \
 			echo "❌ Error: Could not extract GITHUB_TOKEN from .env file"; \
+			echo "   Make sure the line in .env is formatted as GITHUB_TOKEN=your_token"; \
+			echo "   without spaces at the beginning of the line."; \
 			exit 1; \
 		fi; \
 		TOKEN_LENGTH=$${#TOKEN}; \
