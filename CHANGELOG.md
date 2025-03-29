@@ -7,20 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2025-03-29
+
 ### Added
 - Added GoReleaser for automated multi-platform releases
 - Added support for Homebrew installation
 - Added support for Scoop installation
 - Added support for Linux package managers (deb/rpm)
 - Added version flag to CLI
+- Added gitignore management functionality
 
 ### Changed
 - Updated documentation with installation instructions for all platforms
 
-## [1.0.0] - YYYY-MM-DD
-
-### Added
-- Initial release of crules
+### Initial Features
 - Core synchronization functionality
 - Registry management for multiple projects
 - Platform-specific path handling

@@ -14,6 +14,7 @@ builds:
     ldflags:
       - -s -w -X crules/internal/version.Version={{.Version}}
     binary: crules
+    main: ./cmd
 
 archives:
   - id: default
@@ -21,13 +22,6 @@ archives:
     files:
       - README.md
       - LICENSE
-    format_overrides:
-      - goos: windows
-        format: zip
-      - goos: linux
-        format: tar.gz
-      - goos: darwin
-        format: tar.gz
 
 brews:
   - repository:
