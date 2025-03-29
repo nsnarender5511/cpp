@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
+	"crules/internal/agent"
 	"crules/internal/core"
 	"crules/internal/ui"
 	"crules/internal/utils"
@@ -19,6 +21,7 @@ const (
 	ExitSyncError  = 12
 	ExitListError  = 13
 	ExitCleanError = 14
+	ExitAgentError = 15
 	ExitSetupError = 20
 )
 
@@ -96,6 +99,8 @@ func main() {
 		handleList(manager)
 	case "clean":
 		handleClean(manager)
+	case "agent":
+		handleAgent(manager, appPaths)
 	default:
 		utils.Warn("Unknown command received | command=" + command)
 		ui.Warning("Unknown command: %s", command)
@@ -128,6 +133,7 @@ func printUsage() {
 	ui.Plain("  sync         Force sync from main location to current directory")
 	ui.Plain("  list         Display all registered projects")
 	ui.Plain("  clean        Remove non-existent projects from registry")
+	ui.Plain("  agent        Interactively select and use agents")
 }
 
 func handleInit(manager *core.SyncManager) {
@@ -204,4 +210,291 @@ func handleClean(manager *core.SyncManager) {
 	}
 
 	utils.Info("Clean command completed successfully | removed_count=" + fmt.Sprintf("%d", removedCount))
+}
+
+func handleAgent(manager *core.SyncManager, appPaths utils.AppPaths) {
+	utils.Debug("Handling agent command")
+
+	// Get arguments for subcommands
+	subcommand := "select" // Default subcommand is select
+	if len(os.Args) > 2 {
+		subcommand = os.Args[2]
+	}
+
+	// Get config
+	config := utils.LoadConfig()
+
+	// Get rules directory path
+	rulesDir := appPaths.GetRulesDir(config.RulesDirName)
+	utils.Debug("Using rules directory | path=" + rulesDir)
+
+	// Create agent registry
+	registry, err := agent.NewRegistry(config, rulesDir)
+	if err != nil {
+		handleCommandError("Agent", err, ExitAgentError)
+	}
+
+	// Handle subcommands
+	switch subcommand {
+	case "list":
+		handleAgentList(registry)
+	case "select":
+		handleAgentSelect(registry, config, appPaths)
+	case "info":
+		if len(os.Args) < 4 {
+			ui.Error("Missing agent ID. Usage: crules agent info <agent-id>")
+			os.Exit(ExitUsageError)
+		}
+		handleAgentInfo(registry, os.Args[3])
+	default:
+		ui.Error("Unknown agent subcommand: %s", subcommand)
+		printAgentUsage()
+		os.Exit(ExitUsageError)
+	}
+
+	utils.Info("Agent command completed successfully | subcommand=" + subcommand)
+}
+
+func handleAgentList(registry *agent.Registry) {
+	utils.Debug("Handling agent list subcommand")
+
+	agents := registry.ListAgents()
+	count := len(agents)
+
+	if count == 0 {
+		ui.Info("No agents available.")
+		utils.Info("Agent list completed - no agents found")
+		return
+	}
+
+	ui.Header("Available agents (%d):", count)
+
+	// Format in two columns if there are many agents
+	if count > 6 {
+		// Display in two columns
+		for i := 0; i < count; i += 2 {
+			if i+1 < count {
+				// Two agents on this row
+				ui.Plain("  %2d. %-35s  %2d. %s",
+					i+1, agents[i].Name,
+					i+2, agents[i+1].Name)
+			} else {
+				// Last agent (odd count)
+				ui.Plain("  %2d. %s", i+1, agents[i].Name)
+			}
+		}
+	} else {
+		// Display in a single column for fewer agents
+		for i, agentDef := range agents {
+			ui.Plain("  %2d. %s", i+1, agentDef.Name)
+		}
+	}
+
+	utils.Info("Agent list completed successfully | agent_count=" + fmt.Sprintf("%d", count))
+}
+
+func handleAgentSelect(registry *agent.Registry, config *utils.Config, appPaths utils.AppPaths) {
+	utils.Debug("Handling agent select subcommand")
+
+	agents := registry.ListAgents()
+	if len(agents) == 0 {
+		ui.Error("No agents available for selection.")
+		os.Exit(ExitAgentError)
+	}
+
+	// Create selector and run it
+	selector := ui.NewAgentSelector(agents)
+	selectedAgent, err := selector.Run()
+	if err != nil {
+		handleCommandError("Agent select", err, ExitAgentError)
+	}
+
+	// Create loader and load the selected agent
+	loader := agent.NewLoader(registry, config)
+	agent, err := loader.LoadAgent(selectedAgent.ID)
+	if err != nil {
+		handleCommandError("Agent load", err, ExitAgentError)
+	}
+
+	// Log the loaded agent context
+	utils.Debug("Agent loaded with context | last_updated=" + agent.Context.LastUpdated.String())
+
+	ui.Success("Agent '%s' loaded successfully!", selectedAgent.Name)
+
+	// Ask user if they want to see the full agent definition
+	ui.Prompt("View full agent definition? (y/n): ")
+	var input string
+	_, err = fmt.Scanln(&input)
+
+	if err == nil && (input == "y" || input == "Y") {
+		// Show the full agent definition with pagination
+		content := selectedAgent.Content
+		if content == "" {
+			// If content not loaded, load it now
+			contentBytes, err := os.ReadFile(selectedAgent.DefinitionPath)
+			if err == nil {
+				content = string(contentBytes)
+			} else {
+				content = "Error loading content: " + err.Error()
+			}
+		}
+
+		// Split into lines and show with pagination
+		lines := strings.Split(content, "\n")
+
+		// Display with formatting
+		ui.Header("\nAgent Definition:")
+		ui.Plain("")
+
+		// Calculate page size based on terminal height (assuming ~30 lines)
+		pageSize := 20
+		currentLine := 0
+		pageNum := 1
+		totalPages := (len(lines) + pageSize - 1) / pageSize
+
+		for currentLine < len(lines) {
+			// Show page header for multi-page content
+			if totalPages > 1 {
+				ui.Plain(ui.InfoStyle.Sprintf("--- Page %d of %d ---", pageNum, totalPages))
+			}
+
+			// Show current page of content
+			endLine := currentLine + pageSize
+			if endLine > len(lines) {
+				endLine = len(lines)
+			}
+
+			for i := currentLine; i < endLine; i++ {
+				line := lines[i]
+				if strings.TrimSpace(line) == "" {
+					ui.Plain("") // Empty line
+				} else if strings.HasPrefix(strings.TrimSpace(line), "#") {
+					// Header line - show without indentation
+					ui.Header("%s", strings.TrimSpace(line))
+				} else if strings.HasPrefix(strings.TrimSpace(line), "##") {
+					// Subheader - show with special format
+					ui.Plain("\n%s", ui.InfoStyle.Sprint(strings.TrimSpace(line)))
+				} else if strings.HasPrefix(strings.TrimSpace(line), "-") || strings.HasPrefix(strings.TrimSpace(line), "*") {
+					// List item
+					ui.Plain("  %s", strings.TrimSpace(line))
+				} else {
+					// Regular line
+					ui.Plain("  %s", line)
+				}
+			}
+
+			currentLine = endLine
+			pageNum++
+
+			// If there are more pages, prompt to continue
+			if currentLine < len(lines) {
+				ui.Plain("")
+				ui.Prompt("Press Enter to continue, or q to quit: ")
+				var key string
+				_, err := fmt.Scanln(&key)
+				if err == nil && (key == "q" || key == "Q") {
+					break
+				}
+			}
+		}
+	} else {
+		// Just show a brief overview
+		ui.Plain("\nAgent overview:")
+		ui.Plain("  ID:       %s", selectedAgent.ID)
+		ui.Plain("  Name:     %s", selectedAgent.Name)
+		ui.Plain("  Version:  %s", selectedAgent.Version)
+		ui.Plain("  File:     %s", selectedAgent.DefinitionPath)
+
+		if len(selectedAgent.Capabilities) > 0 {
+			ui.Plain("\nCapabilities:")
+			for i, capability := range selectedAgent.Capabilities {
+				if i < 3 { // Show only first 3 capabilities
+					ui.Plain("  - %s", capability)
+				} else {
+					ui.Plain("  - ...")
+					break
+				}
+			}
+		}
+	}
+
+	utils.Info("Agent select completed successfully | selected_agent=" + selectedAgent.ID)
+}
+
+func handleAgentInfo(registry *agent.Registry, agentID string) {
+	utils.Debug("Handling agent info subcommand | agent_id=" + agentID)
+
+	// Get agent by ID
+	agentDef, exists := registry.GetAgent(agentID)
+	if !exists {
+		ui.Error("Agent '%s' not found.", agentID)
+		os.Exit(ExitAgentError)
+	}
+
+	// Display agent details
+	ui.Header("Agent details:")
+	ui.Plain("  ID:          %s", agentDef.ID)
+	ui.Plain("  Name:        %s", agentDef.Name)
+	ui.Plain("  Version:     %s", agentDef.Version)
+	ui.Plain("")
+
+	// Display full description with proper line wrapping
+	ui.Plain("Description:")
+	if agentDef.Description != "" {
+		// Get content from file if not loaded yet
+		content := agentDef.Content
+		if content == "" {
+			contentBytes, err := os.ReadFile(agentDef.DefinitionPath)
+			if err == nil {
+				content = string(contentBytes)
+			} else {
+				content = "Error loading content: " + err.Error()
+			}
+		}
+
+		// Display full content with pagination
+		lines := strings.Split(content, "\n")
+
+		// Display with indentation
+		ui.Plain("")
+		for _, line := range lines {
+			if strings.TrimSpace(line) == "" {
+				ui.Plain("") // Empty line
+			} else if strings.HasPrefix(strings.TrimSpace(line), "#") {
+				// Header line - show without indentation
+				ui.Header("%s", strings.TrimSpace(line))
+			} else if strings.HasPrefix(strings.TrimSpace(line), "##") {
+				// Subheader - show with special format
+				ui.Plain("\n%s", ui.InfoStyle.Sprint(strings.TrimSpace(line)))
+			} else if strings.HasPrefix(strings.TrimSpace(line), "-") || strings.HasPrefix(strings.TrimSpace(line), "*") {
+				// List item
+				ui.Plain("  %s", strings.TrimSpace(line))
+			} else {
+				// Regular line
+				ui.Plain("  %s", line)
+			}
+		}
+	} else {
+		ui.Plain("  No description available.")
+	}
+
+	if len(agentDef.Capabilities) > 0 {
+		ui.Plain("\nCapabilities:")
+		for _, capability := range agentDef.Capabilities {
+			ui.Plain("  - %s", capability)
+		}
+	}
+
+	ui.Plain("\nFile: %s", agentDef.DefinitionPath)
+
+	utils.Info("Agent info completed successfully | agent_id=" + agentID)
+}
+
+func printAgentUsage() {
+	ui.Header("Usage: crules agent <subcommand>")
+
+	ui.Plain("\nSubcommands:")
+	ui.Plain("  select      Interactively select an agent (default)")
+	ui.Plain("  list        List all available agents")
+	ui.Plain("  info <id>   Display detailed information about a specific agent")
 }

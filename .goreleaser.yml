@@ -1,3 +1,6 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+
 builds:
   - env:
       - CGO_ENABLED=0
@@ -13,43 +16,41 @@ builds:
     binary: crules
 
 archives:
-  - format: tar.gz
-    format_overrides:
-      - goos: windows
-        format: zip
+  - id: default
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
-    replacements:
-      darwin: macOS
-      linux: Linux
-      windows: Windows
-      amd64: x86_64
     files:
       - README.md
       - LICENSE
+    format_overrides:
+      - goos: windows
+        format: zip
+      - goos: linux
+        format: tar.gz
+      - goos: darwin
+        format: tar.gz
 
 brews:
-  - tap:
-      owner: "{{.Env.GITHUB_REPOSITORY_OWNER}}"
+  - repository:
+      owner: nsnarender5511
       name: homebrew-tap
-    folder: Formula
-    homepage: "https://github.com/{{.Env.GITHUB_REPOSITORY}}"
+    homepage: https://github.com/nsnarender5511/crules
     description: "A tool for managing and synchronizing Cursor rules across multiple projects"
-    license: "MIT"
+    license: MIT
     test: |
       system "#{bin}/crules --version"
 
-scoop:
-  bucket:
-    owner: "{{.Env.GITHUB_REPOSITORY_OWNER}}"
-    name: scoop-bucket
-  homepage: "https://github.com/{{.Env.GITHUB_REPOSITORY}}"
-  description: "A tool for managing and synchronizing Cursor rules across multiple projects"
-  license: MIT
+scoops:
+  - repository:
+      owner: nsnarender5511
+      name: scoop-bucket
+    homepage: https://github.com/nsnarender5511/crules
+    description: "A tool for managing and synchronizing Cursor rules across multiple projects"
+    license: MIT
 
 nfpms:
-  - vendor: "{{.Env.GITHUB_REPOSITORY_OWNER}}"
-    homepage: "https://github.com/{{.Env.GITHUB_REPOSITORY}}"
-    maintainer: "{{.Env.GITHUB_REPOSITORY_OWNER}}"
+  - vendor: nsnarender5511
+    homepage: https://github.com/nsnarender5511/crules
+    maintainer: nsnarender5511
     description: "A tool for managing and synchronizing Cursor rules across multiple projects"
     license: MIT
     formats:
@@ -57,7 +58,7 @@ nfpms:
       - rpm
 
 checksum:
-  name_template: "checksums.txt"
+  name_template: checksums.txt
 
 changelog:
   sort: asc
