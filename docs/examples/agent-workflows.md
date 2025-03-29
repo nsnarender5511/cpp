@@ -1,260 +1,335 @@
-# Agent Workflow Examples
+# Agent Workflows
 
-> 📋 This guide provides practical examples of how to use the agent system in real-world scenarios.
+> 📋 This guide provides practical examples of using the agent system in real-world scenarios.
 
-## Example 1: Implementing a New Feature
+## Overview
 
-This workflow demonstrates how to use multiple agents to plan and implement a new feature.
+Agent workflows in crules are designed to help you tackle complex development tasks by combining specialized agents. Each agent has unique capabilities, and when used together in a workflow, they create a powerful development experience.
 
-### Step 1: Plan with the Technical Wizard
+## Common Workflows
 
-First, use the Technical Wizard agent to get high-level guidance:
+### Feature Development Workflow
 
-```bash
-$ crules agent select
-# Select "Technical Wizard Agent"
+The following workflow demonstrates how to use agents for developing a new feature:
 
-User: I need to add a new command to our CLI that will generate a report of all the rules in a project.
+```mermaid
+sequenceDiagram
+    participant User as 👤 User
+    participant Wizard as 🧙 Technical Wizard
+    participant Planner as 💡 Feature Planner
+    participant Implementer as ⚙️ Implementer
+    participant Runner as 🏃 Runner
+    participant Docs as 📚 Documentation
 
-Agent: This is a good feature addition. Here's how I'd approach it:
+    User->>Wizard: Discuss feature idea
+    Note over Wizard: Helps refine approach
+    Wizard->>Planner: Hand off feature requirements
+    Planner->>Implementer: Provide detailed implementation plan
+    Implementer->>Runner: Implement code based on plan
+    Runner->>User: Verify implementation
+    User->>Docs: Request documentation
+    Docs->>User: Deliver comprehensive docs
 
-1. Create a new command called "report" in the CLI package
-2. Implement a report generator that can scan rules and extract metadata
-3. Provide output in multiple formats (text, JSON, markdown)
-4. Add appropriate tests
-
-Let's break this down into concrete tasks for implementation.
+    style User fill:#ff9966,stroke:#ff6600
+    style Wizard fill:#ff66b2,stroke:#cc0066
+    style Planner fill:#9966ff,stroke:#6600cc
+    style Implementer fill:#66b3ff,stroke:#0066cc
+    style Runner fill:#66b3ff,stroke:#0066cc
+    style Docs fill:#66cc99,stroke:#009966
 ```
 
-### Step 2: Detailed Feature Planning
+#### Step-by-Step Procedure
 
-Next, switch to the Feature Planner agent for detailed requirements:
+1. Start with the **Technical Wizard** to discuss the feature at a high level:
+   ```
+   @wizard.mdc I need to implement a new feature that allows users to export their data in CSV format
+   ```
 
-```bash
-$ crules agent select
-# Select "Feature Planner Agent"
+2. Once you have a clear direction, consult the **Feature Planner**:
+   ```
+   @feature-planner.mdc Plan the implementation of the CSV export feature. The wizard suggested using a dedicated ExportService.
+   ```
 
-User: I need to plan a "report" command that will generate a summary of all rules in a project.
+3. Take the plan to the **Implementer** for coding:
+   ```
+   @implementer.mdc Implement the CSV export feature based on this plan: [paste plan here]
+   ```
 
-Agent: Here's a detailed plan for the "report" command:
+4. Verify the implementation with the **Runner**:
+   ```
+   @runner.mdc Run tests for the new CSV export feature
+   ```
 
-## Requirements
-- Command: `crules report [--format=<format>] [--output=<file>]`
-- Formats: text (default), json, markdown
-- Information to include:
-  - Number of rules
-  - Rule types breakdown
-  - File sizes
-  - Last modified dates
-  - Content summary
+5. Document the feature with the **Documentation Agent**:
+   ```
+   @documentation-agent.mdc Create user documentation for the new CSV export feature
+   ```
 
-## Implementation Tasks
-1. Create a new file `internal/cli/report.go`
-2. Add report command to root command
-3. Implement rule scanning logic
-4. Create formatters for each output type
-5. Implement file output option
+### Bug Fix Workflow
+
+For fixing bugs, follow this streamlined workflow:
+
+```mermaid
+sequenceDiagram
+    participant User as 👤 User
+    participant Fix as 🔧 Fix Planner
+    participant Implementer as ⚙️ Implementer
+    participant Runner as 🏃 Runner
+    participant Reviewer as 🔍 Code Reviewer
+    participant Committer as 📝 Git Committer
+
+    User->>Fix: Report bug
+    Note over Fix: Analyzes root cause
+    Fix->>Implementer: Provide fix strategy
+    Implementer->>Runner: Implement solution
+    Runner->>Reviewer: Verify fix
+    Reviewer->>Committer: Approve changes
+    Committer->>User: Create commit message
+
+    style User fill:#ff9966,stroke:#ff6600
+    style Fix fill:#9966ff,stroke:#6600cc
+    style Implementer fill:#66b3ff,stroke:#0066cc
+    style Runner fill:#66b3ff,stroke:#0066cc
+    style Reviewer fill:#66cc99,stroke:#009966
+    style Committer fill:#66cc99,stroke:#009966
 ```
 
-### Step 3: Implementation
+#### Step-by-Step Procedure
 
-Now, switch to the Implementer agent to write the code:
+1. Start with the **Fix Planner** to analyze the bug:
+   ```
+   @fix-planner.mdc Users report that the sorting function in the data table is not working correctly for date fields
+   ```
 
-```bash
-$ crules agent select
-# Select "Implementer Agent"
+2. Implement the fix with the **Implementer**:
+   ```
+   @implementer.mdc Fix the date sorting issue based on the analysis: [paste analysis here]
+   ```
 
-User: I need to implement the "report" command as planned. Please start with the basic structure in internal/cli/report.go.
+3. Verify the fix with the **Runner**:
+   ```
+   @runner.mdc Test the date sorting functionality
+   ```
 
-Agent: I'll implement the report command. First, let's create the file structure:
+4. Review the code with the **Code Reviewer**:
+   ```
+   @code-reviewer.mdc Review my fix for the date sorting issue
+   ```
 
-[Agent provides implementation code for report.go with command structure, flags, and basic reporting logic]
+5. Commit the changes with the **Git Committer**:
+   ```
+   @git-committer.mdc Create a commit message for fixing the date sorting issue
+   ```
+
+## Advanced Workflows
+
+### Refactoring Workflow
+
+For complex refactoring tasks:
+
+```mermaid
+flowchart TD
+    User((👤 User)) --> RefactorGuru(♻️ Refactoring Guru)
+    RefactorGuru --> Wizard(🧙 Technical Wizard)
+    Wizard --> Implementer(⚙️ Implementer)
+    Implementer --> Runner(🏃 Runner)
+    Runner --> Reviewer(🔍 Code Reviewer)
+    
+    style User fill:#ff9966,stroke:#ff6600,stroke-width:2px
+    style RefactorGuru fill:#9966ff,stroke:#6600cc,stroke-width:2px
+    style Wizard fill:#ff66b2,stroke:#cc0066,stroke-width:2px
+    style Implementer fill:#66b3ff,stroke:#0066cc,stroke-width:2px
+    style Runner fill:#66b3ff,stroke:#0066cc,stroke-width:2px
+    style Reviewer fill:#66cc99,stroke:#009966,stroke-width:2px
 ```
 
-### Step 4: Testing
+### Architecture Planning Workflow
 
-Use the Runner agent to test the implementation:
+For designing system architecture:
 
-```bash
-$ crules agent select
-# Select "Runner Agent"
-
-User: I need to test the new report command.
-
-Agent: Let's run some tests for the new report command:
-
-1. First, let's build the binary:
-   ```
-   go build -o crules ./cmd/crules
-   ```
-
-2. Now, let's run basic functionality tests:
-   ```
-   ./crules report
-   ./crules report --format=json
-   ./crules report --format=markdown --output=report.md
-   ```
-
-[Agent provides analysis of the test results]
+```mermaid
+flowchart TD
+    User((👤 User)) --> Wizard(🧙 Technical Wizard)
+    Wizard --> ArchPlanner(🏗️ Architecture Planner)
+    ArchPlanner --> DocAgent(📚 Documentation Agent)
+    ArchPlanner --> FeaturePlanner(💡 Feature Planner)
+    
+    style User fill:#ff9966,stroke:#ff6600,stroke-width:2px
+    style Wizard fill:#ff66b2,stroke:#cc0066,stroke-width:2px
+    style ArchPlanner fill:#9966ff,stroke:#6600cc,stroke-width:2px
+    style DocAgent fill:#66cc99,stroke:#009966,stroke-width:2px
+    style FeaturePlanner fill:#9966ff,stroke:#6600cc,stroke-width:2px
 ```
 
-### Step 5: Documentation
+## Real-World Examples
 
-Finally, use the Documentation agent to document the new feature:
+### Example 1: Adding a New API Endpoint
 
-```bash
-$ crules agent select
-# Select "Documentation Agent"
+<details>
+  <summary>📑 Click to view the complete workflow</summary>
 
-User: I need to document the new report command.
+  #### Technical Wizard Conversation
+  ```
+  User: I need to add a new API endpoint to our Express.js application that will handle user profile updates
+  
+  Wizard: For implementing a new API endpoint for user profile updates, I'd suggest the following approach:
+  
+  1. Determine what user profile fields will be updatable
+  2. Define input validation for the endpoint
+  3. Implement proper authentication and authorization
+  4. Create the route handler in the Express application
+  5. Update the user data in the database
+  6. Add error handling and response formatting
+  7. Write tests for the endpoint
+  
+  Would you like to proceed with this approach? I can help coordinate with other agents for implementation.
+  ```
 
-Agent: I'll add documentation for the new report command:
+  #### Feature Planner Conversation
+  ```
+  User: Plan how to implement the user profile update endpoint as discussed with the wizard
+  
+  Feature Planner: # User Profile Update Endpoint Implementation Plan
+  
+  ## Requirements
+  - Add a PATCH `/api/users/:userId/profile` endpoint
+  - Allow updating name, email, avatar, and preferences
+  - Require authentication
+  - Validate input data
+  - Return updated user profile on success
+  
+  ## Implementation Steps
+  1. Add route definition in `routes/users.js`
+  2. Create middleware for input validation
+  3. Implement authorization check
+  4. Create controller function in `controllers/users.js`
+  5. Add database update logic in `models/User.js`
+  6. Implement error handling
+  7. Add unit and integration tests
+  
+  ## Detailed Specifications
+  [Detailed specifications follow...]
+  ```
 
-[Agent provides documentation updates for the command, including usage examples, parameter descriptions, and output formats]
+  #### Implementer Conversation
+  ```
+  User: Implement the user profile update endpoint based on the planner's specifications
+  
+  Implementer: I'll implement the user profile update endpoint according to the plan.
+  
+  First, let's add the route in routes/users.js:
+  [Code implementation details follow...]
+  ```
+</details>
+
+### Example 2: Fixing a Performance Issue
+
+<details>
+  <summary>📑 Click to view the complete workflow</summary>
+
+  #### Fix Planner Conversation
+  ```
+  User: Our application is experiencing slow load times on the dashboard page, especially when there are many data points
+  
+  Fix Planner: # Performance Issue Analysis
+  
+  ## Problem Description
+  The dashboard page is loading slowly when displaying large datasets.
+  
+  ## Root Cause Analysis
+  1. Inefficient data fetching - all data is being loaded at once
+  2. No pagination implemented for large datasets
+  3. Frontend rendering all data points simultaneously
+  4. No caching mechanism in place
+  
+  ## Fix Strategy
+  [Detailed fix strategy follows...]
+  ```
+
+  #### Implementer and Runner Conversations
+  [Additional implementation and testing conversations...]
+</details>
+
+## Custom Workflow Creation
+
+You can create your own custom workflows by chaining agents together in a way that best suits your development process.
+
+### Workflow Design Tips
+
+1. **Start High-Level**: Begin with the Technical Wizard or specialized planning agents
+2. **Chain Specialized Agents**: Pass outputs between agents in a logical sequence
+3. **Verify Results**: Always include verification steps with the Runner or Code Reviewer
+4. **Document as You Go**: Involve the Documentation Agent throughout the process
+5. **Use Feedback Loops**: Return to previous agents when needed for refinement
+
+### Example Custom Workflow
+
+```mermaid
+flowchart TD
+    Start([Start]) --> Wizard(🧙 Technical Wizard)
+    Wizard --> Decision{Complex Task?}
+    Decision -->|Yes| ArchPlanner(🏗️ Architecture Planner)
+    Decision -->|No| FeaturePlanner(💡 Feature Planner)
+    
+    ArchPlanner --> FeaturePlanner
+    FeaturePlanner --> Implementer(⚙️ Implementer)
+    Implementer --> Runner(🏃 Runner)
+    Runner --> Decision2{Issues Found?}
+    
+    Decision2 -->|Yes| FixPlanner(🔧 Fix Planner)
+    Decision2 -->|No| CodeReviewer(🔍 Code Reviewer)
+    
+    FixPlanner --> Implementer
+    CodeReviewer --> Decision3{Needs Refactoring?}
+    
+    Decision3 -->|Yes| RefactorGuru(♻️ Refactoring Guru)
+    Decision3 -->|No| DocAgent(📚 Documentation Agent)
+    
+    RefactorGuru --> Implementer
+    DocAgent --> GitCommitter(📝 Git Committer)
+    GitCommitter --> End([End])
+    
+    style Start fill:#f96,stroke:#f60
+    style End fill:#f96,stroke:#f60
+    style Wizard fill:#ff66b2,stroke:#cc0066
+    style ArchPlanner fill:#9966ff,stroke:#6600cc
+    style FeaturePlanner fill:#9966ff,stroke:#6600cc
+    style Implementer fill:#66b3ff,stroke:#0066cc
+    style Runner fill:#66b3ff,stroke:#0066cc
+    style FixPlanner fill:#9966ff,stroke:#6600cc
+    style CodeReviewer fill:#66cc99,stroke:#009966
+    style RefactorGuru fill:#9966ff,stroke:#6600cc
+    style DocAgent fill:#66cc99,stroke:#009966
+    style GitCommitter fill:#66cc99,stroke:#009966
+    style Decision fill:#ffcc99,stroke:#ff9933
+    style Decision2 fill:#ffcc99,stroke:#ff9933
+    style Decision3 fill:#ffcc99,stroke:#ff9933
 ```
 
-## Example 2: Fixing a Bug
+## Performance Tips
 
-This workflow demonstrates how to use agents to diagnose and fix a bug.
+- **Provide Context**: Give each agent the necessary context from previous steps
+- **Be Specific**: Clearly describe the task for each agent
+- **Share Relevant Code**: Include relevant code snippets or file references
+- **Set Constraints**: Specify any limitations or requirements
+- **Review and Iterate**: Review each agent's output before proceeding
 
-### Step 1: Analyze with Fix Planner
+## Interactive Examples
 
-Start with the Fix Planner agent to analyze the issue:
+We've prepared some interactive examples to help you learn how to use agent workflows effectively:
 
-```bash
-$ crules agent select
-# Select "Fix Planner Agent"
+<details>
+  <summary>📺 View Feature Development Workflow Demo</summary>
+  <img src="../assets/gifs/workflows/feature-development-workflow.gif" alt="Feature Development Workflow" width="600">
+</details>
 
-User: The sync command isn't correctly preserving file permissions. Files end up with 644 permissions after sync.
+<details>
+  <summary>📺 View Bug Fix Workflow Demo</summary>
+  <img src="../assets/gifs/workflows/bug-fixing-workflow.gif" alt="Bug Fix Workflow" width="600">
+</details>
 
-Agent: Let's analyze this file permission issue:
+## Navigation
 
-## Problem Analysis
-- The sync command is changing file permissions to 644
-- This suggests we're not preserving the original file permissions during copy
-- Likely location: internal/projects/sync.go
-
-## Potential Causes
-1. Using simple file copy that doesn't preserve permissions
-2. Explicitly setting permissions to 644
-3. Not using appropriate OS functions
-
-## Fix Strategy
-1. Check how files are copied in the sync function
-2. Ensure we use functions that preserve metadata (like os.Copy with appropriate flags)
-3. Add tests to verify permission preservation
-```
-
-### Step 2: Implementation with Implementer
-
-Switch to the Implementer agent to fix the code:
-
-```bash
-$ crules agent select
-# Select "Implementer Agent"
-
-User: I need to fix the file permission issue in the sync command as analyzed by the Fix Planner.
-
-Agent: I'll fix the file permission issue in the sync command. Let's look at the current implementation first.
-
-[Agent reviews the code, identifies the issue, and provides a fix that preserves file permissions]
-```
-
-### Step 3: Verification with Runner
-
-Use the Runner agent to verify the fix:
-
-```bash
-$ crules agent select
-# Select "Runner Agent"
-
-User: I need to test the fix for the file permissions issue.
-
-Agent: Let's test the fix for the file permissions issue:
-
-1. First, let's build the binary:
-   ```
-   go build -o crules ./cmd/crules
-   ```
-
-2. Now, let's create a test file with specific permissions:
-   ```
-   touch testfile
-   chmod 755 testfile
-   ```
-
-3. Let's run the sync command and check if permissions are preserved:
-   ```
-   ./crules sync
-   ls -la testfile
-   ```
-
-[Agent analyzes the results and confirms that permissions are now preserved]
-```
-
-## Example 3: Code Review
-
-This example shows how to use agents for code review.
-
-### Step 1: Review with Technical Wizard
-
-Use the Technical Wizard agent to review code at a high level:
-
-```bash
-$ crules agent select
-# Select "Technical Wizard Agent"
-
-User: Can you review this new implementation of the agent selection UI?
-
-Agent: I'll review the agent selection UI implementation:
-
-## High-Level Review
-- The approach using a terminal UI library is solid
-- The separation of UI logic from business logic is good
-- There are a few architectural concerns to address
-
-## Strengths
-- Clean component-based design
-- Good error handling
-- Responsive UI with keyboard shortcuts
-
-## Areas for Improvement
-- Consider extracting the UI theme into a configuration
-- The agent loading might benefit from background caching
-- Some error messages could be more user-friendly
-
-Overall, this is a well-implemented feature but with room for some architectural refinements.
-```
-
-### Step 2: Detailed Implementation Feedback
-
-Switch to the Implementer agent for detailed code feedback:
-
-```bash
-$ crules agent select
-# Select "Implementer Agent"
-
-User: Can you provide detailed implementation feedback on the agent selection UI?
-
-Agent: Here's my detailed implementation feedback:
-
-[Agent provides specific code-level feedback, including suggestions for refactoring, optimizing performance, and improving error handling]
-```
-
-## Best Practices for Agent Workflows
-
-1. **Use specialized agents for specific tasks**: Each agent is optimized for certain types of tasks.
-
-2. **Chain agents in a logical sequence**: Start with planning, move to implementation, then testing and documentation.
-
-3. **Provide context when switching agents**: When you select a new agent, briefly summarize what previous agents have done.
-
-4. **Be specific in your requests**: Clearly state what you need from each agent to get the most relevant help.
-
-5. **Review agent suggestions critically**: While agents provide expert guidance, always review their suggestions critically.
-
-## See Also
-
-- [Agent System Documentation](../user-guide/agents.md)
-- [Command Reference](../user-guide/commands.md)
-- [Extending Agents](../developer-guide/extending-agents.md) 
+- Previous: [Advanced Usage](./advanced-usage.md)
+- Up: [Examples](./README.md)
+- Home: [Documentation Home](../README.md) 

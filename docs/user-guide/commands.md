@@ -1,14 +1,24 @@
-# Commands Reference
+# Command Reference
 
-> 🔍 This document provides detailed information about all available commands in crules.
+> 📋 This guide provides a comprehensive reference for all commands available in the crules tool.
 
-## Basic Usage
+## Command Overview
 
-```bash
-crules [OPTIONS] <command>
-```
+Crules provides several commands to manage your rules and interact with agents:
+
+| Command | Description |
+|---------|-------------|
+| `init` | Initialize current directory with rules from main location |
+| `merge` | Merge current rules to main location and sync to all locations |
+| `sync` | Force sync from main location to current directory |
+| `list` | Display all registered projects |
+| `clean` | Remove non-existent projects from registry |
+| `agent` | Interactively select and use agents |
+| `import` | Import agent rules from a URL |
 
 ## Global Options
+
+These options can be used with any command:
 
 | Option | Description |
 |--------|-------------|
@@ -16,9 +26,20 @@ crules [OPTIONS] <command>
 | `--debug` | Show debug messages on console (implies verbose) |
 | `--version`, `-v` | Show version information |
 
-## Core Commands
+```bash
+# Show version information
+crules --version
 
-### `init`
+# Enable verbose output
+crules --verbose list
+
+# Enable debug output
+crules --debug sync
+```
+
+## Command Details
+
+### `init` Command
 
 Initializes the current directory with rules from the main location.
 
@@ -26,40 +47,81 @@ Initializes the current directory with rules from the main location.
 crules init
 ```
 
-This command will:
-1. Copy rules from the main location to the current directory
-2. Create a `.cursor/rules` directory if it doesn't exist
-3. Register the current project in the registry
+**Behavior:**
+- Copies rules from main location to current directory
+- Registers the current project in the crules registry
+- Creates the `.cursor/rules` directory if it doesn't exist
+- Updates `.gitignore` to exclude the `.cursor/` directory
+- If main location doesn't exist, guides you through setup options
 
-If the rules directory already exists, you'll be prompted to confirm overwriting it.
+**First-time Setup Options:**
+1. Create an empty directory structure
+2. Fetch rules from a git repository
+3. Cancel operation
 
-### `merge`
+**Example Output:**
+```
+✨ crules - Cursor Rules Manager v0.1.0 ✨
 
-Merges current rules to the main location and syncs them to all locations.
+⚠️ Warning: Main rules location does not exist: /Users/username/.cursor/rules
+
+Choose an option:
+1. Create empty directory structure
+2. Fetch from git repository
+3. Cancel operation
+
+> 2
+
+Enter git repository URL: [git@github.com:nsnarender5511/AgenticSystem.git]
+
+✓ Successfully initialized rules in /path/to/project/.cursor/rules
+```
+
+### `merge` Command
+
+Merges rules from the current directory to the main location and syncs to all registered projects.
 
 ```bash
 crules merge
 ```
 
-This command will:
-1. Copy rules from the current directory to the main location
-2. Sync the updated rules to all registered projects
+**Behavior:**
+- Copies rules from current directory to main location
+- Synchronizes the changes to all registered projects
+- Ensures all projects have the latest versions of your rules
 
-The current directory must have a `.cursor/rules` directory with rules.
+**Example Output:**
+```
+✨ crules - Cursor Rules Manager v0.1.0 ✨
 
-### `sync`
+Merging rules to main location...
+Syncing changes to 3 registered projects...
 
-Forces synchronization from the main location to the current directory.
+✓ Successfully merged rules to main location
+```
+
+### `sync` Command
+
+Forces a sync from the main location to the current directory.
 
 ```bash
 crules sync
 ```
 
-This command will:
-1. Copy rules from the main location to the current directory
-2. Overwrite any existing rules in the current directory
+**Behavior:**
+- Copies rules from main location to current directory
+- Overwrites any local changes
 
-### `list`
+**Example Output:**
+```
+✨ crules - Cursor Rules Manager v0.1.0 ✨
+
+Syncing rules from main location...
+
+✓ Successfully synced rules from main location
+```
+
+### `list` Command
 
 Displays all registered projects.
 
@@ -67,12 +129,23 @@ Displays all registered projects.
 crules list
 ```
 
-This command will show:
-1. A list of all registered project paths
-2. An indication of which projects exist and which are missing
-3. A count of valid and invalid projects
+**Behavior:**
+- Lists all projects registered in the crules registry
+- Indicates if a project no longer exists
 
-### `clean`
+**Example Output:**
+```
+✨ crules - Cursor Rules Manager v0.1.0 ✨
+
+Registered projects (3):
+  1. /Users/username/projects/project1
+  2. /Users/username/projects/project2
+  3. /Users/username/old-project (not found)
+
+⚠️ 1 project(s) could not be found. Run 'crules clean' to remove them.
+```
+
+### `clean` Command
 
 Removes non-existent projects from the registry.
 
@@ -80,79 +153,161 @@ Removes non-existent projects from the registry.
 crules clean
 ```
 
-This command will:
-1. Check all registered projects to verify they exist
-2. Remove any projects that no longer exist
-3. Report how many projects were removed
+**Behavior:**
+- Checks all registered projects for existence
+- Removes non-existent projects from the registry
+- Updates the registry file
 
-## Agent Commands
-
-The agent commands provide interactive access to the Agent System, allowing you to discover and use specialized AI agents for different tasks.
-
-The `agent` command displays information about available agents and allows you to interact with them.
-
+**Example Output:**
 ```
-crules agent [subcommand]
+✨ crules - Cursor Rules Manager v0.1.0 ✨
+
+✓ Successfully removed 1 non-existent project(s) from registry.
 ```
 
-#### Subcommands:
+### `agent` Command
 
-- **`agent`** - Lists all available agents in a clean tabular format. The display adapts based on your terminal width to show an optimal amount of information.
-- **`agent select`** - Interactively select an agent from the list.
-- **`agent info <agent-id>`** - Show detailed information about a specific agent.
-  - You can use either the agent's string ID (e.g., `wizard`) or its position number from the list (e.g., `1`).
+The `agent` command provides access to the Agent System, allowing you to view, select, and interact with agents.
 
-#### Examples:
+#### Basic Usage
 
-**List all available agents:**
-```
+```bash
 crules agent
 ```
 
-This will display a formatted table of all available agents with their reference IDs. The table will adapt to your terminal width:
+Without additional arguments, this lists all available agents.
 
-- In narrow terminals: A simplified table with just agent numbers and IDs
-- In medium terminals: A table with agent numbers, names, and reference syntax
-- In wide terminals: A comprehensive table including version information
+#### Subcommands
 
-**Get detailed information about a specific agent by string ID:**
-```
-crules agent info wizard
+| Subcommand | Description |
+|------------|-------------|
+| `list` | Display all available agents (default behavior) |
+| `info <id>` | Show detailed information about a specific agent |
+| `select` | Interactively select and load an agent |
+
+#### `agent list` Subcommand
+
+Lists all available agents.
+
+```bash
+crules agent list
 ```
 
-**Get detailed information about a specific agent by position number:**
+**Example Output:**
 ```
-crules agent info 1
+✨ crules - Cursor Rules Manager v0.1.0 ✨
+
++-----+---------------------+--------------------+----------+
+| No. | Agent Name          | Reference ID       | Version  |
++-----+---------------------+--------------------+----------+
+| 1   | Feature Planner     | @feature-planner.mdc | 1.0    |
+| 2   | Fix Planner         | @fix-planner.mdc     | 1.0    |
+| 3   | Runner              | @runner.mdc          | 1.0    |
+| 4   | Technical Wizard    | @wizard.mdc          | 1.0    |
++-----+---------------------+--------------------+----------+
 ```
 
-**Interactively select an agent:**
+#### `agent info` Subcommand
+
+Shows detailed information about a specific agent.
+
+```bash
+crules agent info <id>
 ```
+
+The `<id>` can be:
+- A string ID (e.g., `wizard`)
+- A numeric index from the list (e.g., `1`)
+
+**Example Output:**
+```
+✨ crules - Cursor Rules Manager v0.1.0 ✨
+
+Agent details:
+  ID:          wizard
+  Name:        🧙‍♂️ Technical Wizard Agent
+  Version:     1.0
+
+Description:
+  The Technical Wizard Agent provides high-level technical guidance 
+  and coordinates other agents. It helps with architecture decisions, 
+  design patterns, and clean code principles.
+
+Capabilities:
+  - In-Depth Technical Exploration and Analysis
+  - Expert Architectural Guidance
+  - Design Patterns Discussion
+  - Clean Code Advisory
+
+File: /Users/username/.cursor/rules/wizard.mdc
+```
+
+#### `agent select` Subcommand
+
+Interactively selects and loads an agent.
+
+```bash
 crules agent select
 ```
 
-## Using Agents in Chat
+**Behavior:**
+- Displays a terminal UI for selecting an agent
+- Shows agent details after selection
+- Optionally displays the full agent definition
 
-You can directly reference agents in the chatbox using the `@` symbol followed by the agent ID. For example:
+**Example Output:**
+```
+✨ crules - Cursor Rules Manager v0.1.0 ✨
 
-- `@wizard.mdc` - Invokes the Technical Wizard agent
-- `@refactoring-guru.mdc` - Invokes the Refactoring Guru agent
-- `@quick-answer-agent.mdc` - Invokes the Quick Answer Agent
+Select an agent:
+> 1. 🧙‍♂️ Technical Wizard Agent
+  2. ✨ Feature Planner Agent
+  3. 🔍 Fix Planner Agent
+  4. 🛠️ Implementer Agent
 
-This approach allows you to quickly switch between specialized agents without running additional commands.
+[Use arrow keys to navigate, Enter to select]
+```
 
-## Command Output
+### `import` Command
 
-All commands provide:
-- Success or error messages
-- Details about the operation performed
-- Warnings about potential issues
+Imports agent rules from a URL.
 
-Adding the `--verbose` flag will show additional information about the operation, while `--debug` shows even more detailed diagnostic information.
+```bash
+crules import <url>
+```
+
+**Parameters:**
+- `<url>`: The URL to import rules from (required)
+
+**Behavior:**
+- Fetches content from the specified URL
+- Parses the content to extract rules
+- Stores the rules in your main location
+- Optionally stores them in your current project if it has a rules directory
+
+**Example Output:**
+```
+✨ crules - Cursor Rules Manager v0.1.0 ✨
+
+Fetching rules from https://cursor.directory/example-agent...
+Parsing rules...
+
+Found 1 rule to import:
+  1. Example Agent - An example agent for crules
+
+Do you want to import this rule? [y/N] y
+
+Storing rules to main location...
+
+✓ Successfully imported 1 rule
+```
 
 ## Exit Codes
 
-| Code | Description |
-|------|-------------|
+The crules tool uses the following exit codes:
+
+| Code | Meaning |
+|------|---------|
 | 0 | Success |
 | 1 | Usage error |
 | 10 | Init error |
@@ -161,10 +316,64 @@ Adding the `--verbose` flag will show additional information about the operation
 | 13 | List error |
 | 14 | Clean error |
 | 15 | Agent error |
+| 16 | Import error |
 | 20 | Setup error |
+
+## Command Workflow Examples
+
+### Basic Project Setup
+
+```bash
+# Create a new project
+mkdir my-project
+cd my-project
+
+# Initialize git repository
+git init
+
+# Initialize rules
+crules init
+
+# Select an agent to work with
+crules agent select
+```
+
+### Sharing Rules with Team
+
+```bash
+# Make changes to rules
+# ...
+
+# Merge changes to main location and sync to all projects
+crules merge
+
+# In another project, get the latest rules
+cd ../another-project
+crules sync
+```
+
+### Cleaning Up Projects
+
+```bash
+# List all registered projects
+crules list
+
+# Remove non-existent projects
+crules clean
+
+# Verify cleanup
+crules list
+```
 
 ## See Also
 
-- [Agent System Overview](./agents.md) - Detailed information about the Agent System
-- [Configuration](./configuration.md) - How to configure crules
-- [Troubleshooting](./troubleshooting.md) - Common issues and solutions
+- [Configuration](./configuration.md) for details on configuring crules
+- [Agent System](./agents.md) for information on working with agents
+- [Examples](../examples/) for usage examples and workflows
+
+## Navigation
+
+- Previous: [Configuration](./configuration.md)
+- Next: [Agent System](./agents.md)
+- Up: [User Guide](../README.md#user-guide)
+- Home: [Documentation Home](../README.md)

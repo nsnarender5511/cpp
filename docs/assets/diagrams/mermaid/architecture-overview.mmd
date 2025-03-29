@@ -1,0 +1,47 @@
+graph TD
+    User((👤 User)):::user --> CLI[/Command Line Interface\]:::cli
+    
+    subgraph Core["🔧 Core System"]
+        CLI --> Init[Initialize]:::command
+        CLI --> Sync[Synchronize]:::command
+        CLI --> Merge[Merge]:::command
+        CLI --> Config[Configure]:::command
+        CLI --> AgentCmd[Agent Commands]:::command
+        
+        AgentCmd --> AgentList[List Agents]:::agentOp
+        AgentCmd --> AgentSelect[Select Agent]:::agentOp
+        AgentCmd --> AgentInfo[Agent Info]:::agentOp
+        
+        Init --> Registry[(Project Registry)]:::registry
+        Sync --> Registry
+        Merge --> Registry
+        
+        Registry --> FileOps[File Operations]:::fileOp
+    end
+    
+    subgraph Storage["💾 Storage"]
+        MainLoc[("📁 Main Rules\nLocation")]:::storage <--> FileOps
+        Projects[("📁 Project\nRules")]:::storage <--> FileOps
+        ConfigFile[("⚙️ Configuration\nFile")]:::storage <--> Config
+    end
+    
+    subgraph UI["🖥️ User Interface"]
+        AgentSelect --> TermUI{Terminal UI}:::ui
+        AgentList --> TermUI
+        AgentInfo --> TermUI
+    end
+    
+    %% Enhanced style definitions
+    classDef user fill:#ff9966,stroke:#ff6600,stroke-width:2px,color:#333,font-weight:bold
+    classDef cli fill:#66b3ff,stroke:#0066cc,stroke-width:2px,color:#333,font-weight:bold
+    classDef command fill:#ffcc99,stroke:#ff9933,stroke-width:2px,color:#333
+    classDef agentOp fill:#cc99ff,stroke:#9933ff,stroke-width:2px,color:#333
+    classDef registry fill:#ff99cc,stroke:#ff3399,stroke-width:2px,color:#333
+    classDef fileOp fill:#99ccff,stroke:#3399ff,stroke-width:2px,color:#333
+    classDef storage fill:#99ff99,stroke:#33cc33,stroke-width:2px,color:#333
+    classDef ui fill:#ffff99,stroke:#cccc00,stroke-width:2px,color:#333,font-weight:bold
+    
+    %% Style assignment for subgraphs
+    style Core fill:#f0f0ff,stroke:#9999cc,stroke-width:2px,color:#333,font-weight:bold
+    style Storage fill:#f0fff0,stroke:#99cc99,stroke-width:2px,color:#333,font-weight:bold
+    style UI fill:#fffff0,stroke:#cccc99,stroke-width:2px,color:#333,font-weight:bold 
