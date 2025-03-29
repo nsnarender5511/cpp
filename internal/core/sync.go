@@ -184,3 +184,8 @@ func (sm *SyncManager) syncToAll() error {
 	utils.Info("Sync to all projects completed | successful=" + fmt.Sprintf("%d", succeeded) + ", failed=" + fmt.Sprintf("%d", failed))
 	return nil
 }
+
+// GetRegistry returns the registry instance
+func (sm *SyncManager) GetRegistry() *Registry {
+	return sm.registry
+}

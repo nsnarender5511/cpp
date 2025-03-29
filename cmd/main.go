@@ -43,6 +43,8 @@ func main() {
 		handleMerge(manager)
 	case "sync":
 		handleSync(manager)
+	case "list":
+		handleList(manager)
 	default:
 		utils.Warn("Unknown command received | command=" + command)
 		fmt.Printf("Unknown command: %s\n", command)
@@ -59,6 +61,7 @@ func printUsage() {
 	fmt.Println("  init     Initialize current directory with rules from main location")
 	fmt.Println("  merge    Merge current rules to main location and sync to all locations")
 	fmt.Println("  sync     Force sync from main location to current directory")
+	fmt.Println("  list     Display all registered projects")
 }
 
 func handleInit(manager *core.SyncManager) {
@@ -92,4 +95,24 @@ func handleSync(manager *core.SyncManager) {
 	}
 	utils.Info("Sync command completed successfully")
 	fmt.Println("Successfully synced rules from main location")
+}
+
+func handleList(manager *core.SyncManager) {
+	utils.Debug("Handling list command")
+
+	projects := manager.GetRegistry().GetProjects()
+	count := len(projects)
+
+	if count == 0 {
+		fmt.Println("No projects registered.")
+		utils.Info("List command completed - no projects found")
+		return
+	}
+
+	fmt.Printf("Registered projects (%d):\n", count)
+	for i, project := range projects {
+		fmt.Printf("%d. %s\n", i+1, project)
+	}
+
+	utils.Info("List command completed successfully | project_count=" + fmt.Sprintf("%d", count))
 }
