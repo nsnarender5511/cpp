@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"crules/internal/git"
+	"crules/internal/ui"
 	"crules/internal/utils"
 )
 
@@ -87,12 +89,58 @@ func (sm *SyncManager) Init() error {
 	targetPath := filepath.Join(currentDir, sm.config.RulesDirName)
 	utils.Debug("Init target path | path=" + targetPath)
 
-	// Check if target already exists
+	// Check if the main rules location exists
+	mainLocationNeedsSetup := false
+
+	if !utils.DirExists(sm.mainPath) {
+		utils.Debug("Main rules location does not exist | path=" + sm.mainPath)
+		ui.Warning("Main rules location does not exist: %s", sm.mainPath)
+		mainLocationNeedsSetup = true
+	} else {
+		// Main location exists, but check if it has any .mdc files
+		hasMDCFiles, err := utils.HasMDCFiles(sm.mainPath)
+		if err != nil {
+			utils.Error("Failed to check for .mdc files | path=" + sm.mainPath + ", error=" + err.Error())
+			return fmt.Errorf("failed to check for .mdc files: %v", err)
+		}
+
+		if !hasMDCFiles {
+			utils.Debug("Main rules location exists but contains no .mdc files | path=" + sm.mainPath)
+			ui.Warning("Main rules location exists but contains no rules: %s", sm.mainPath)
+			mainLocationNeedsSetup = true
+		}
+	}
+
+	// If main location doesn't exist or is empty, offer options
+	if mainLocationNeedsSetup {
+		if !sm.offerMainLocationOptions() {
+			ui.Info("Operation cancelled by user")
+			return fmt.Errorf("operation cancelled by user")
+		}
+	}
+
+	// Check if target already exists and list its contents
 	if utils.DirExists(targetPath) {
 		utils.Debug("Rules directory already exists | path=" + targetPath)
-		if !utils.ConfirmOverwrite(sm.config.RulesDirName) {
-			utils.Info("Operation cancelled by user")
-			return fmt.Errorf("operation cancelled by user")
+
+		// List files that will be overwritten
+		files, err := utils.ListDirectoryContents(targetPath)
+		if err != nil {
+			utils.Error("Failed to list directory contents | path=" + targetPath + ", error=" + err.Error())
+			return fmt.Errorf("failed to list directory contents: %v", err)
+		}
+
+		if len(files) > 0 {
+			ui.Header("The following files will be deleted:")
+			ui.DisplayFileTable(files)
+
+			ui.Plain("")
+			if !ui.PromptYesNo("Do you want to continue and overwrite these files?") {
+				ui.Info("Operation cancelled by user")
+				return fmt.Errorf("operation cancelled by user")
+			}
+		} else {
+			ui.Info("Destination directory exists but is empty")
 		}
 	}
 
@@ -111,7 +159,95 @@ func (sm *SyncManager) Init() error {
 	}
 
 	utils.Info("Rules initialized successfully | project=" + currentDir)
+	ui.Success("Successfully initialized rules in %s", targetPath)
 	return nil
+}
+
+// offerMainLocationOptions presents options for an empty or non-existent main location
+// Returns true if operation should continue, false if cancelled
+func (sm *SyncManager) offerMainLocationOptions() bool {
+	options := []string{
+		"Create empty directory structure",
+		"Fetch from git repository",
+		"Cancel operation",
+	}
+
+	choice := ui.PromptOptions("Choose an option:", options)
+
+	switch choice {
+	case 0: // Create empty directory
+		ui.Info("Creating empty directory structure...")
+
+		// Clean up existing directory if it exists
+		if utils.DirExists(sm.mainPath) {
+			utils.Debug("Existing directory found | path=" + sm.mainPath)
+			ui.Warning("Directory already exists: %s", sm.mainPath)
+
+			if !ui.PromptYesNo("Remove existing directory and create empty structure?") {
+				ui.Info("Operation cancelled by user")
+				return false
+			}
+
+			utils.Debug("Removing existing directory | path=" + sm.mainPath)
+			if err := os.RemoveAll(sm.mainPath); err != nil {
+				utils.Error("Failed to remove existing directory | path=" + sm.mainPath + ", error=" + err.Error())
+				ui.Error("Failed to remove existing directory: %v", err)
+				return false
+			}
+		}
+
+		if err := os.MkdirAll(sm.mainPath, sm.config.DirPermission); err != nil {
+			utils.Error("Failed to create main directory | path=" + sm.mainPath + ", error=" + err.Error())
+			ui.Error("Failed to create main directory: %v", err)
+			return false
+		}
+		ui.Success("Created empty directory structure at %s", sm.mainPath)
+		return true
+
+	case 1: // Fetch from git repository
+		// Default repository URL
+		defaultGitRepo := "git@github.com:nsnarender5511/AgenticSystem.git"
+		gitURL := ui.PromptInputWithDefault("Enter git repository URL:", defaultGitRepo, ui.ValidateURL)
+
+		// Clean up existing directory if it exists
+		if utils.DirExists(sm.mainPath) {
+			utils.Debug("Existing directory found | path=" + sm.mainPath)
+			ui.Warning("Directory already exists: %s", sm.mainPath)
+
+			if !ui.PromptYesNo("Remove existing directory before cloning?") {
+				ui.Info("Operation cancelled by user")
+				return false
+			}
+
+			ui.Info("Removing existing directory before cloning...")
+			utils.Debug("Removing existing directory | path=" + sm.mainPath)
+			if err := os.RemoveAll(sm.mainPath); err != nil {
+				utils.Error("Failed to remove existing directory | path=" + sm.mainPath + ", error=" + err.Error())
+				ui.Error("Failed to remove existing directory: %v", err)
+				return false
+			}
+		}
+
+		// Verify if the repository exists
+		ui.Info("Verifying git repository...")
+		if !git.IsValidRepo(gitURL) {
+			ui.Error("Invalid git repository URL or repository not accessible")
+			return false
+		}
+
+		// Clone the repository
+		ui.Info("Cloning git repository to %s...", sm.mainPath)
+		if err := git.Clone(gitURL, sm.mainPath); err != nil {
+			git.CleanupOnFailure(sm.mainPath)
+			ui.Error("Failed to clone repository: %v", err)
+			return false
+		}
+		ui.Success("Repository cloned successfully")
+		return true
+
+	default: // Cancel
+		return false
+	}
 }
 
 // Merge copies current rules to main and syncs to all locations
