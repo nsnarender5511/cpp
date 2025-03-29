@@ -96,12 +96,12 @@ release:
 	@if [ ! -f .env ]; then \
 		echo "❌ Error: .env file not found!"; \
 		exit 1; \
-	fi
-	@echo "📄 Contents of .env file (with sensitive data masked):"; \
-	@cat .env | sed 's/\(GITHUB_TOKEN=\)[^ ]*/\1********/g'; \
-	@echo "🔍 Extracting token..."; \
-	@TOKEN=$$(grep -E "^\s*GITHUB_TOKEN=" .env | sed 's/^\s*GITHUB_TOKEN=//' | tr -d '\r\n '); \
-	@if [ -z "$$TOKEN" ]; then \
+	fi; \
+	echo "📄 Contents of .env file (with sensitive data masked):"; \
+	cat .env | sed 's/\(GITHUB_TOKEN=\)[^ ]*/\1********/g'; \
+	echo "🔍 Extracting token..."; \
+	TOKEN=$$(grep -E "^\s*GITHUB_TOKEN=" .env | sed 's/^\s*GITHUB_TOKEN=//' | tr -d '\r\n '); \
+	if [ -z "$$TOKEN" ]; then \
 		echo "❌ Error: Could not extract GITHUB_TOKEN from .env file"; \
 		echo "   Make sure the line in .env is formatted as GITHUB_TOKEN=your_token"; \
 		echo "   without spaces at the beginning or end of the line."; \
