@@ -585,13 +585,27 @@ func handleAgentSelect(registry *agent.Registry, config *utils.Config, appPaths 
 	utils.Info("Agent select completed successfully | selected_agent=" + selectedAgent.ID)
 }
 
-func handleAgentInfo(registry *agent.Registry, agentID string) {
-	utils.Debug("Handling agent info subcommand | agent_id=" + agentID)
+func handleAgentInfo(registry *agent.Registry, agentParam string) {
+	utils.Debug("Handling agent info subcommand | agent_param=" + agentParam)
 
-	// Get agent by ID
-	agentDef, exists := registry.GetAgent(agentID)
+	var agentDef *agent.AgentDefinition
+	var exists bool
+
+	// Check if the input is a numeric index
+	if index, err := strconv.Atoi(agentParam); err == nil && index > 0 {
+		// Get agent by numeric index
+		agents := registry.ListAgents()
+		if index <= len(agents) {
+			agentDef = agents[index-1] // Convert to 0-based index
+			exists = true
+		}
+	} else {
+		// Get agent by string ID
+		agentDef, exists = registry.GetAgent(agentParam)
+	}
+
 	if !exists {
-		ui.Error("Agent '%s' not found.", agentID)
+		ui.Error("Agent '%s' not found. Use a valid agent ID or number from the agent list.", agentParam)
 		os.Exit(ExitAgentError)
 	}
 
@@ -619,7 +633,7 @@ func handleAgentInfo(registry *agent.Registry, agentID string) {
 
 	ui.Plain("\nFile: %s", agentDef.DefinitionPath)
 
-	utils.Info("Agent info completed successfully | agent_id=" + agentID)
+	utils.Info("Agent info completed successfully | agent_param=" + agentParam + ", agent_id=" + agentDef.ID)
 }
 
 func printAgentUsage() {
@@ -634,5 +648,6 @@ func printAgentUsage() {
 	ui.Plain("  crules agent               # List all available agents")
 	ui.Plain("  crules agent select        # Interactively select an agent")
 	ui.Plain("  crules agent info wizard   # Show detailed info about the wizard agent")
+	ui.Plain("  crules agent info 1        # Show detailed info about the first agent in the list")
 	ui.Plain("\nYou can also reference agents in the chatbox using @ (example: @wizard.mdc)")
 }

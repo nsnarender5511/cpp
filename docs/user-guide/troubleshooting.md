@@ -172,6 +172,30 @@
    crules sync
    ```
 
+#### Agent Not Found When Using Numeric Index
+
+**Problem**: The `crules agent info <number>` command returns "Agent not found" even though the number is valid in the list.
+
+**Solutions**:
+
+1. **Rebuild the application**:
+   ```bash
+   # Ensure you have the latest version of the binary
+   make build
+   ```
+
+2. **Verify agent listing**:
+   ```bash
+   # Confirm the number corresponds to a valid agent
+   crules agent
+   ```
+
+3. **Use string ID instead**:
+   ```bash
+   # Reference the agent by its string ID rather than position number
+   crules agent info <agent-id>
+   ```
+
 #### Agent Selection Fails
 
 **Problem**: The `crules agent select` command fails.
