@@ -91,67 +91,43 @@ release:
 		echo "✅ Tag created successfully."; \
 	fi
 	
-	@# Run GoReleaser
-	@echo "🚀 Running GoReleaser..."
-	@# Debug token information
-	@if [ -f .env ] && [ -z "$$GITHUB_TOKEN" ]; then \
-		echo "ℹ️  Using GITHUB_TOKEN from .env file"; \
-		echo "📄 Contents of .env file (with sensitive data masked):"; \
-		cat .env | sed 's/\(GITHUB_TOKEN=\)[^ ]*/\1********/g'; \
-		echo "🔍 Extracting token..."; \
-		TOKEN=$$(grep -E "^\s*GITHUB_TOKEN=" .env | sed 's/^\s*GITHUB_TOKEN=//'); \
-		echo "🔄 Extracted token status: $${TOKEN:+found}$${TOKEN:-not found}"; \
-		if [ -z "$$TOKEN" ]; then \
-			echo "❌ Error: Could not extract GITHUB_TOKEN from .env file"; \
-			echo "   Make sure the line in .env is formatted as GITHUB_TOKEN=your_token"; \
-			echo "   without spaces at the beginning of the line."; \
-			exit 1; \
-		fi; \
-		TOKEN_LENGTH=$${#TOKEN}; \
-		if [ $$TOKEN_LENGTH -lt 30 ]; then \
-			echo "⚠️  Warning: Token looks suspiciously short ($$TOKEN_LENGTH chars)"; \
-		fi; \
-		echo "📝 Showing first 4 chars of token as a hint..."; \
-		TOKEN_PREFIX=$$(echo $$TOKEN | cut -c1-4); \
-		echo "🔑 Using token: $$TOKEN_PREFIX**** ($$TOKEN_LENGTH chars)"; \
-		echo "🔍 Testing GitHub API access..."; \
-		HTTP_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token $$TOKEN" https://api.github.com/user); \
-		if [ "$$HTTP_CODE" = "200" ]; then \
-			echo "✅ GitHub authentication successful"; \
-		else \
-			echo "⚠️  GitHub API returned HTTP $$HTTP_CODE - token may not have correct permissions"; \
-			echo "   Token needs 'repo' scope to create releases"; \
-		fi; \
-		if ! GITHUB_TOKEN="$$TOKEN" goreleaser release --clean; then \
-			echo "❌ Error: GoReleaser failed. Check the output above for details."; \
-			exit 1; \
-		fi; \
+	@# Use token from .env file or exit
+	@echo "🔑 Loading token EXCLUSIVELY from .env file..."
+	@if [ ! -f .env ]; then \
+		echo "❌ Error: .env file not found!"; \
+		exit 1; \
+	fi
+	@echo "📄 Contents of .env file (with sensitive data masked):"; \
+	@cat .env | sed 's/\(GITHUB_TOKEN=\)[^ ]*/\1********/g'; \
+	@echo "🔍 Extracting token..."; \
+	@TOKEN=$$(grep -E "^\s*GITHUB_TOKEN=" .env | sed 's/^\s*GITHUB_TOKEN=//' | tr -d '\r\n '); \
+	@if [ -z "$$TOKEN" ]; then \
+		echo "❌ Error: Could not extract GITHUB_TOKEN from .env file"; \
+		echo "   Make sure the line in .env is formatted as GITHUB_TOKEN=your_token"; \
+		echo "   without spaces at the beginning or end of the line."; \
+		exit 1; \
+	fi; \
+	echo "🔄 Token successfully extracted from .env"; \
+	TOKEN_LENGTH=$${#TOKEN}; \
+	if [ $$TOKEN_LENGTH -lt 30 ]; then \
+		echo "⚠️  Warning: Token looks suspiciously short ($$TOKEN_LENGTH chars)"; \
+	fi; \
+	echo "📝 Showing first 8 chars of token as a hint..."; \
+	TOKEN_PREFIX=$$(echo $$TOKEN | cut -c1-8); \
+	echo "🔑 Using token: $$TOKEN_PREFIX**** ($$TOKEN_LENGTH chars)"; \
+	echo "🔍 Testing GitHub API access..."; \
+	HTTP_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token $$TOKEN" https://api.github.com/user); \
+	if [ "$$HTTP_CODE" = "200" ]; then \
+		echo "✅ GitHub authentication successful"; \
 	else \
-		echo "ℹ️  Using GITHUB_TOKEN from environment"; \
-		if [ -n "$$GITHUB_TOKEN" ]; then \
-			TOKEN_LENGTH=$${#GITHUB_TOKEN}; \
-			if [ $$TOKEN_LENGTH -lt 30 ]; then \
-				echo "⚠️  Warning: Token looks suspiciously short ($$TOKEN_LENGTH chars)"; \
-			fi; \
-			echo "📝 Showing first 4 chars of token as a hint..."; \
-			TOKEN_PREFIX=$$(echo $$GITHUB_TOKEN | cut -c1-4); \
-			echo "🔑 Using token: $$TOKEN_PREFIX**** ($$TOKEN_LENGTH chars)"; \
-			echo "🔍 Testing GitHub API access..."; \
-			HTTP_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token $$GITHUB_TOKEN" https://api.github.com/user); \
-			if [ "$$HTTP_CODE" = "200" ]; then \
-				echo "✅ GitHub authentication successful"; \
-			else \
-				echo "⚠️  GitHub API returned HTTP $$HTTP_CODE - token may not have correct permissions"; \
-				echo "   Token needs 'repo' scope to create releases"; \
-			fi; \
-		else \
-			echo "❌ Error: GITHUB_TOKEN is empty"; \
-			exit 1; \
-		fi; \
-		if ! goreleaser release --clean; then \
-			echo "❌ Error: GoReleaser failed. Check the output above for details."; \
-			exit 1; \
-		fi; \
+		echo "⚠️  GitHub API returned HTTP $$HTTP_CODE - token may not have correct permissions"; \
+		echo "   Token needs 'repo' scope to create releases"; \
+		echo "   You can create a new token at: https://github.com/settings/tokens"; \
+	fi; \
+	echo "🚀 Running GoReleaser with token from .env file..."; \
+	if ! GITHUB_TOKEN="$$TOKEN" goreleaser release --clean; then \
+		echo "❌ Error: GoReleaser failed. Check the output above for details."; \
+		exit 1; \
 	fi; \
 	echo "✅ Release successful!"
 	
