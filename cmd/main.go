@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"strconv"
 	"strings"
 
 	"crules/internal/agent"
@@ -10,6 +12,9 @@ import (
 	"crules/internal/ui"
 	"crules/internal/utils"
 	"crules/internal/version"
+
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 // Exit codes
@@ -24,6 +29,33 @@ const (
 	ExitAgentError = 15
 	ExitSetupError = 20
 )
+
+// getTerminalWidth returns the width of the terminal in characters
+func getTerminalWidth() int {
+	// First check if COLUMNS environment variable is set (useful for testing)
+	if colEnv := os.Getenv("COLUMNS"); colEnv != "" {
+		if width, err := strconv.Atoi(colEnv); err == nil && width > 0 {
+			return width
+		}
+	}
+
+	// Try using the stty command to get terminal size
+	cmd := exec.Command("stty", "size")
+	cmd.Stdin = os.Stdin
+	out, err := cmd.Output()
+	if err == nil {
+		parts := strings.Split(strings.TrimSpace(string(out)), " ")
+		if len(parts) == 2 {
+			width, err := strconv.Atoi(parts[1])
+			if err == nil && width > 0 {
+				return width
+			}
+		}
+	}
+
+	// If everything fails, return a default width
+	return 80
+}
 
 func main() {
 	// Parse debug/verbose flags
@@ -216,7 +248,7 @@ func handleAgent(manager *core.SyncManager, appPaths utils.AppPaths) {
 	utils.Debug("Handling agent command")
 
 	// Get arguments for subcommands
-	subcommand := "select" // Default subcommand is select
+	subcommand := "" // Empty default means show list
 	if len(os.Args) > 2 {
 		subcommand = os.Args[2]
 	}
@@ -236,8 +268,9 @@ func handleAgent(manager *core.SyncManager, appPaths utils.AppPaths) {
 
 	// Handle subcommands
 	switch subcommand {
-	case "list":
-		handleAgentList(registry)
+	case "":
+		// Default behavior: show agent list
+		displayAgentList(registry)
 	case "select":
 		handleAgentSelect(registry, config, appPaths)
 	case "info":
@@ -255,8 +288,9 @@ func handleAgent(manager *core.SyncManager, appPaths utils.AppPaths) {
 	utils.Info("Agent command completed successfully | subcommand=" + subcommand)
 }
 
-func handleAgentList(registry *agent.Registry) {
-	utils.Debug("Handling agent list subcommand")
+// displayAgentList displays all available agents
+func displayAgentList(registry *agent.Registry) {
+	utils.Debug("Displaying agent list")
 
 	agents := registry.ListAgents()
 	count := len(agents)
@@ -269,28 +303,224 @@ func handleAgentList(registry *agent.Registry) {
 
 	ui.Header("Available agents (%d):", count)
 
-	// Format in two columns if there are many agents
-	if count > 6 {
-		// Display in two columns
-		for i := 0; i < count; i += 2 {
-			if i+1 < count {
-				// Two agents on this row
-				ui.Plain("  %2d. %-35s  %2d. %s",
-					i+1, agents[i].Name,
-					i+2, agents[i+1].Name)
-			} else {
-				// Last agent (odd count)
-				ui.Plain("  %2d. %s", i+1, agents[i].Name)
+	// Get terminal width for responsive display
+	termWidth := getTerminalWidth()
+	utils.Debug(fmt.Sprintf("Terminal width detected: %d", termWidth))
+
+	// For very narrow terminals, use a compact vertical list
+	if termWidth < 50 {
+		displayCompactAgentList(agents)
+	} else {
+		// Use the table display for wider terminals
+		displayAgentTable(agents, termWidth)
+	}
+
+	ui.Plain("\nTip: You can reference agents in the chatbox using the @ syntax shown above")
+	ui.Plain("For more details about any agent, use: crules agent info <agent-id>")
+
+	utils.Info("Agent list completed successfully | agent_count=" + fmt.Sprintf("%d", count))
+}
+
+// displayCompactAgentList renders agents as a simple vertical list for very narrow terminals
+func displayCompactAgentList(agents []*agent.AgentDefinition) {
+	for i, agent := range agents {
+		// Clean up the name if available
+		name := cleanAgentName(agent.Name)
+
+		// Display agent number and name
+		ui.Plain("%s %s",
+			ui.SuccessStyle.Sprintf("%d.", i+1),
+			ui.InfoStyle.Sprint(name))
+
+		// Display reference on the next line with indentation
+		ui.Plain("   %s", fmt.Sprintf("@%s.mdc", agent.ID))
+
+		// Add a separator line between agents (except after the last one)
+		if i < len(agents)-1 {
+			ui.Plain("   ─────────────────")
+		}
+	}
+}
+
+// displayAgentTable renders agent list as a formatted table
+func displayAgentTable(agents []*agent.AgentDefinition, termWidth int) {
+	// Create a new table writer
+	t := table.NewWriter()
+	// Don't use SetOutputMirror since we'll be manually printing the output
+
+	// Start with a light style
+	customStyle := table.StyleLight
+
+	// Enable row separation
+	customStyle.Options.SeparateRows = true
+
+	// Setup colors - no alternating row colors
+	customStyle.Color.Header = text.Colors{text.Bold}
+	customStyle.Color.Row = text.Colors{}
+	customStyle.Color.RowAlternate = nil
+
+	// Apply the style
+	t.SetStyle(customStyle)
+
+	// Configure table based on terminal width
+	if termWidth < 80 {
+		// For medium width terminals
+		headers := table.Row{
+			ui.HeaderStyle.Sprint("No."),
+			ui.HeaderStyle.Sprint("Name"),
+			ui.HeaderStyle.Sprint("Reference"),
+		}
+		t.AppendHeader(headers)
+
+		for i, agent := range agents {
+			// Clean up the name by removing redundant words
+			name := cleanAgentName(agent.Name)
+
+			// Truncate name if needed
+			if len(name) > 25 {
+				name = name[:22] + "..."
 			}
+
+			t.AppendRow(table.Row{
+				ui.SuccessStyle.Sprintf("%d", i+1),
+				ui.InfoStyle.Sprint(name),
+				fmt.Sprintf("@%s.mdc", agent.ID),
+			})
 		}
 	} else {
-		// Display in a single column for fewer agents
-		for i, agentDef := range agents {
-			ui.Plain("  %2d. %s", i+1, agentDef.Name)
+		// For wide terminals, show more details
+		headers := table.Row{
+			ui.HeaderStyle.Sprint("No."),
+			ui.HeaderStyle.Sprint("Name"),
+			ui.HeaderStyle.Sprint("Reference ID"),
+			ui.HeaderStyle.Sprint("Version"),
+		}
+		t.AppendHeader(headers)
+
+		for i, agent := range agents {
+			// Clean up the name by removing redundant words
+			name := cleanAgentName(agent.Name)
+
+			t.AppendRow(table.Row{
+				ui.SuccessStyle.Sprintf("%d", i+1),
+				ui.InfoStyle.Sprint(name),
+				fmt.Sprintf("@%s.mdc", agent.ID),
+				ui.WarnStyle.Sprint(agent.Version),
+			})
 		}
 	}
 
-	utils.Info("Agent list completed successfully | agent_count=" + fmt.Sprintf("%d", count))
+	// Custom render to stdout
+	tableString := t.Render()
+
+	// Replace the first separator line with a double line separator
+	lines := strings.Split(tableString, "\n")
+
+	for i, line := range lines {
+		// Find the first separator line (should be after the header)
+		if i > 0 && strings.Contains(line, "├") {
+			// Replace with double line characters
+			line = strings.ReplaceAll(line, "├", "╞")
+			line = strings.ReplaceAll(line, "┤", "╡")
+			line = strings.ReplaceAll(line, "┼", "╪")
+			line = strings.ReplaceAll(line, "─", "═")
+			lines[i] = line
+			break
+		}
+	}
+
+	// Print the modified table
+	fmt.Println(strings.Join(lines, "\n"))
+}
+
+// cleanAgentName removes redundant words from agent names
+func cleanAgentName(name string) string {
+	// Remove common redundant words
+	name = strings.ReplaceAll(name, "Agent Prompt", "")
+	name = strings.ReplaceAll(name, "Prompt", "")
+	name = strings.ReplaceAll(name, "Agent", "")
+
+	// Trim spaces and handle multiple spaces
+	name = strings.TrimSpace(name)
+	name = strings.Join(strings.Fields(name), " ")
+
+	return name
+}
+
+// displayAgentContent displays agent content with proper formatting
+// If paginated is true, the content will be displayed with pagination
+func displayAgentContent(agentDef *agent.AgentDefinition, paginated bool) {
+	// Get content from file if not loaded yet
+	content := agentDef.Content
+	if content == "" {
+		contentBytes, err := os.ReadFile(agentDef.DefinitionPath)
+		if err == nil {
+			content = string(contentBytes)
+		} else {
+			content = "Error loading content: " + err.Error()
+		}
+	}
+
+	// Split into lines
+	lines := strings.Split(content, "\n")
+
+	// Display with formatting
+	if paginated {
+		// Calculate page size based on terminal height (assuming ~30 lines)
+		pageSize := 20
+		currentLine := 0
+		pageNum := 1
+
+		for currentLine < len(lines) {
+			endLine := currentLine + pageSize
+			if endLine > len(lines) {
+				endLine = len(lines)
+			}
+
+			for i := currentLine; i < endLine; i++ {
+				formatAndDisplayLine(lines[i])
+			}
+
+			currentLine = endLine
+			pageNum++
+
+			// If there are more pages, prompt to continue
+			if currentLine < len(lines) {
+				ui.Plain("")
+				ui.Prompt("Press Enter to continue, or q to quit: ")
+				var key string
+				_, err := fmt.Scanln(&key)
+				if err == nil && (key == "q" || key == "Q") {
+					break
+				}
+			}
+		}
+	} else {
+		// Display all content without pagination
+		ui.Plain("")
+		for _, line := range lines {
+			formatAndDisplayLine(line)
+		}
+	}
+}
+
+// formatAndDisplayLine formats and displays a single line of agent content
+func formatAndDisplayLine(line string) {
+	if strings.TrimSpace(line) == "" {
+		ui.Plain("") // Empty line
+	} else if strings.HasPrefix(strings.TrimSpace(line), "#") {
+		// Header line - show without indentation
+		ui.Header("%s", strings.TrimSpace(line))
+	} else if strings.HasPrefix(strings.TrimSpace(line), "##") {
+		// Subheader - show with special format
+		ui.Plain("\n%s", ui.InfoStyle.Sprint(strings.TrimSpace(line)))
+	} else if strings.HasPrefix(strings.TrimSpace(line), "-") || strings.HasPrefix(strings.TrimSpace(line), "*") {
+		// List item
+		ui.Plain("  %s", strings.TrimSpace(line))
+	} else {
+		// Regular line
+		ui.Plain("  %s", line)
+	}
 }
 
 func handleAgentSelect(registry *agent.Registry, config *utils.Config, appPaths utils.AppPaths) {
@@ -328,75 +558,9 @@ func handleAgentSelect(registry *agent.Registry, config *utils.Config, appPaths 
 
 	if err == nil && (input == "y" || input == "Y") {
 		// Show the full agent definition with pagination
-		content := selectedAgent.Content
-		if content == "" {
-			// If content not loaded, load it now
-			contentBytes, err := os.ReadFile(selectedAgent.DefinitionPath)
-			if err == nil {
-				content = string(contentBytes)
-			} else {
-				content = "Error loading content: " + err.Error()
-			}
-		}
-
-		// Split into lines and show with pagination
-		lines := strings.Split(content, "\n")
-
-		// Display with formatting
 		ui.Header("\nAgent Definition:")
 		ui.Plain("")
-
-		// Calculate page size based on terminal height (assuming ~30 lines)
-		pageSize := 20
-		currentLine := 0
-		pageNum := 1
-		totalPages := (len(lines) + pageSize - 1) / pageSize
-
-		for currentLine < len(lines) {
-			// Show page header for multi-page content
-			if totalPages > 1 {
-				ui.Plain(ui.InfoStyle.Sprintf("--- Page %d of %d ---", pageNum, totalPages))
-			}
-
-			// Show current page of content
-			endLine := currentLine + pageSize
-			if endLine > len(lines) {
-				endLine = len(lines)
-			}
-
-			for i := currentLine; i < endLine; i++ {
-				line := lines[i]
-				if strings.TrimSpace(line) == "" {
-					ui.Plain("") // Empty line
-				} else if strings.HasPrefix(strings.TrimSpace(line), "#") {
-					// Header line - show without indentation
-					ui.Header("%s", strings.TrimSpace(line))
-				} else if strings.HasPrefix(strings.TrimSpace(line), "##") {
-					// Subheader - show with special format
-					ui.Plain("\n%s", ui.InfoStyle.Sprint(strings.TrimSpace(line)))
-				} else if strings.HasPrefix(strings.TrimSpace(line), "-") || strings.HasPrefix(strings.TrimSpace(line), "*") {
-					// List item
-					ui.Plain("  %s", strings.TrimSpace(line))
-				} else {
-					// Regular line
-					ui.Plain("  %s", line)
-				}
-			}
-
-			currentLine = endLine
-			pageNum++
-
-			// If there are more pages, prompt to continue
-			if currentLine < len(lines) {
-				ui.Plain("")
-				ui.Prompt("Press Enter to continue, or q to quit: ")
-				var key string
-				_, err := fmt.Scanln(&key)
-				if err == nil && (key == "q" || key == "Q") {
-					break
-				}
-			}
-		}
+		displayAgentContent(selectedAgent, true) // Display with pagination
 	} else {
 		// Just show a brief overview
 		ui.Plain("\nAgent overview:")
@@ -441,39 +605,7 @@ func handleAgentInfo(registry *agent.Registry, agentID string) {
 	// Display full description with proper line wrapping
 	ui.Plain("Description:")
 	if agentDef.Description != "" {
-		// Get content from file if not loaded yet
-		content := agentDef.Content
-		if content == "" {
-			contentBytes, err := os.ReadFile(agentDef.DefinitionPath)
-			if err == nil {
-				content = string(contentBytes)
-			} else {
-				content = "Error loading content: " + err.Error()
-			}
-		}
-
-		// Display full content with pagination
-		lines := strings.Split(content, "\n")
-
-		// Display with indentation
-		ui.Plain("")
-		for _, line := range lines {
-			if strings.TrimSpace(line) == "" {
-				ui.Plain("") // Empty line
-			} else if strings.HasPrefix(strings.TrimSpace(line), "#") {
-				// Header line - show without indentation
-				ui.Header("%s", strings.TrimSpace(line))
-			} else if strings.HasPrefix(strings.TrimSpace(line), "##") {
-				// Subheader - show with special format
-				ui.Plain("\n%s", ui.InfoStyle.Sprint(strings.TrimSpace(line)))
-			} else if strings.HasPrefix(strings.TrimSpace(line), "-") || strings.HasPrefix(strings.TrimSpace(line), "*") {
-				// List item
-				ui.Plain("  %s", strings.TrimSpace(line))
-			} else {
-				// Regular line
-				ui.Plain("  %s", line)
-			}
-		}
+		displayAgentContent(agentDef, false) // Display without pagination
 	} else {
 		ui.Plain("  No description available.")
 	}
@@ -491,10 +623,16 @@ func handleAgentInfo(registry *agent.Registry, agentID string) {
 }
 
 func printAgentUsage() {
-	ui.Header("Usage: crules agent <subcommand>")
+	ui.Header("Usage: crules agent [subcommand]")
 
 	ui.Plain("\nSubcommands:")
-	ui.Plain("  select      Interactively select an agent (default)")
-	ui.Plain("  list        List all available agents")
-	ui.Plain("  info <id>   Display detailed information about a specific agent")
+	ui.Plain("  <none>       List all available agents (default)")
+	ui.Plain("  select       Interactively select an agent")
+	ui.Plain("  info <id>    Display detailed information about a specific agent")
+
+	ui.Plain("\nExample usage:")
+	ui.Plain("  crules agent               # List all available agents")
+	ui.Plain("  crules agent select        # Interactively select an agent")
+	ui.Plain("  crules agent info wizard   # Show detailed info about the wizard agent")
+	ui.Plain("\nYou can also reference agents in the chatbox using @ (example: @wizard.mdc)")
 }
