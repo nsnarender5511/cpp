@@ -58,11 +58,32 @@ release-github:
 	@echo "🔍 Checking if tag exists on remote..."
 	@if git ls-remote --tags origin refs/tags/$(TAG) | grep -q ""; then \
 		echo "⚠️  Warning: Tag $(TAG) already exists on remote."; \
-		read -p "Delete remote tag? [y/N] " answer; \
+		read -p "Delete remote tag and release? [y/N] " answer; \
 		if [ "$$answer" = "y" ] || [ "$$answer" = "Y" ]; then \
 			echo "🔄 Deleting remote tag $(TAG)..."; \
 			git push --delete origin $(TAG) || { echo "❌ Failed to delete remote tag"; exit 1; }; \
 			echo "✅ Remote tag deleted successfully."; \
+			echo "🔄 Attempting to delete GitHub release..."; \
+			GITHUB_REPO=$$(git remote get-url origin | sed 's/.*github.com[:/]\(.*\).git/\1/'); \
+			if [ -n "$$GITHUB_TOKEN" ]; then \
+				echo "🔍 Checking for existing GitHub release..."; \
+				RELEASE_ID=$$(curl -s -H "Authorization: token $$GITHUB_TOKEN" \
+					"https://api.github.com/repos/$$GITHUB_REPO/releases/tags/$(TAG)" | \
+					grep -o '"id": [0-9]*' | head -1 | grep -o '[0-9]*'); \
+				if [ -n "$$RELEASE_ID" ]; then \
+					echo "🗑️  Deleting GitHub release ID: $$RELEASE_ID"; \
+					DELETE_RESULT=$$(curl -s -X DELETE -H "Authorization: token $$GITHUB_TOKEN" \
+						"https://api.github.com/repos/$$GITHUB_REPO/releases/$$RELEASE_ID"); \
+					echo "✅ GitHub release deleted successfully."; \
+				else \
+					echo "ℹ️  No existing GitHub release found for tag $(TAG)."; \
+				fi; \
+			else \
+				echo "⚠️  No GITHUB_TOKEN found in environment"; \
+				echo "⚠️  Cannot delete GitHub release automatically."; \
+				echo "⚠️  Please delete any existing release for tag $(TAG) manually on GitHub."; \
+				echo "⚠️  Visit: https://github.com/$$GITHUB_REPO/releases"; \
+			fi; \
 		else \
 			echo "❌ Cannot proceed with existing remote tag. Please choose a different tag."; \
 			exit 1; \

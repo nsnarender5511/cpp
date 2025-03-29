@@ -23,6 +23,15 @@ archives:
       - README.md
       - LICENSE
 
+release:
+  github:
+    owner: nsnarender5511
+    name: crules
+  draft: false
+  prerelease: auto
+  mode: replace  # Replaces existing releases
+  name_template: "v{{.Version}}"
+
 brews:
   - repository:
       owner: nsnarender5511
