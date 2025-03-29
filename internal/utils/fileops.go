@@ -33,11 +33,20 @@ func ConfirmOverwrite(dirName string) bool {
 	return result
 }
 
-// CopyDir copies a directory recursively
+// CopyDir copies a directory recursively, filtering to only copy .mdc files
 func CopyDir(src, dst string) error {
 	Debug("Copying directory | source=" + src + ", destination=" + dst)
 
 	config := LoadConfig()
+
+	// Define directories to skip
+	dirsToSkip := map[string]bool{
+		".git":         true,
+		".cursor":      true,
+		".github":      true,
+		".vscode":      true,
+		"node_modules": true,
+	}
 
 	// Create destination directory
 	if err := os.MkdirAll(dst, config.DirPermission); err != nil {
@@ -63,14 +72,25 @@ func CopyDir(src, dst string) error {
 		}
 
 		if fileInfo.IsDir() {
+			// Skip directories that should be excluded
+			if dirsToSkip[entry.Name()] {
+				Debug("Skipping excluded directory | path=" + sourcePath)
+				continue
+			}
+
 			Debug("Copying subdirectory | source=" + sourcePath + ", destination=" + destPath)
 			if err := CopyDir(sourcePath, destPath); err != nil {
 				return err
 			}
 		} else {
-			Debug("Copying file | source=" + sourcePath + ", destination=" + destPath)
-			if err := CopyFile(sourcePath, destPath); err != nil {
-				return err
+			// Only copy .mdc files
+			if filepath.Ext(entry.Name()) == ".mdc" {
+				Debug("Copying .mdc file | source=" + sourcePath + ", destination=" + destPath)
+				if err := CopyFile(sourcePath, destPath); err != nil {
+					return err
+				}
+			} else {
+				Debug("Skipping non-mdc file | path=" + sourcePath)
 			}
 		}
 	}
