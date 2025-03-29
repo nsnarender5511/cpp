@@ -82,6 +82,35 @@ func (r *Registry) GetProjects() []string {
 	return r.Projects
 }
 
+// CleanProjects removes projects that no longer exist
+func (r *Registry) CleanProjects() (int, error) {
+	utils.Debug("Cleaning registry of non-existent projects")
+
+	originalCount := len(r.Projects)
+	validProjects := make([]string, 0, originalCount)
+
+	for _, project := range r.Projects {
+		if utils.DirExists(project) {
+			validProjects = append(validProjects, project)
+		} else {
+			utils.Debug("Removing non-existent project | project=" + project)
+		}
+	}
+
+	r.Projects = validProjects
+	removedCount := originalCount - len(validProjects)
+
+	if removedCount > 0 {
+		if err := r.save(); err != nil {
+			utils.Error("Failed to save registry after cleaning | error=" + err.Error())
+			return 0, err
+		}
+	}
+
+	utils.Info("Registry cleaned | removed=" + fmt.Sprintf("%d", removedCount))
+	return removedCount, nil
+}
+
 // save writes registry to disk
 func (r *Registry) save() error {
 	utils.Debug("Saving registry | path=" + r.path)

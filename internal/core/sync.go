@@ -39,6 +39,7 @@ func NewSyncManager() (*SyncManager, error) {
 	// Ensure required directories exist
 	if err := utils.EnsureDirExists(appPaths.ConfigDir, config.DirPermission); err != nil {
 		utils.Error("Cannot create config directory | path=" + appPaths.ConfigDir + ", error=" + err.Error())
+		return nil, fmt.Errorf("cannot create config directory: %v", err)
 	}
 
 	if err := utils.EnsureDirExists(appPaths.DataDir, config.DirPermission); err != nil {
@@ -48,6 +49,7 @@ func NewSyncManager() (*SyncManager, error) {
 
 	if err := utils.EnsureDirExists(appPaths.LogDir, config.DirPermission); err != nil {
 		utils.Error("Cannot create log directory | path=" + appPaths.LogDir + ", error=" + err.Error())
+		return nil, fmt.Errorf("cannot create log directory: %v", err)
 	}
 
 	utils.Debug("Using main rules path | path=" + mainPath)
@@ -169,6 +171,14 @@ func (sm *SyncManager) syncToAll() error {
 	failed := 0
 
 	for _, project := range projects {
+		// Check if project directory exists
+		if !utils.DirExists(project) {
+			utils.Warn("Project directory does not exist | project=" + project)
+			fmt.Printf("Warning: skipping non-existent project: %s\n", project)
+			failed++
+			continue
+		}
+
 		targetPath := filepath.Join(project, sm.config.RulesDirName)
 		utils.Debug("Syncing to project | project=" + project + ", target=" + targetPath)
 
@@ -188,4 +198,9 @@ func (sm *SyncManager) syncToAll() error {
 // GetRegistry returns the registry instance
 func (sm *SyncManager) GetRegistry() *Registry {
 	return sm.registry
+}
+
+// Clean removes non-existent projects from registry
+func (sm *SyncManager) Clean() (int, error) {
+	return sm.registry.CleanProjects()
 }

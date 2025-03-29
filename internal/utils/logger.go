@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 
@@ -11,6 +10,22 @@ import (
 
 // Logger instance used throughout the application
 var log *logrus.Logger
+
+// Console output control flags
+var (
+	debugConsole bool
+	verbose      bool
+)
+
+// SetDebugConsole controls debug message console output
+func SetDebugConsole(enabled bool) {
+	debugConsole = enabled
+}
+
+// SetVerbose controls info message console output
+func SetVerbose(enabled bool) {
+	verbose = enabled
+}
 
 // InitLogger initializes the logging system
 func InitLogger(appPaths AppPaths) {
@@ -40,9 +55,8 @@ func InitLogger(appPaths AppPaths) {
 		// Set up file for logging
 		file, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 		if err == nil {
-			// Create multi-writer to log to both file and stdout
-			mw := io.MultiWriter(os.Stdout, file)
-			log.SetOutput(mw)
+			// Only log to file, not to stdout
+			log.SetOutput(file)
 		}
 	}
 
@@ -56,49 +70,68 @@ func InitLogger(appPaths AppPaths) {
 // Debug logs a debug message
 func Debug(msg string) {
 	log.Debug(msg)
+
+	if debugConsole {
+		fmt.Println("[DEBUG]", msg)
+	}
 }
 
 // Info logs an informational message
 func Info(msg string) {
 	log.Info(msg)
+
+	if verbose {
+		fmt.Println("[INFO]", msg)
+	}
 }
 
 // Warn logs a warning message
 func Warn(msg string) {
 	log.Warn(msg)
+
+	// Always show warnings on console
+	fmt.Println("[WARN]", msg)
 }
 
 // Error logs an error message
 func Error(msg string) {
 	log.Error(msg)
+
+	// Always show errors on console
+	fmt.Println("[ERROR]", msg)
 }
 
 // Fatal logs a fatal message and exits
 func Fatal(msg string) {
-	log.Fatal(msg)
+	log.Fatal(msg) // This will call os.Exit(1)
 }
 
 // Debugf logs a formatted debug message
 func Debugf(format string, args ...interface{}) {
-	log.Debug(fmt.Sprintf(format, args...))
+	formatted := fmt.Sprintf(format, args...)
+	Debug(formatted)
 }
 
 // Infof logs a formatted informational message
 func Infof(format string, args ...interface{}) {
-	log.Info(fmt.Sprintf(format, args...))
+	formatted := fmt.Sprintf(format, args...)
+	Info(formatted)
 }
 
 // Warnf logs a formatted warning message
 func Warnf(format string, args ...interface{}) {
-	log.Warn(fmt.Sprintf(format, args...))
+	formatted := fmt.Sprintf(format, args...)
+	Warn(formatted)
 }
 
 // Errorf logs a formatted error message
 func Errorf(format string, args ...interface{}) {
-	log.Error(fmt.Sprintf(format, args...))
+	formatted := fmt.Sprintf(format, args...)
+	Error(formatted)
 }
 
 // Fatalf logs a formatted fatal message and exits
 func Fatalf(format string, args ...interface{}) {
-	log.Fatal(fmt.Sprintf(format, args...))
+	formatted := fmt.Sprintf(format, args...)
+	Fatal(formatted)
 }
