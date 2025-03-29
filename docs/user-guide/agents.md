@@ -19,22 +19,76 @@ Agents are defined in Markdown (`.mdc`) files that contain both the agent's meta
 
 You can interact with agents using the following commands:
 
-- `crules agent list` - Display all available agents in a concise list
+- `crules agent` - Display all available agents (default behavior)
 - `crules agent info <id>` - Show detailed information about a specific agent
 - `crules agent select` - Interactively select and load an agent
 
-### Agent List
+You can also reference agents directly in the chatbox using the `@` symbol (e.g., `@wizard.mdc`).
 
-The `list` command displays all available agents in a concise format:
+## Listing Available Agents
+
+To see all available agents, use:
+
+```bash
+crules agent
+```
+
+This will display a formatted table of all agents with their information. The table adapts to your terminal width to provide the optimal display format:
+
+### Display Examples
+
+**Wide Terminal Display:**
+```
++-----+---------------------+--------------------+----------+
+| No. | Agent Name          | Reference ID       | Version  |
++-----+---------------------+--------------------+----------+
+| 1   | Feature Planner     | @feature-planner.mdc | 1.0    |
+| 2   | Fix Planner         | @fix-planner.mdc     | 1.0    |
+| 3   | Runner              | @runner.mdc          | 1.0    |
+| 4   | Technical Wizard    | @wizard.mdc          | 1.0    |
+| ... | ...                 | ...                  | ...    |
++-----+---------------------+--------------------+----------+
+```
+
+**Medium Terminal Display:**
+```
++-----+----------------+--------------------+
+| No. | Name           | Reference          |
++-----+----------------+--------------------+
+| 1   | Feature Planner| @feature-planner.mdc |
+| 2   | Fix Planner    | @fix-planner.mdc     |
+| 3   | Runner         | @runner.mdc          |
+| ... | ...            | ...                  |
++-----+----------------+--------------------+
+```
+
+**Narrow Terminal Display:**
+```
++-----+------------------+
+| No. | Agent            |
++-----+------------------+
+| 1   | feature-planner  |
+| 2   | fix-planner      |
+| 3   | runner           |
+| ... | ...              |
++-----+------------------+
+```
+
+The table format ensures proper alignment and clarity regardless of your terminal size, making agent information easy to read and reference.
+
+### Agent @ References
+
+The quickest way to invoke a specific agent is by using the `@` reference in the chatbox. Simply type `@` followed by the agent ID to invoke that agent:
 
 ```
-$ crules agent list
-
-Available agents (6):
-   1. 🧙‍♂️ Technical Wizard Agent          2. ✨ Feature Planner Agent
-   3. 🔍 Fix Planner Agent               4. 🛠️ Implementer Agent
-   5. 🏃 Runner Agent                    6. 📚 Documentation Agent
+@wizard.mdc I need help designing a new API endpoint
 ```
+
+```
+@quick-answer-agent.mdc What does the HTTP 418 status code mean?
+```
+
+This method allows you to quickly switch between different agent specializations without running additional commands.
 
 ### Agent Info
 

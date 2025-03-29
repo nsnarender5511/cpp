@@ -89,54 +89,50 @@ This command will:
 
 The agent commands provide interactive access to the Agent System, allowing you to discover and use specialized AI agents for different tasks.
 
-### `agent list`
+The `agent` command displays information about available agents and allows you to interact with them.
 
-Displays all available agents in a concise list format.
-
-```bash
-crules agent list
+```
+crules agent [subcommand]
 ```
 
-Output example:
+#### Subcommands:
+
+- **`agent`** - Lists all available agents in a clean tabular format. The display adapts based on your terminal width to show an optimal amount of information.
+- **`agent select`** - Interactively select an agent from the list.
+- **`agent info <agent-id>`** - Show detailed information about a specific agent.
+
+#### Examples:
+
+**List all available agents:**
 ```
-Available agents (6):
-   1. 🧙‍♂️ Technical Wizard Agent          2. ✨ Feature Planner Agent
-   3. 🔍 Fix Planner Agent               4. 🛠️ Implementer Agent
-   5. 🏃 Runner Agent                    6. 📚 Documentation Agent
-```
-
-### `agent info <id>`
-
-Shows detailed information about a specific agent, including its capabilities and full definition.
-
-```bash
-crules agent info <agent-id>
+crules agent
 ```
 
-Example:
-```bash
+This will display a formatted table of all available agents with their reference IDs. The table will adapt to your terminal width:
+
+- In narrow terminals: A simplified table with just agent numbers and IDs
+- In medium terminals: A table with agent numbers, names, and reference syntax
+- In wide terminals: A comprehensive table including version information
+
+**Get detailed information about a specific agent:**
+```
 crules agent info wizard
 ```
 
-This command displays:
-- Basic metadata (ID, name, version)
-- Full agent description with formatted markdown
-- Agent capabilities
-- File location
-
-### `agent select`
-
-Interactively select and load an agent through a terminal-based menu interface.
-
-```bash
+**Interactively select an agent:**
+```
 crules agent select
 ```
 
-This command will:
-1. Display a list of all available agents
-2. Allow you to select an agent by entering its number
-3. Load the selected agent and display its details
-4. Give you the option to view the full agent definition
+## Using Agents in Chat
+
+You can directly reference agents in the chatbox using the `@` symbol followed by the agent ID. For example:
+
+- `@wizard.mdc` - Invokes the Technical Wizard agent
+- `@refactoring-guru.mdc` - Invokes the Refactoring Guru agent
+- `@quick-answer-agent.mdc` - Invokes the Quick Answer Agent
+
+This approach allows you to quickly switch between specialized agents without running additional commands.
 
 ## Command Output
 
