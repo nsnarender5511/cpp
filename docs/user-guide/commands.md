@@ -100,6 +100,7 @@ crules agent [subcommand]
 - **`agent`** - Lists all available agents in a clean tabular format. The display adapts based on your terminal width to show an optimal amount of information.
 - **`agent select`** - Interactively select an agent from the list.
 - **`agent info <agent-id>`** - Show detailed information about a specific agent.
+  - You can use either the agent's string ID (e.g., `wizard`) or its position number from the list (e.g., `1`).
 
 #### Examples:
 
@@ -114,9 +115,14 @@ This will display a formatted table of all available agents with their reference
 - In medium terminals: A table with agent numbers, names, and reference syntax
 - In wide terminals: A comprehensive table including version information
 
-**Get detailed information about a specific agent:**
+**Get detailed information about a specific agent by string ID:**
 ```
 crules agent info wizard
+```
+
+**Get detailed information about a specific agent by position number:**
+```
+crules agent info 1
 ```
 
 **Interactively select an agent:**

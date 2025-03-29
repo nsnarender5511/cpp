@@ -76,9 +76,38 @@ This will display a formatted table of all agents with their information. The ta
 
 The table format ensures proper alignment and clarity regardless of your terminal size, making agent information easy to read and reference.
 
+## Referencing Agents
+
+There are multiple ways to reference agents in crules, providing flexibility based on your preference and needs.
+
+### Referencing by String ID
+
+You can reference agents by their unique string ID, which is derived from the filename without the `.mdc` extension:
+
+```bash
+crules agent info wizard
+```
+
+This method is stable across sessions and reorderings of the agent list.
+
+### Referencing by Numeric Index
+
+You can also reference agents by their position number shown in the agent list:
+
+```bash
+crules agent info 1  # References the first agent in the list
+```
+
+This method is convenient for quick access when you can see the number in the list but might not remember the exact ID.
+
+Benefits of numeric index referencing:
+- Shorter to type
+- Easier for sequential exploration of agents
+- Direct visual correspondence with the displayed list
+
 ### Agent @ References
 
-The quickest way to invoke a specific agent is by using the `@` reference in the chatbox. Simply type `@` followed by the agent ID to invoke that agent:
+The quickest way to invoke a specific agent in the chatbox is by using the `@` reference. Simply type `@` followed by the agent ID to invoke that agent:
 
 ```
 @wizard.mdc I need help designing a new API endpoint
@@ -112,6 +141,19 @@ Capabilities:
   - Clean Code Advisory
 
 File: /Users/username/Library/Application Support/crules/.cursor/rules/wizard.mdc
+```
+
+Or using the numeric index:
+
+```
+$ crules agent info 6  # Assuming 6 is the position number for the wizard agent
+
+Agent details:
+  ID:          wizard
+  Name:        🧙‍♂️ Technical Wizard Agent
+  Version:     1.0
+  
+  ...
 ```
 
 ### Agent Selection
