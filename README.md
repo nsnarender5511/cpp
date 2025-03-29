@@ -139,7 +139,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Release Process
 
-To create a new release:
+There are two ways to create a new release:
+
+#### 1. Local Release (using GoReleaser locally)
 
 1. Create a `.env` file based on `.env.example` with your GitHub token:
    ```
@@ -151,17 +153,26 @@ To create a new release:
    make release TAG=v0.0.1
    ```
 
-The release command:
-- Ensures your git workspace is clean
-- Updates `.gitignore` if needed
-- Runs tests to verify everything works
-- Creates and pushes a new git tag
-- Builds binaries for all supported platforms
-- Creates a GitHub release
-- Updates the Homebrew formula
+#### 2. GitHub Actions Release (recommended)
 
-You can also set the `GITHUB_TOKEN` in your environment instead of using a `.env` file:
-```bash
-export GITHUB_TOKEN=your_github_token
-make release TAG=v0.0.1
-``` 
+This method leverages GitHub Actions to handle the release process:
+
+1. Ensure all your changes are committed and pushed
+2. Run:
+   ```bash
+   make release-github TAG=v0.0.1
+   ```
+
+This will:
+- Verify your working directory is clean
+- Create and push a git tag
+- Automatically trigger the GitHub Actions workflow
+- Build and publish the release using GitHub's infrastructure
+
+The GitHub Actions workflow will:
+- Build binaries for all supported platforms
+- Create a GitHub release
+- Update the Homebrew formula
+- Update the Scoop manifest
+
+You can monitor the progress at GitHub Actions tab in your repository. 
