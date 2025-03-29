@@ -7,6 +7,9 @@ This document describes the process for creating a new release of crules.
 1. [GoReleaser](https://goreleaser.com/install/) installed locally
 2. Git access to the repository with push permissions
 3. GitHub personal access token with `repo` scope (for GoReleaser)
+4. Create these repository dependencies:
+   - https://github.com/nsnarender5511/homebrew-tap (for Homebrew formulas)
+   - https://github.com/nsnarender5511/scoop-bucket (for Scoop manifests)
 
 ## Release Steps
 

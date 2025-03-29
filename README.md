@@ -1,164 +1,108 @@
 # crules
 
-A tool for managing and synchronizing Cursor rules across multiple projects.
+> 🧩 A powerful tool for managing AI agent rules across multiple projects
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/yourusername/crules)](https://goreportcard.com/report/github.com/yourusername/crules)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+## Overview
+
+crules (Cursor Rules) is a command-line tool that helps you manage AI agent rules across multiple projects. It provides commands for initializing, syncing, and merging rule files, as well as an interactive agent selection system.
+
+## Features
+
+- **Rule Synchronization**: Keep rules in sync across multiple projects
+- **Agent System**: Work with specialized AI agents for different tasks
+- **Interactive Selection**: Choose agents through an intuitive terminal UI
+- **Project Management**: Register and track projects with rule directories
 
 ## Installation
 
-### macOS
-
-Using Homebrew:
+### Using Go
 
 ```bash
-brew install username/tap/crules
+go install github.com/yourusername/crules/cmd/crules@latest
 ```
 
-### Linux
+### From Binary Releases
 
-#### Using pre-built binaries
+Download the appropriate binary for your platform from the [Releases](https://github.com/yourusername/crules/releases) page.
+
+## Quick Start
 
 ```bash
-# Download and extract
-curl -L https://github.com/username/crules/releases/latest/download/crules_Linux_x86_64.tar.gz | tar xz
-# Move to a directory in your PATH
-sudo mv crules /usr/local/bin/
+# Initialize rules in the current directory
+crules init
+
+# List available agents
+crules agent list
+
+# Select an agent interactively
+crules agent select
+
+# Get detailed information about a specific agent
+crules agent info wizard
+
+# Synchronize rules from the main location
+crules sync
+
+# Merge rules from the current directory to the main location
+crules merge
+
+# List all registered projects
+crules list
 ```
 
-#### Using packages (Debian/Ubuntu)
+## Agent System
 
-```bash
-# Download the .deb package
-curl -LO https://github.com/username/crules/releases/latest/download/crules_amd64.deb
-# Install the package
-sudo dpkg -i crules_amd64.deb
-```
+The Agent System allows you to work with specialized AI agents for different tasks in software development:
 
-#### Using packages (RHEL/Fedora)
+- **Technical Wizard**: Provides high-level technical guidance
+- **Feature Planner**: Breaks down requirements into implementation tasks
+- **Fix Planner**: Analyzes issues and develops fix strategies
+- **Implementer**: Translates plans into code
+- **Runner**: Executes and tests code
+- **Documentation**: Creates and maintains documentation
 
-```bash
-# Download the .rpm package
-curl -LO https://github.com/username/crules/releases/latest/download/crules_amd64.rpm
-# Install the package
-sudo rpm -i crules_amd64.rpm
-```
+Learn more about the Agent System in the [documentation](./docs/user-guide/agents.md).
 
-### Windows
+## Commands
 
-#### Using Scoop
+crules provides several commands to manage your rules:
 
-```powershell
-# Add the bucket
-scoop bucket add username https://github.com/username/scoop-bucket
-# Install crules
-scoop install crules
-```
+| Command | Description |
+|---------|-------------|
+| `init` | Initializes the current directory with rules from the main location |
+| `merge` | Merges current rules to the main location and syncs them to all locations |
+| `sync` | Forces synchronization from the main location to the current directory |
+| `list` | Displays all registered projects |
+| `clean` | Removes non-existent projects from the registry |
+| `agent list` | Lists all available agents |
+| `agent info <id>` | Shows detailed information about a specific agent |
+| `agent select` | Interactively selects and loads an agent |
 
-#### Manual installation
-
-1. Download the latest Windows archive from the [Releases page](https://github.com/username/crules/releases)
-2. Extract the archive
-3. Add the location to your PATH or move the binary to a directory in your PATH
-
-### Building from source
-
-```bash
-# Clone the repository
-git clone https://github.com/username/crules.git
-cd crules
-
-# Build the binary
-go build -o crules cmd/main.go
-
-# Make it executable (macOS/Linux)
-chmod +x crules
-
-# Move to a directory in your PATH (optional)
-sudo mv crules /usr/local/bin/
-```
+For detailed information about commands, see the [Command Reference](./docs/user-guide/commands.md).
 
 ## Configuration
 
-crules can be configured using environment variables. Create a `.env` file in the project root with any of the following variables:
+crules stores its configuration in `~/.config/crules/config.json`. This file contains:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| APP_NAME | Application name used for system paths | crules |
-| RULES_DIR_NAME | Directory name for cursor rules | .cursor/rules |
-| REGISTRY_FILE_NAME | Name of the registry file | registry.json |
-| DIR_PERMISSION | Directory permission in octal | 0755 |
-| FILE_PERMISSION | File permission in octal | 0644 |
-| LOG_LEVEL | Logging level | info |
-| LOG_FILE_NAME | Name of the log file | crules.log |
+- The main rules location
+- Registered project locations
 
-Example `.env` file:
-```
-APP_NAME=crules
-RULES_DIR_NAME=.cursor/rules
-REGISTRY_FILE_NAME=registry.json
-DIR_PERMISSION=0755
-FILE_PERMISSION=0644
-LOG_LEVEL=info
-LOG_FILE_NAME=crules.log
-```
+## Documentation
 
-A sample configuration file is provided in `.env.example`.
+For comprehensive documentation, visit the [docs](./docs) directory:
 
-### Logging Levels
+- [User Guide](./docs/user-guide): Instructions for using crules
+- [Developer Guide](./docs/developer-guide): Information for developers
+- [Examples](./docs/examples): Usage examples and workflows
+- [API Reference](./docs/api): API documentation
 
-The following log levels are available (from most to least verbose):
+## Contributing
 
-- `trace`: Extremely detailed information
-- `debug`: Detailed information for debugging purposes
-- `info`: General information about program execution (default)
-- `warn`: Potentially harmful situations that don't prevent operation
-- `error`: Error events that might still allow the application to continue
-- `fatal`: Severe error events that cause the application to terminate
-- `panic`: Severe error events that cause the application to panic
+Contributions are welcome! Please see our [Contributing Guidelines](./docs/developer-guide/contributing.md) for more information.
 
-The application uses a dedicated lightweight logger based on Logrus for structured, colorized logging.
+## License
 
-### File Locations
-
-crules follows platform-specific conventions for storing files. The actual paths will respect the configured APP_NAME value:
-
-#### Windows
-- Configuration: `%APPDATA%\<APP_NAME>`
-- Rules & Registry: `%LOCALAPPDATA%\<APP_NAME>\<RULES_DIR_NAME>`
-- Logs: `%LOCALAPPDATA%\<APP_NAME>\Logs\<LOG_FILE_NAME>`
-
-#### macOS
-- Configuration: `~/Library/Application Support/<APP_NAME>`
-- Rules & Registry: `~/Library/Application Support/<APP_NAME>/<RULES_DIR_NAME>`
-- Logs: `~/Library/Logs/<APP_NAME>/<LOG_FILE_NAME>`
-
-#### Linux/Unix
-- Configuration: `~/.config/<APP_NAME>`
-- Rules & Registry: `~/.local/share/<APP_NAME>/<RULES_DIR_NAME>`
-- Logs: `~/.local/state/<APP_NAME>/logs/<LOG_FILE_NAME>`
-
-## Usage
-
-```bash
-# Show version information
-crules --version
-
-# Initialize current directory with rules from main location
-crules init
-
-# Merge current rules to main location and sync to all locations
-crules merge
-
-# Force sync from main location to current directory
-crules sync
-
-# Display all registered projects
-crules list
-
-# Remove non-existent projects from registry
-crules clean
-
-# Show more detailed output
-crules --verbose <command>
-
-# Show debug information
-crules --debug <command>
-``` 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 

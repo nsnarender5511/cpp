@@ -13,6 +13,7 @@ var (
 	WarnStyle    = color.New(color.FgYellow)
 	InfoStyle    = color.New(color.FgCyan)
 	HeaderStyle  = color.New(color.FgBlue, color.Bold)
+	PromptStyle  = color.New(color.FgMagenta, color.Bold)
 
 	// Internal references for consistency
 	successStyle = SuccessStyle
@@ -20,6 +21,7 @@ var (
 	warnStyle    = WarnStyle
 	infoStyle    = InfoStyle
 	headerStyle  = HeaderStyle
+	promptStyle  = PromptStyle
 )
 
 // Success prints a success message
@@ -50,4 +52,9 @@ func Header(format string, a ...interface{}) {
 // Plain prints plain text without styling
 func Plain(format string, a ...interface{}) {
 	fmt.Printf(format+"\n", a...)
+}
+
+// Prompt prints a prompt message without a newline
+func Prompt(format string, a ...interface{}) {
+	promptStyle.Printf("> "+format, a...)
 }
