@@ -78,56 +78,44 @@ release:
 				git push --delete origin $(TAG); \
 			fi; \
 			echo "🔄 Creating new tag $(TAG)..."; \
-			git tag -a $(TAG) -m "Release $(TAG)"; \
+			if ! git tag -a $(TAG) -m "Release $(TAG)"; then \
+				echo "❌ Error: Failed to create tag $(TAG)"; \
+				exit 1; \
+			fi; \
 			echo "✅ Tag $(TAG) created."; \
 		else \
 			echo "ℹ️  Using existing tag $(TAG)."; \
 		fi; \
 	else \
 		echo "🔄 Creating new tag $(TAG)..."; \
-		git tag -a $(TAG) -m "Release $(TAG)"; \
-		echo "✅ Tag $(TAG) created."; \
-	fi
-	
-	@# Check for GITHUB_TOKEN from environment or .env file
-	@echo "🔑 Checking for GITHUB_TOKEN..."
-	@if [ -z "$$GITHUB_TOKEN" ]; then \
-		echo "ℹ️  GITHUB_TOKEN not found in environment, checking .env file..."; \
-		if [ -f .env ]; then \
-			echo "📄 Found .env file, trying to load GITHUB_TOKEN..."; \
-			export GITHUB_TOKEN=$$(grep -E "^GITHUB_TOKEN=" .env | cut -d= -f2); \
-			if [ -z "$$GITHUB_TOKEN" ]; then \
-				echo "❌ Error: GITHUB_TOKEN not found in .env file."; \
-				echo "   Add GITHUB_TOKEN=your_token to your .env file or export it."; \
-				exit 1; \
-			else \
-				echo "✅ GITHUB_TOKEN loaded from .env file."; \
-			fi; \
-		else \
-			echo "❌ Error: GITHUB_TOKEN environment variable is not set and .env file not found."; \
-			echo "   Either:"; \
-			echo "   - Export your GitHub token with: export GITHUB_TOKEN=your_token"; \
-			echo "   - Create a .env file with: GITHUB_TOKEN=your_token"; \
+		if ! git tag -a $(TAG) -m "Release $(TAG)"; then \
+			echo "❌ Error: Failed to create tag $(TAG)"; \
 			exit 1; \
 		fi; \
-	else \
-		echo "✅ GITHUB_TOKEN is set in environment."; \
+		echo "✅ Tag $(TAG) created."; \
 	fi
 	
 	@# Run GoReleaser
 	@echo "🚀 Running GoReleaser..."
-	@if ! ( \
-		if [ -f .env ] && [ -z "$$GITHUB_TOKEN" ]; then \
-			GITHUB_TOKEN=$$(grep -E "^GITHUB_TOKEN=" .env | cut -d= -f2) goreleaser release --clean; \
-		else \
-			goreleaser release --clean; \
-		fi \
-	); then \
-		echo "❌ Error: GoReleaser failed. Check the output above for details."; \
-		exit 1; \
+	@if [ -f .env ] && [ -z "$$GITHUB_TOKEN" ]; then \
+		echo "ℹ️  Using GITHUB_TOKEN from .env file"; \
+		TOKEN=$$(grep -E "^GITHUB_TOKEN=" .env | cut -d= -f2); \
+		if [ -z "$$TOKEN" ]; then \
+			echo "❌ Error: Could not extract GITHUB_TOKEN from .env file"; \
+			exit 1; \
+		fi; \
+		if ! GITHUB_TOKEN="$$TOKEN" goreleaser release --clean; then \
+			echo "❌ Error: GoReleaser failed. Check the output above for details."; \
+			exit 1; \
+		fi; \
 	else \
-		echo "✅ Release successful!"; \
-	fi
+		echo "ℹ️  Using GITHUB_TOKEN from environment"; \
+		if ! goreleaser release --clean; then \
+			echo "❌ Error: GoReleaser failed. Check the output above for details."; \
+			exit 1; \
+		fi; \
+	fi; \
+	echo "✅ Release successful!"
 	
 	@# Push tag if successful
 	@echo "🔄 Pushing tag $(TAG) to remote..."
