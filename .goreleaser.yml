@@ -31,6 +31,8 @@ release:
   prerelease: auto
   mode: replace  # Replaces existing releases
   name_template: "v{{.Version}}"
+  replace_existing_draft: true
+  make_latest: true
 
 brews:
   - repository:
