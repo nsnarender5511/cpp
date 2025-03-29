@@ -93,6 +93,7 @@ release:
 	
 	@# Run GoReleaser
 	@echo "🚀 Running GoReleaser..."
+	@# Debug token information
 	@if [ -f .env ] && [ -z "$$GITHUB_TOKEN" ]; then \
 		echo "ℹ️  Using GITHUB_TOKEN from .env file"; \
 		TOKEN=$$(grep -E "^GITHUB_TOKEN=" .env | cut -d= -f2); \
@@ -100,12 +101,47 @@ release:
 			echo "❌ Error: Could not extract GITHUB_TOKEN from .env file"; \
 			exit 1; \
 		fi; \
+		TOKEN_LENGTH=$${#TOKEN}; \
+		if [ $$TOKEN_LENGTH -lt 30 ]; then \
+			echo "⚠️  Warning: Token looks suspiciously short ($$TOKEN_LENGTH chars)"; \
+		fi; \
+		# Show first 4 chars as a hint without exposing full token \
+		TOKEN_PREFIX=$$(echo $$TOKEN | cut -c1-4); \
+		echo "🔑 Using token: $$TOKEN_PREFIX**** ($$TOKEN_LENGTH chars)"; \
+		echo "🔍 Testing GitHub API access..."; \
+		HTTP_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token $$TOKEN" https://api.github.com/user); \
+		if [ "$$HTTP_CODE" = "200" ]; then \
+			echo "✅ GitHub authentication successful"; \
+		else \
+			echo "⚠️  GitHub API returned HTTP $$HTTP_CODE - token may not have correct permissions"; \
+			echo "   Token needs 'repo' scope to create releases"; \
+		fi; \
 		if ! GITHUB_TOKEN="$$TOKEN" goreleaser release --clean; then \
 			echo "❌ Error: GoReleaser failed. Check the output above for details."; \
 			exit 1; \
 		fi; \
 	else \
 		echo "ℹ️  Using GITHUB_TOKEN from environment"; \
+		if [ -n "$$GITHUB_TOKEN" ]; then \
+			TOKEN_LENGTH=$${#GITHUB_TOKEN}; \
+			if [ $$TOKEN_LENGTH -lt 30 ]; then \
+				echo "⚠️  Warning: Token looks suspiciously short ($$TOKEN_LENGTH chars)"; \
+			fi; \
+			# Show first 4 chars as a hint without exposing full token \
+			TOKEN_PREFIX=$$(echo $$GITHUB_TOKEN | cut -c1-4); \
+			echo "🔑 Using token: $$TOKEN_PREFIX**** ($$TOKEN_LENGTH chars)"; \
+			echo "🔍 Testing GitHub API access..."; \
+			HTTP_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token $$GITHUB_TOKEN" https://api.github.com/user); \
+			if [ "$$HTTP_CODE" = "200" ]; then \
+				echo "✅ GitHub authentication successful"; \
+			else \
+				echo "⚠️  GitHub API returned HTTP $$HTTP_CODE - token may not have correct permissions"; \
+				echo "   Token needs 'repo' scope to create releases"; \
+			fi; \
+		else \
+			echo "❌ Error: GITHUB_TOKEN is empty"; \
+			exit 1; \
+		fi; \
 		if ! goreleaser release --clean; then \
 			echo "❌ Error: GoReleaser failed. Check the output above for details."; \
 			exit 1; \
