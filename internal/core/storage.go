@@ -1,9 +1,10 @@
 package core
 
 import (
-	"fmt"
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -12,72 +13,67 @@ import (
 )
 
 // StoreRules saves parsed rules to the filesystem
-func StoreRules(rules []Rule, forceOverwrite bool) error {
+func StoreRules(rules []*CursorRule, forceOverwrite bool) error {
 	// Get main rules location from config
-	config := utils.LoadConfig()
+	cm := utils.NewConfigManager()
+	if err := cm.Load(); err != nil {
+		return wrapOpError("StoreRules", "config", err, "failed to load configuration")
+	}
+	cfg := cm.GetConfig()
 
 	// Get app paths
 	appName := os.Getenv("APP_NAME")
 	if appName == "" {
-		appName = utils.DefaultAppName
+		appName = utils.DefaultAgentsDirName
 	}
 
 	appPaths := utils.GetAppPaths(appName)
-	baseDir := appPaths.GetRulesDir(config.RulesDirName)
+	baseDir := appPaths.GetRulesDir(cfg.RulesDirName)
 
 	return StoreRulesToPath(rules, baseDir, forceOverwrite)
 }
 
 // StoreRulesToPath saves parsed rules to a specific directory path
-func StoreRulesToPath(rules []Rule, baseDir string, forceOverwrite bool) error {
+func StoreRulesToPath(rules []*CursorRule, baseDir string, forceOverwrite bool) error {
 	// Ensure the directory exists
 	if err := os.MkdirAll(baseDir, 0755); err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
+		return wrapOpError("StoreRulesToPath", baseDir, err, "failed to create directory")
 	}
 
 	// Store each rule
 	savedCount := 0
 	for _, rule := range rules {
-		filename := sanitizeFilename(rule.Name) + getExtensionForFormat(rule.Format)
+		filename := sanitizeFilename(rule.Metadata.Name) + ".json"
 		fullPath := filepath.Join(baseDir, filename)
 
 		// Check if file already exists
 		if _, err := os.Stat(fullPath); err == nil && !forceOverwrite {
 			// File exists and force flag is not set
-			if !ui.PromptYesNo(fmt.Sprintf("Rule '%s' already exists in %s. Overwrite?", rule.Name, baseDir)) {
+			if !ui.PromptYesNo(rule.Metadata.Name + " already exists. Overwrite?") {
 				// Generate alternative name
-				timestamp := fmt.Sprintf("%d", time.Now().Unix())
-				filename = sanitizeFilename(rule.Name) + "-" + timestamp + getExtensionForFormat(rule.Format)
+				timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+				filename = sanitizeFilename(rule.Metadata.Name) + "-" + timestamp + ".json"
 				fullPath = filepath.Join(baseDir, filename)
 			}
 		}
 
-		// Add metadata header if it's a markdown file
-		content := rule.Content
-		if rule.Format == "markdown" || rule.Format == "mdx" {
-			// Add metadata as a comment if not already present
-			if !strings.Contains(content, "Description:") {
-				metaHeader := fmt.Sprintf("<!-- \nName: %s\nDescription: %s\nSource: %s\nImported: %s\n-->\n\n",
-					rule.Name,
-					rule.Description,
-					rule.Source,
-					time.Now().Format(time.RFC3339),
-				)
-				content = metaHeader + content
-			}
+		// Marshal rule to JSON
+		data, err := json.MarshalIndent(rule, "", "  ")
+		if err != nil {
+			return wrapOpError("StoreRulesToPath", fullPath, err, "failed to marshal rule")
 		}
 
 		// Write the file
-		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
-			return fmt.Errorf("failed to write rule file: %w", err)
+		if err := os.WriteFile(fullPath, data, 0644); err != nil {
+			return wrapOpError("StoreRulesToPath", fullPath, err, "failed to write rule file")
 		}
 
-		utils.Info(fmt.Sprintf("Saved rule %s to %s", rule.Name, fullPath))
+		utils.Info("Saved rule " + rule.Metadata.Name + " to " + fullPath)
 		savedCount++
 	}
 
 	if savedCount == 0 {
-		return fmt.Errorf("no rules were saved")
+		return wrapValidationError("rules", "no rules were saved")
 	}
 
 	return nil

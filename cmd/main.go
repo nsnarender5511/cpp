@@ -21,11 +21,12 @@ import (
 
 // Exit codes
 const (
-	ExitSuccess    = 0
-	ExitUsageError = 1
-	ExitInitError  = 10
-	ExitAgentError = 15
-	ExitSetupError = 20
+	ExitSuccess     = 0
+	ExitUsageError  = 1
+	ExitInitError   = 10
+	ExitAgentError  = 15
+	ExitSetupError  = 20
+	ExitConfigError = 25
 )
 
 // getTerminalWidth returns the width of the terminal in characters
@@ -112,7 +113,7 @@ func main() {
 
 	// Create new sync manager
 	utils.Debug("Initializing sync manager")
-	manager, err := core.NewSyncManager()
+	initializer, err := core.NewAgentInitializer()
 	if err != nil {
 		utils.Error("Error initializing: " + err.Error())
 		ui.Error("Error initializing: %v", err)
@@ -123,11 +124,18 @@ func main() {
 	if *multiAgentFlag {
 		utils.Info("Multi-agent mode explicitly enabled via flag")
 		// Update the config to enable multi-agent mode
-		config := utils.LoadConfig()
+		cm := utils.NewConfigManager()
+		if err := cm.Load(); err != nil {
+			utils.Error("Failed to load configuration: " + err.Error())
+			ui.Error("Failed to load configuration: %v", err)
+			os.Exit(ExitConfigError)
+		}
+		config := cm.GetConfig()
 		config.MultiAgentEnabled = true
 
 		// Save configuration to make the change permanent
-		if err := utils.SaveConfig(config); err != nil {
+		cm.SetConfig(config)
+		if err := cm.Save(); err != nil {
 			utils.Warn("Failed to save multi-agent configuration: " + err.Error())
 		} else {
 			utils.Info("Multi-agent mode permanently enabled")
@@ -140,9 +148,9 @@ func main() {
 
 	switch command {
 	case "init":
-		handleInit(manager)
+		handleInit(initializer)
 	case "agent":
-		handleAgent(manager, appPaths, *verboseFlag, args[1:])
+		handleAgent(initializer, appPaths, *verboseFlag, args[1:])
 	default:
 		utils.Warn("Unknown command received | command=" + command)
 		ui.Warning("Unknown command: %s", command)
@@ -194,7 +202,7 @@ func printUsage() {
 	ui.Plain("  agent        Interactively select and use agents for cursor++ IDE")
 }
 
-func handleInit(manager *core.SyncManager) {
+func handleInit(manager *core.AgentInitializer) {
 	utils.Debug("Handling init command")
 
 	// Print a blank line before starting for better spacing
@@ -213,7 +221,11 @@ func handleInit(manager *core.SyncManager) {
 		utils.Warn("Could not get current directory for agent listing: " + err.Error())
 	} else {
 		// Display agent list from local directory
-		config := utils.LoadConfig()
+		configManager := utils.NewConfigManager()
+		if err := configManager.Load(); err != nil {
+			utils.Warn("Failed to load configuration: " + err.Error())
+		}
+		config := configManager.GetConfig()
 		localRulesDir := filepath.Join(currentDir, config.RulesDirName, config.AgentsDirName)
 		registry, regErr := agent.NewRegistry(config, localRulesDir)
 		if regErr != nil {
@@ -261,11 +273,15 @@ func handleInit(manager *core.SyncManager) {
 	utils.Info("Init command completed successfully")
 }
 
-func handleAgent(manager *core.SyncManager, appPaths utils.AppPaths, verbose bool, args []string) {
+func handleAgent(manager *core.AgentInitializer, appPaths utils.AppPaths, verbose bool, args []string) {
 	utils.Debug("Handling agent command")
 
 	// Get config for agent operations
-	config := utils.LoadConfig()
+	configManager := utils.NewConfigManager()
+	if err := configManager.Load(); err != nil {
+		handleCommandError("Agent", fmt.Errorf("cannot load configuration: %v", err), ExitAgentError)
+	}
+	config := configManager.GetConfig()
 
 	// Get current directory to use local agents
 	currentDir, err := os.Getwd()
@@ -329,7 +345,11 @@ func displayAgentList(registry *agent.Registry) {
 	termWidth := getTerminalWidth()
 
 	// Get last selected agent from config
-	config := utils.LoadConfig()
+	configManager := utils.NewConfigManager()
+	if err := configManager.Load(); err != nil {
+		utils.Warn("Failed to load configuration: " + err.Error())
+	}
+	config := configManager.GetConfig()
 	lastSelectedAgent := config.LastSelectedAgent
 
 	// Create display options
@@ -386,7 +406,7 @@ func displayAgentContent(agentDef *agent.AgentDefinition, paginated bool) error 
 	}
 
 	// Add multi-agent information
-	config := utils.LoadConfig()
+	config := utils.NewConfigManager().GetConfig()
 	if config.MultiAgentEnabled {
 		content = strings.Replace(content,
 			"# Agent System Integration:",
@@ -483,7 +503,7 @@ func validatePath(path string) bool {
 	}
 
 	// Verify the path is within expected directory
-	config := utils.LoadConfig()
+	config := utils.NewConfigManager().GetConfig()
 
 	// Get absolute path of local agents directory
 	localAgentsDir := filepath.Join(currentDir, config.RulesDirName, config.AgentsDirName)
@@ -573,7 +593,7 @@ func handleAgentSelect(registry *agent.Registry, config *utils.Config, appPaths 
 	}
 
 	// Log the loaded agent context
-	utils.Debug("Agent loaded with context | last_updated=" + loadedAgent.Context.LastUpdated.String())
+	utils.Debug("Agent loaded with context | last_updated=" + loadedAgent.Context.GetLastUpdated().String())
 
 	// Save the selected agent ID to configuration
 	config.LastSelectedAgent = selectedAgent.ID

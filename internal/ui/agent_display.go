@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -56,37 +55,41 @@ func getTerminalWidth() int {
 	return 80
 }
 
-// detectAgentCategory attempts to determine an agent's category based on its ID and capabilities
+// detectAgentCategory attempts to determine the category of an agent
 func detectAgentCategory(agent *agent.AgentDefinition) string {
-	// Check ID-based categories first
 	id := strings.ToLower(agent.ID)
 
-	if strings.Contains(id, "wizard") {
-		return "Wizard"
-	} else if strings.Contains(id, "reviewer") || strings.Contains(id, "review") {
+	// Check ID for category hints
+	if strings.Contains(id, "review") {
 		return "Code Review"
-	} else if strings.Contains(id, "tester") || strings.Contains(id, "test") {
+	} else if strings.Contains(id, "test") {
 		return "Testing"
-	} else if strings.Contains(id, "document") || strings.Contains(id, "doc") {
+	} else if strings.Contains(id, "doc") {
 		return "Documentation"
 	} else if strings.Contains(id, "git") || strings.Contains(id, "commit") {
 		return "Git & Version Control"
-	} else if strings.Contains(id, "scraper") || strings.Contains(id, "web") {
+	} else if strings.Contains(id, "refactor") {
+		return "Refactoring"
+	} else if strings.Contains(id, "architect") || strings.Contains(id, "plan") {
+		return "Architecture & Planning"
+	} else if strings.Contains(id, "debug") || strings.Contains(id, "fix") {
+		return "Debugging & Fixing"
+	} else if strings.Contains(id, "web") {
 		return "Web Tools"
 	} else if strings.Contains(id, "answer") || strings.Contains(id, "quick") {
 		return "Quick Help"
 	}
 
-	// Check capabilities as backup
-	for _, cap := range agent.Capabilities {
-		capLower := strings.ToLower(cap)
-		if strings.Contains(capLower, "code review") {
+	// Check description as backup
+	if agent.Description != "" {
+		descLower := strings.ToLower(agent.Description)
+		if strings.Contains(descLower, "code review") {
 			return "Code Review"
-		} else if strings.Contains(capLower, "test") {
+		} else if strings.Contains(descLower, "test") {
 			return "Testing"
-		} else if strings.Contains(capLower, "document") {
+		} else if strings.Contains(descLower, "document") {
 			return "Documentation"
-		} else if strings.Contains(capLower, "git") || strings.Contains(capLower, "commit") {
+		} else if strings.Contains(descLower, "git") || strings.Contains(descLower, "commit") {
 			return "Git & Version Control"
 		}
 	}
@@ -220,22 +223,9 @@ func displayDetailedAgentGroup(agents []*agent.AgentDefinition, options AgentDis
 			fmt.Printf("    %s\n", shortDesc)
 		}
 
-		// Print first 2 capabilities if available
-		if len(a.Capabilities) > 0 {
-			capabilities := []string{}
-			for _, cap := range a.Capabilities {
-				if len(capabilities) < 2 {
-					capabilities = append(capabilities, cap)
-				}
-			}
-
-			if len(capabilities) > 0 {
-				capStr := strings.Join(capabilities, ", ")
-				if len(a.Capabilities) > 2 {
-					capStr += ", ..."
-				}
-				fmt.Printf("    %s\n", capStr)
-			}
+		// Print tags if available
+		if len(a.Templates) > 0 {
+			fmt.Printf("    Templates: %s\n", strings.Join(a.Templates, ", "))
 		}
 
 		// Add separator except after last item
@@ -273,69 +263,41 @@ func DisplayAgentInfoEnhanced(agent *agent.AgentDefinition, verbose bool) error 
 		Plain("  Version:   %s", agent.Version)
 	}
 
-	category := detectAgentCategory(agent)
-	Plain("  Category:  %s", category)
+	if agent.Type != "" {
+		Plain("  Type:      %s", agent.Type)
+	}
 
+	Plain("  Updated:   %s", agent.LastUpdated.Format("2006-01-02 15:04:05"))
+	fmt.Println()
+
+	// Display description
 	if agent.Description != "" {
-		fmt.Println()
 		Header("Description")
-		desc := strings.TrimSpace(agent.Description)
-		fmt.Println(createCodeBox(desc, 80, false))
-	}
-
-	if len(agent.Capabilities) > 0 {
 		fmt.Println()
-		Header("Capabilities")
-		for _, cap := range agent.Capabilities {
-			Plain("  • %s", cap)
-		}
-	}
-
-	// Show file information
-	fmt.Println()
-	Header("File Information")
-
-	// Make path relative if possible
-	cwd, err := os.Getwd()
-	if err == nil {
-		relPath, err := filepath.Rel(cwd, agent.DefinitionPath)
-		if err == nil {
-			Plain("  Path:       %s", relPath)
-		} else {
-			Plain("  Path:       %s", agent.DefinitionPath)
-		}
-	} else {
-		Plain("  Path:       %s", agent.DefinitionPath)
-	}
-
-	// Show modification time
-	info, err := os.Stat(agent.DefinitionPath)
-	if err == nil {
-		modTime := info.ModTime().Format("2006-01-02 15:04:05")
-		Plain("  Modified:   %s", modTime)
-	}
-
-	// Add file size
-	if info != nil {
-		Plain("  Size:       %s", formatFileSize(info.Size()))
-	}
-
-	// Show content if verbose and if we can read it
-	if verbose {
+		Plain("  %s", agent.Description)
 		fmt.Println()
-		Header("Agent Content")
-
-		// Try to read the file contents
-		content, err := os.ReadFile(agent.DefinitionPath)
-		if err == nil {
-			cleanContent := cleanPromptContent(string(content))
-			fmt.Println(createCodeBox(cleanContent, 80, true))
-		} else {
-			Warning("  Could not read agent content: %s", err.Error())
-		}
 	}
 
-	fmt.Println()
+	// Display templates
+	if len(agent.Templates) > 0 {
+		Header("Templates")
+		fmt.Println()
+		for _, tmpl := range agent.Templates {
+			Plain("  • %s", tmpl)
+		}
+		fmt.Println()
+	}
+
+	// Display configuration
+	if len(agent.Config) > 0 && verbose {
+		Header("Configuration")
+		fmt.Println()
+		for k, v := range agent.Config {
+			Plain("  %s: %v", k, v)
+		}
+		fmt.Println()
+	}
+
 	return nil
 }
 

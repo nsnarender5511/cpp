@@ -3,7 +3,6 @@ package agent
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"cursor++/internal/utils"
 )
@@ -36,7 +35,7 @@ func (l *Loader) reportProgress(event string, message string) {
 	}
 }
 
-// LoadAgent loads and initializes an agent by ID
+// LoadAgent loads an agent by ID
 func (l *Loader) LoadAgent(id string) (*Agent, error) {
 	utils.Debug("Loading agent | id=" + id)
 	l.reportProgress("load_start", id)
@@ -49,22 +48,8 @@ func (l *Loader) LoadAgent(id string) (*Agent, error) {
 		return nil, fmt.Errorf("failed to get agent: %w", err)
 	}
 
-	// Read agent definition content if not already loaded
-	if definition.Content == "" {
-		utils.Debug("Reading agent definition content | path=" + definition.DefinitionPath)
-		l.reportProgress("reading_content", id)
-		content, err := os.ReadFile(definition.DefinitionPath)
-		if err != nil {
-			utils.Error("Failed to read agent definition | path=" + definition.DefinitionPath +
-				", error=" + err.Error())
-			l.reportProgress("read_error", "Failed to read agent "+id+": "+err.Error())
-			return nil, fmt.Errorf("failed to read agent definition: %w", err)
-		}
-		definition.Content = string(content)
-	}
-
 	// Create agent context
-	context := NewAgentContext()
+	context := CreateAgentContext(definition.ID, definition.Type, definition.Version, nil)
 
 	// Initialize agent with definition and context
 	agent := &Agent{
@@ -78,12 +63,12 @@ func (l *Loader) LoadAgent(id string) (*Agent, error) {
 }
 
 // LoadAgentWithContext loads an agent and initializes it with the provided context
-func (l *Loader) LoadAgentWithContext(id string, agentCtx *AgentContext) (*Agent, error) {
+func (l *Loader) LoadAgentWithContext(id string, agentCtx AgentContext) (*Agent, error) {
 	return l.LoadAgentWithContextCancellation(context.Background(), id, agentCtx)
 }
 
 // LoadAgentWithContextCancellation loads an agent with both context awareness and cancellation support
-func (l *Loader) LoadAgentWithContextCancellation(ctx context.Context, id string, agentCtx *AgentContext) (*Agent, error) {
+func (l *Loader) LoadAgentWithContextCancellation(ctx context.Context, id string, agentCtx AgentContext) (*Agent, error) {
 	utils.Debug("Loading agent with context | id=" + id)
 	l.reportProgress("load_context_start", id)
 
@@ -109,20 +94,6 @@ func (l *Loader) LoadAgentWithContextCancellation(ctx context.Context, id string
 		return nil, fmt.Errorf("agent loading canceled: %w", ctx.Err())
 	default:
 		// Continue if not canceled
-	}
-
-	// Read agent definition content if not already loaded
-	if definition.Content == "" {
-		utils.Debug("Reading agent definition content | path=" + definition.DefinitionPath)
-		l.reportProgress("reading_content", id)
-		content, err := os.ReadFile(definition.DefinitionPath)
-		if err != nil {
-			utils.Error("Failed to read agent definition | path=" + definition.DefinitionPath +
-				", error=" + err.Error())
-			l.reportProgress("read_error", "Failed to read agent "+id+": "+err.Error())
-			return nil, fmt.Errorf("failed to read agent definition: %w", err)
-		}
-		definition.Content = string(content)
 	}
 
 	// Initialize agent with definition and provided context

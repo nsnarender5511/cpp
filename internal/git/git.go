@@ -1,65 +1,52 @@
 package git
 
 import (
+	"context"
 	"fmt"
 	"os"
-	"os/exec"
-
-	"cursor++/internal/utils"
+	"path/filepath"
 )
 
-// Clone clones a git repository to the specified local path
-func Clone(url, destination string) error {
-	utils.Debug("Cloning git repository | url=" + url + ", destination=" + destination)
+// GitManager handles Git operations for rule repositories
+type GitManager struct {
+	service GitService
+}
 
-	// Ensure the destination directory exists (parent directory)
-	if err := os.MkdirAll(destination, 0755); err != nil {
-		utils.Error("Failed to create destination directory | destination=" + destination + ", error=" + err.Error())
-		return fmt.Errorf("failed to create destination directory: %v", err)
+// NewGitManager creates a new GitManager
+func NewGitManager(service GitService) *GitManager {
+	if service == nil {
+		service = NewGitCommandService(nil)
+	}
+	return &GitManager{service: service}
+}
+
+// CloneOrPull clones a repository if it doesn't exist, or pulls if it does
+func (m *GitManager) CloneOrPull(ctx context.Context, url string, destDir string) error {
+	// Ensure destination directory exists
+	if err := os.MkdirAll(filepath.Dir(destDir), 0755); err != nil {
+		return fmt.Errorf("failed to create destination directory: %w", err)
 	}
 
-	// Prepare the git clone command
-	cmd := exec.Command("git", "clone", url, destination)
-
-	// Capture the output
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		errMsg := string(output)
-		utils.Error("Git clone failed | error=" + err.Error() + ", output=" + errMsg)
-		return fmt.Errorf("git clone failed: %v\n%s", err, errMsg)
+	// Check if repository already exists
+	if _, err := os.Stat(filepath.Join(destDir, ".git")); os.IsNotExist(err) {
+		// Clone repository
+		if err := m.service.Clone(ctx, url, destDir); err != nil {
+			return fmt.Errorf("failed to clone repository: %w", err)
+		}
+	} else {
+		// Pull latest changes
+		if err := m.service.Pull(ctx, destDir); err != nil {
+			return fmt.Errorf("failed to pull repository: %w", err)
+		}
 	}
 
-	utils.Info("Git repository cloned successfully | url=" + url + ", destination=" + destination)
 	return nil
 }
 
-// IsValidRepo checks if a URL is a valid git repository
-func IsValidRepo(url string) bool {
-	utils.Debug("Checking if URL is a valid git repository | url=" + url)
-
-	// The ls-remote command checks if the repository exists without cloning it
-	cmd := exec.Command("git", "ls-remote", url)
-
-	err := cmd.Run()
-	isValid := err == nil
-
-	utils.Debug("Git repository validation result | url=" + url + ", isValid=" + fmt.Sprintf("%v", isValid))
-	return isValid
-}
-
-// CleanupOnFailure removes the destination directory if cloning fails
-func CleanupOnFailure(destination string) {
-	utils.Debug("Cleaning up failed git clone | destination=" + destination)
-
-	// Only remove if it's not empty (something was partially cloned)
-	if utils.DirExists(destination) {
-		// Check if it's a git repository by looking for .git directory
-		gitDir := destination + "/.git"
-		if utils.DirExists(gitDir) {
-			utils.Debug("Removing partial git clone | destination=" + destination)
-			if err := os.RemoveAll(destination); err != nil {
-				utils.Warn("Failed to clean up git clone | destination=" + destination + ", error=" + err.Error())
-			}
-		}
+// CheckoutRef checks out a specific reference in a repository
+func (m *GitManager) CheckoutRef(ctx context.Context, repoPath string, ref string) error {
+	if err := m.service.Checkout(ctx, repoPath, ref); err != nil {
+		return fmt.Errorf("failed to checkout ref %s: %w", ref, err)
 	}
+	return nil
 }

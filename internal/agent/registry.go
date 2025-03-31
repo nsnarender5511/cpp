@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"cursor++/internal/utils"
 )
@@ -108,66 +109,40 @@ func (r *Registry) scanAgents() error {
 
 // processAgentFile parses an agent definition file and adds it to the registry
 func (r *Registry) processAgentFile(path string) error {
-	utils.Debug("Processing agent file | path=" + path)
+	// Extract agent ID from path
+	id := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 
-	// Read file
-	content, err := os.ReadFile(path)
+	// Validate agent ID
+	if !validateAgentID(id) {
+		utils.Warn("Invalid agent ID | id=" + id + ", path=" + path)
+		return fmt.Errorf("invalid agent ID: %s", id)
+	}
+
+	// Get agent metadata from file
+	name, description, err := r.extractAgentMetadata(path)
 	if err != nil {
-		return fmt.Errorf("failed to read file: %v", err)
+		utils.Warn("Failed to extract agent metadata | id=" + id + ", path=" + path + ", error=" + err.Error())
+		name = id // Use ID as name if metadata extraction fails
+		description = "No description available"
 	}
 
-	// Extract metadata from the file
-	// For simplicity, we're assuming the first line after "# " is the agent name
-	// and the content after "## 🎯 Role:" is the description
-	// In a real implementation, proper parsing would be needed
-
-	lines := strings.Split(string(content), "\n")
-	var name, description string
-	var capabilities []string
-
-	for i, line := range lines {
-		trimmed := strings.TrimSpace(line)
-
-		if strings.HasPrefix(trimmed, "# ") && name == "" {
-			name = strings.TrimPrefix(trimmed, "# ")
-		} else if strings.HasPrefix(trimmed, "## 🎯 Role:") && i+1 < len(lines) {
-			// Take the next line as description
-			if i+1 < len(lines) {
-				description = strings.TrimSpace(lines[i+1])
-			}
-		} else if strings.HasPrefix(trimmed, "### ✅") {
-			// Extract capability from this line
-			capability := strings.TrimPrefix(trimmed, "### ✅")
-			capability = strings.TrimSpace(capability)
-			if capability != "" {
-				capabilities = append(capabilities, capability)
-			}
-		}
-
-		// For simplicity, we'll only process the first few lines
-		if i > 50 {
-			break
-		}
+	// Check for templates
+	templates, err := r.findTemplates(id)
+	if err != nil {
+		utils.Warn("Failed to find templates | id=" + id + ", error=" + err.Error())
+		// Continue without templates
 	}
-
-	// If we couldn't extract a name, use the filename
-	if name == "" {
-		base := filepath.Base(path)
-		name = strings.TrimSuffix(base, ".mdc")
-	}
-
-	// Create short ID from filename
-	base := filepath.Base(path)
-	id := strings.TrimSuffix(base, ".mdc")
 
 	// Create agent definition
 	agent := &AgentDefinition{
-		ID:             id,
-		Name:           name,
-		Description:    description,
-		Capabilities:   capabilities,
-		Version:        "1.0", // Default version
-		DefinitionPath: path,
+		ID:          id,
+		Name:        name,
+		Description: description,
+		Version:     "1.0", // Default version
+		Type:        "ai",  // Default type
+		Config:      make(map[string]interface{}),
+		Templates:   templates,
+		LastUpdated: time.Now(),
 	}
 
 	// Add to registry
@@ -238,4 +213,70 @@ func (r *Registry) ScanAgentsWithAnimation() error {
 
 	// Scan for agents using the existing method that will call progress callbacks
 	return r.scanAgents()
+}
+
+// extractAgentMetadata extracts name and description from an agent file
+func (r *Registry) extractAgentMetadata(path string) (string, string, error) {
+	// Read file
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to read file: %v", err)
+	}
+
+	// Extract metadata from the file
+	// For simplicity, we're assuming the first line after "# " is the agent name
+	// and the content after "## 🎯 Role:" is the description
+	lines := strings.Split(string(content), "\n")
+	var name, description string
+
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		if strings.HasPrefix(trimmed, "# ") && name == "" {
+			name = strings.TrimPrefix(trimmed, "# ")
+		} else if strings.HasPrefix(trimmed, "## 🎯 Role:") && i+1 < len(lines) {
+			// Take the next line as description
+			if i+1 < len(lines) {
+				description = strings.TrimSpace(lines[i+1])
+			}
+		}
+
+		// For simplicity, we'll only process the first few lines
+		if i > 50 {
+			break
+		}
+	}
+
+	// If we couldn't extract a name, use the filename
+	if name == "" {
+		base := filepath.Base(path)
+		name = strings.TrimSuffix(base, ".mdc")
+	}
+
+	return name, description, nil
+}
+
+// findTemplates looks for template files associated with an agent
+func (r *Registry) findTemplates(agentID string) ([]string, error) {
+	// Look for templates in templates directory
+	templatesDir := filepath.Join(r.rulesDir, "templates")
+	if !utils.DirExists(templatesDir) {
+		return nil, nil // No templates directory
+	}
+
+	// Find templates with pattern agentID-*.tmpl
+	pattern := filepath.Join(templatesDir, agentID+"-*.tmpl")
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search for templates: %w", err)
+	}
+
+	// Convert to relative paths
+	templates := make([]string, len(matches))
+	for i, path := range matches {
+		// Store just the filename
+		templates[i] = filepath.Base(path)
+	}
+
+	return templates, nil
 }

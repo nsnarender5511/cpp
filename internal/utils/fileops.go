@@ -37,7 +37,12 @@ func ConfirmOverwrite(dirName string) bool {
 func CopyDir(src, dst string) error {
 	Debug("Copying directory | source=" + src + ", destination=" + dst)
 
-	config := LoadConfig()
+	cm := NewConfigManager()
+	if err := cm.Load(); err != nil {
+		Error("Failed to load configuration: " + err.Error())
+		return err
+	}
+	config := cm.GetConfig()
 
 	// Define directories to skip
 	dirsToSkip := map[string]bool{
@@ -101,7 +106,12 @@ func CopyDir(src, dst string) error {
 
 // CopyFile copies a single file
 func CopyFile(src, dst string) error {
-	config := LoadConfig()
+	cm := NewConfigManager()
+	if err := cm.Load(); err != nil {
+		Error("Failed to load configuration: " + err.Error())
+		return err
+	}
+	config := cm.GetConfig()
 
 	sourceFile, err := os.Open(src)
 	if err != nil {

@@ -2,9 +2,9 @@ package core
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"cursor++/internal/utils"
 )
@@ -33,8 +33,7 @@ func LoadRegistry(registryPath string, config *utils.Config) (*Registry, error) 
 		// Ensure directory exists
 		registryDir := filepath.Dir(registryPath)
 		if err := utils.EnsureDirExists(registryDir, config.DirPermission); err != nil {
-			utils.Error("Failed to create registry directory | path=" + registryDir + ", error=" + err.Error())
-			return nil, fmt.Errorf("cannot create registry directory: %v", err)
+			return nil, wrapOpError("LoadRegistry", registryDir, err, "failed to create registry directory")
 		}
 
 		return registry, registry.save()
@@ -44,24 +43,27 @@ func LoadRegistry(registryPath string, config *utils.Config) (*Registry, error) 
 	utils.Debug("Reading existing registry | path=" + registryPath)
 	data, err := os.ReadFile(registryPath)
 	if err != nil {
-		utils.Error("Failed to read registry file | path=" + registryPath + ", error=" + err.Error())
-		return nil, err
+		return nil, wrapOpError("LoadRegistry", registryPath, err, "failed to read registry file")
 	}
 
 	if err := json.Unmarshal(data, registry); err != nil {
-		utils.Error("Failed to parse registry file | path=" + registryPath + ", error=" + err.Error())
-		return nil, err
+		return nil, wrapParseError(registryPath, err, 0)
 	}
 
 	registry.config = config
 	registry.path = registryPath
-	utils.Debug("Registry loaded successfully | projects=" + fmt.Sprintf("%d", len(registry.Projects)))
+	utils.Debug("Registry loaded successfully | projects=" + strconv.Itoa(len(registry.Projects)))
 	return registry, nil
 }
 
 // AddProject adds a project to registry
 func (r *Registry) AddProject(projectPath string) error {
 	utils.Debug("Adding project to registry | project=" + projectPath)
+
+	// Validate project path
+	if !utils.DirExists(projectPath) {
+		return wrapValidationError("projectPath", "directory does not exist")
+	}
 
 	// Check if already registered
 	for _, p := range r.Projects {
@@ -78,7 +80,7 @@ func (r *Registry) AddProject(projectPath string) error {
 
 // GetProjects returns all registered projects
 func (r *Registry) GetProjects() []string {
-	utils.Debug("Getting registered projects | count=" + fmt.Sprintf("%d", len(r.Projects)))
+	utils.Debug("Getting registered projects | count=" + strconv.Itoa(len(r.Projects)))
 	return r.Projects
 }
 
@@ -102,12 +104,11 @@ func (r *Registry) CleanProjects() (int, error) {
 
 	if removedCount > 0 {
 		if err := r.save(); err != nil {
-			utils.Error("Failed to save registry after cleaning | error=" + err.Error())
-			return 0, err
+			return 0, wrapOpError("CleanProjects", r.path, err, "failed to save registry after cleaning")
 		}
 	}
 
-	utils.Info("Registry cleaned | removed=" + fmt.Sprintf("%d", removedCount))
+	utils.Info("Registry cleaned | removed=" + strconv.Itoa(removedCount))
 	return removedCount, nil
 }
 
@@ -116,13 +117,11 @@ func (r *Registry) save() error {
 	utils.Debug("Saving registry | path=" + r.path)
 	data, err := json.MarshalIndent(r, "", "    ")
 	if err != nil {
-		utils.Error("Failed to marshal registry | error=" + err.Error())
-		return err
+		return wrapOpError("save", r.path, err, "failed to marshal registry")
 	}
 
 	if err := os.WriteFile(r.path, data, r.config.FilePermission); err != nil {
-		utils.Error("Failed to write registry | path=" + r.path + ", error=" + err.Error())
-		return err
+		return wrapOpError("save", r.path, err, "failed to write registry file")
 	}
 
 	utils.Debug("Registry saved successfully | path=" + r.path)
