@@ -1,17 +1,20 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 
-	"crules/internal/agent"
-	"crules/internal/core"
-	"crules/internal/ui"
-	"crules/internal/utils"
-	"crules/internal/version"
+	"cursor++/internal/agent"
+	"cursor++/internal/core"
+	"cursor++/internal/ui"
+	"cursor++/internal/utils"
+	"cursor++/internal/version"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -19,16 +22,11 @@ import (
 
 // Exit codes
 const (
-	ExitSuccess     = 0
-	ExitUsageError  = 1
-	ExitInitError   = 10
-	ExitMergeError  = 11
-	ExitSyncError   = 12
-	ExitListError   = 13
-	ExitCleanError  = 14
-	ExitAgentError  = 15
-	ExitSetupError  = 20
-	ExitImportError = 16 // Add exit code for import command
+	ExitSuccess    = 0
+	ExitUsageError = 1
+	ExitInitError  = 10
+	ExitAgentError = 15
+	ExitSetupError = 20
 )
 
 // getTerminalWidth returns the width of the terminal in characters
@@ -62,6 +60,8 @@ func main() {
 	// Parse debug/verbose flags
 	debugFlag := false
 	verboseFlag := false
+	multiAgentFlag := false
+	verboseErrorsFlag := false
 
 	// Process each argument to find flags
 	args := make([]string, 0, len(os.Args))
@@ -73,6 +73,12 @@ func main() {
 		} else if arg == "--verbose" {
 			verboseFlag = true
 			continue
+		} else if arg == "--multi-agent" {
+			multiAgentFlag = true
+			continue
+		} else if arg == "--verbose-errors" {
+			verboseErrorsFlag = true
+			continue
 		}
 		// Keep non-flag arguments
 		args = append(args, arg)
@@ -83,7 +89,7 @@ func main() {
 
 	// Check for version flag
 	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
-		fmt.Printf("crules version %s\n", version.GetVersion())
+		fmt.Printf("cursor++ version %s\n", version.GetVersion())
 		os.Exit(ExitSuccess)
 	}
 
@@ -95,8 +101,9 @@ func main() {
 	// Configure console output
 	utils.SetDebugConsole(debugFlag)
 	utils.SetVerbose(verboseFlag)
+	utils.SetVerboseErrors(verboseErrorsFlag)
 
-	utils.Info("Starting crules")
+	utils.Info("Starting cursor++")
 
 	// Print usage if no arguments
 	if len(os.Args) < 2 {
@@ -117,6 +124,21 @@ func main() {
 		os.Exit(ExitSetupError)
 	}
 
+	// Set multi-agent mode if flag is provided
+	if multiAgentFlag {
+		utils.Info("Multi-agent mode explicitly enabled via flag")
+		// Update the config to enable multi-agent mode
+		config := utils.LoadConfig()
+		config.MultiAgentEnabled = true
+
+		// Save configuration to make the change permanent
+		if err := utils.SaveConfig(config); err != nil {
+			utils.Warn("Failed to save multi-agent configuration: " + err.Error())
+		} else {
+			utils.Info("Multi-agent mode permanently enabled")
+		}
+	}
+
 	// Handle commands
 	command := os.Args[1]
 	utils.Info("Executing command | command=" + command)
@@ -124,18 +146,8 @@ func main() {
 	switch command {
 	case "init":
 		handleInit(manager)
-	case "merge":
-		handleMerge(manager)
-	case "sync":
-		handleSync(manager)
-	case "list":
-		handleList(manager)
-	case "clean":
-		handleClean(manager)
 	case "agent":
-		handleAgent(manager, appPaths)
-	case "import":
-		handleImport(manager)
+		handleAgent(manager, appPaths, verboseFlag)
 	default:
 		utils.Warn("Unknown command received | command=" + command)
 		ui.Warning("Unknown command: %s", command)
@@ -148,154 +160,165 @@ func main() {
 
 // handleCommandError handles command errors consistently
 func handleCommandError(commandName string, err error, exitCode int) {
-	utils.Error(commandName + " failed: " + err.Error())
-	ui.Error("%s failed: %v", commandName, err)
+	errMsg := err.Error()
+	// Check if we should display detailed error information
+	verboseErrors := utils.IsVerboseErrors()
+
+	// Log the full error regardless of console output settings
+	utils.Error(commandName + " failed: " + errMsg)
+
+	// For UI display, use different formatting based on verbosity
+	if verboseErrors {
+		// Show detailed error with stack trace or additional context if available
+		detailedErr := errMsg
+		if stackTracer, ok := err.(interface{ StackTrace() string }); ok {
+			detailedErr += "\n" + stackTracer.StackTrace()
+		}
+		ui.Error("%s failed with details:\n%s", commandName, detailedErr)
+	} else {
+		// Show simplified error message
+		ui.Error("%s failed: %v", commandName, err)
+		ui.Plain("\nUse --verbose-errors flag for detailed error information")
+	}
 	os.Exit(exitCode)
 }
 
 func printUsage() {
-	ui.Header("Usage: crules [OPTIONS] <command>")
+	ui.Header("Usage: cursor++ [OPTIONS] <command>")
 
 	ui.Plain("\nOptions:")
-	ui.Plain("  --verbose    Show informational messages on console")
-	ui.Plain("  --debug      Show debug messages on console")
-	ui.Plain("  --version    Show version information")
-	ui.Plain("  -v           Show version information")
+	ui.Plain("  --verbose        Show informational messages on console")
+	ui.Plain("  --debug          Show debug messages on console")
+	ui.Plain("  --multi-agent    Enable multi-agent mode for this session")
+	ui.Plain("  --verbose-errors Display detailed error messages on failure")
+	ui.Plain("  --version        Show version information")
+	ui.Plain("  -v               Show version information")
 
 	ui.Plain("\nCommands:")
-	ui.Plain("  init         Initialize current directory with rules from main location")
-	ui.Plain("  merge        Merge current rules to main location and sync to all locations")
-	ui.Plain("  sync         Force sync from main location to current directory")
-	ui.Plain("  list         Display all registered projects")
-	ui.Plain("  clean        Remove non-existent projects from registry")
-	ui.Plain("  agent        Interactively select and use agents")
-	ui.Plain("  import       Import agent rules from a URL")
+	ui.Plain("  init         Initialize current directory with cursor++ agents")
+	ui.Plain("  agent        Interactively select and use agents for cursor++ IDE")
 }
 
 func handleInit(manager *core.SyncManager) {
 	utils.Debug("Handling init command")
+
+	// Print a blank line before starting for better spacing
+	fmt.Println()
+
 	if err := manager.Init(); err != nil {
 		handleCommandError("Init", err, ExitInitError)
 	}
-	utils.Info("Init command completed successfully")
-	ui.Success("Successfully initialized rules from main location")
-}
 
-func handleMerge(manager *core.SyncManager) {
-	utils.Debug("Handling merge command")
-	if err := manager.Merge(); err != nil {
-		handleCommandError("Merge", err, ExitMergeError)
-	}
-	utils.Info("Merge command completed successfully")
-	ui.Success("Successfully merged rules to main location")
-}
+	// Space after the animation
+	fmt.Println()
 
-func handleSync(manager *core.SyncManager) {
-	utils.Debug("Handling sync command")
-	if err := manager.Sync(); err != nil {
-		handleCommandError("Sync", err, ExitSyncError)
-	}
-	utils.Info("Sync command completed successfully")
-	ui.Success("Successfully synced rules from main location")
-}
-
-func handleList(manager *core.SyncManager) {
-	utils.Debug("Handling list command")
-
-	projects := manager.GetRegistry().GetProjects()
-	count := len(projects)
-
-	if count == 0 {
-		ui.Info("No projects registered.")
-		utils.Info("List command completed - no projects found")
-		return
-	}
-
-	ui.Header("Registered projects (%d):", count)
-	validCount := 0
-
-	for i, project := range projects {
-		exists := utils.DirExists(project)
-		if exists {
-			validCount++
-			ui.Plain("  %d. %s", i+1, project)
+	// Get current directory for agent listing
+	currentDir, err := os.Getwd()
+	if err != nil {
+		utils.Warn("Could not get current directory for agent listing: " + err.Error())
+	} else {
+		// Display agent list from local directory
+		config := utils.LoadConfig()
+		localRulesDir := filepath.Join(currentDir, config.RulesDirName, config.AgentsDirName)
+		registry, regErr := agent.NewRegistry(config, localRulesDir)
+		if regErr != nil {
+			utils.Warn("Could not list agents: " + regErr.Error())
 		} else {
-			ui.Plain("  %d. %s %s", i+1, project, ui.ErrorStyle.Sprint("(not found)"))
+			// Get actual agent count
+			agents := registry.ListAgents()
+			agentCount := len(agents)
+
+			// Only show agents if there are any
+			if agentCount > 0 {
+				ui.Header("Available Agents (%d):", agentCount)
+
+				// Display the agents in a compatible format
+				if agentCount <= 5 {
+					// Show compact list for small number of agents
+					displayCompactAgentList(agents)
+				} else {
+					// Show summary for large number of agents
+					ui.Plain("Use %s to see all available agents", ui.SuccessStyle.Sprint("cursor++ agent list"))
+					// Show first few agents as examples
+					for i := 0; i < 3 && i < len(agents); i++ {
+						ui.Plain("• %s (%s)",
+							ui.InfoStyle.Sprint(cleanAgentName(agents[i].Name)),
+							fmt.Sprintf("@%s.mdc", agents[i].ID))
+					}
+					if len(agents) > 3 {
+						ui.Plain("• %s", ui.WarnStyle.Sprint("...and more"))
+					}
+				}
+				fmt.Println()
+			}
 		}
 	}
 
-	if validCount < count {
-		ui.Warning("\n%d project(s) could not be found. Run 'crules clean' to remove them.", count-validCount)
-	}
+	// Display next steps instructions with formatting
+	ui.Header("Next Steps:")
+	ui.Plain("1. Use %s to see available agents", ui.SuccessStyle.Sprint("cursor++ agent list"))
+	ui.Plain("2. Start using agents by referencing them with %s in your chat", ui.SuccessStyle.Sprint("@agent-name.mdc"))
+	ui.Plain("3. For more information about an agent, use %s", ui.SuccessStyle.Sprint("cursor++ agent info <agent-id>"))
 
-	utils.Info("List command completed successfully | project_count=" + fmt.Sprintf("%d", count) + ", valid_count=" + fmt.Sprintf("%d", validCount))
+	fmt.Println()
+	utils.Info("Init command completed successfully")
 }
 
-func handleClean(manager *core.SyncManager) {
-	utils.Debug("Handling clean command")
-
-	removedCount, err := manager.Clean()
-	if err != nil {
-		handleCommandError("Clean", err, ExitCleanError)
-	}
-
-	if removedCount == 0 {
-		ui.Info("No projects needed to be removed.")
-	} else {
-		ui.Success("Successfully removed %d non-existent project(s) from registry.", removedCount)
-	}
-
-	utils.Info("Clean command completed successfully | removed_count=" + fmt.Sprintf("%d", removedCount))
-}
-
-func handleAgent(manager *core.SyncManager, appPaths utils.AppPaths) {
+func handleAgent(manager *core.SyncManager, appPaths utils.AppPaths, verbose bool) {
 	utils.Debug("Handling agent command")
 
-	// Get arguments for subcommands
-	subcommand := "" // Empty default means show list
-	if len(os.Args) > 2 {
-		subcommand = os.Args[2]
-	}
-
-	// Get config
+	// Get config for agent operations
 	config := utils.LoadConfig()
 
-	// Get rules directory path
-	rulesDir := appPaths.GetRulesDir(config.RulesDirName)
-	utils.Debug("Using rules directory | path=" + rulesDir)
+	// Get current directory to use local agents
+	currentDir, err := os.Getwd()
+	if err != nil {
+		handleCommandError("Agent", fmt.Errorf("cannot get current directory: %v", err), ExitAgentError)
+	}
 
-	// Create agent registry
-	registry, err := agent.NewRegistry(config, rulesDir)
+	// Use local rules directory instead of global
+	localRulesDir := filepath.Join(currentDir, config.RulesDirName, config.AgentsDirName)
+	utils.Debug("Using local rules directory | path=" + localRulesDir)
+
+	// Get agent registry from local directory
+	registry, err := agent.NewRegistry(config, localRulesDir)
 	if err != nil {
 		handleCommandError("Agent", err, ExitAgentError)
 	}
 
-	// Handle subcommands
-	switch subcommand {
-	case "":
-		// Default behavior: show agent list
+	// Check if there are no arguments after "agent"
+	if len(os.Args) < 3 {
+		displayAgentList(registry)
+		return
+	}
+
+	// Handle sub-commands
+	subCommand := os.Args[2]
+	utils.Info("Executing agent sub-command | sub_command=" + subCommand)
+
+	switch subCommand {
+	case "list":
 		displayAgentList(registry)
 	case "select":
 		handleAgentSelect(registry, config, appPaths)
 	case "info":
 		if len(os.Args) < 4 {
-			ui.Error("Missing agent ID. Usage: crules agent info <agent-id>")
+			ui.Error("Missing agent ID. Usage: cursor++ agent info <agent-id>")
 			os.Exit(ExitUsageError)
 		}
-		handleAgentInfo(registry, os.Args[3])
+		handleAgentInfo(registry, os.Args[3], verbose)
 	default:
-		ui.Error("Unknown agent subcommand: %s", subcommand)
+		ui.Warning("Unknown agent sub-command: %s", subCommand)
 		printAgentUsage()
 		os.Exit(ExitUsageError)
 	}
-
-	utils.Info("Agent command completed successfully | subcommand=" + subcommand)
 }
 
-// displayAgentList displays all available agents
+// displayAgentList shows available agents
 func displayAgentList(registry *agent.Registry) {
 	utils.Debug("Displaying agent list")
 
+	// Get agents from registry
 	agents := registry.ListAgents()
 	count := len(agents)
 
@@ -305,36 +328,47 @@ func displayAgentList(registry *agent.Registry) {
 		return
 	}
 
-	ui.Header("Available agents (%d):", count)
-
-	// Get terminal width for responsive display
+	// Get terminal width for display formatting
 	termWidth := getTerminalWidth()
-	utils.Debug(fmt.Sprintf("Terminal width detected: %d", termWidth))
 
-	// For very narrow terminals, use a compact vertical list
-	if termWidth < 50 {
-		displayCompactAgentList(agents)
-	} else {
-		// Use the table display for wider terminals
-		displayAgentTable(agents, termWidth)
-	}
+	// Get last selected agent from config
+	config := utils.LoadConfig()
+	lastSelectedAgent := config.LastSelectedAgent
 
-	ui.Plain("\nTip: You can reference agents in the chatbox using the @ syntax shown above")
-	ui.Plain("For more details about any agent, use: crules agent info <agent-id>")
+	// Create display options
+	options := ui.DefaultAgentDisplayOptions()
+	options.TermWidth = termWidth
+	options.GroupByCategory = termWidth > 100 // Use categories for wider terminals
+	options.CompactMode = termWidth < 80
+	options.SelectedAgentID = lastSelectedAgent
+
+	// Display with enhanced UI
+	ui.DisplayAgentListEnhanced(agents, options)
 
 	utils.Info("Agent list completed successfully | agent_count=" + fmt.Sprintf("%d", count))
 }
 
-// displayCompactAgentList renders agents as a simple vertical list for very narrow terminals
+// displayCompactAgentList renders agents as a simple vertical list for narrow terminals
 func displayCompactAgentList(agents []*agent.AgentDefinition) {
+	// Get last selected agent from config
+	config := utils.LoadConfig()
+	lastSelectedAgent := config.LastSelectedAgent
+
 	for i, agent := range agents {
 		// Clean up the name if available
 		name := cleanAgentName(agent.Name)
 
+		// Display a star for last selected agent
+		selected := ""
+		if agent.ID == lastSelectedAgent {
+			selected = ui.WarnStyle.Sprint(" ★")
+		}
+
 		// Display agent number and name
-		ui.Plain("%s %s",
+		ui.Plain("%s %s%s",
 			ui.SuccessStyle.Sprintf("%d.", i+1),
-			ui.InfoStyle.Sprint(name))
+			ui.InfoStyle.Sprint(name),
+			selected)
 
 		// Display reference on the next line with indentation
 		ui.Plain("   %s", fmt.Sprintf("@%s.mdc", agent.ID))
@@ -348,6 +382,10 @@ func displayCompactAgentList(agents []*agent.AgentDefinition) {
 
 // displayAgentTable renders agent list as a formatted table
 func displayAgentTable(agents []*agent.AgentDefinition, termWidth int) {
+	// Get last selected agent from config
+	config := utils.LoadConfig()
+	lastSelectedAgent := config.LastSelectedAgent
+
 	// Create a new table writer
 	t := table.NewWriter()
 	// Don't use SetOutputMirror since we'll be manually printing the output
@@ -366,13 +404,14 @@ func displayAgentTable(agents []*agent.AgentDefinition, termWidth int) {
 	// Apply the style
 	t.SetStyle(customStyle)
 
-	// Configure table based on terminal width
+	// Choose appropriate columns based on width
 	if termWidth < 80 {
-		// For medium width terminals
+		// For narrow terminals, show minimal info
 		headers := table.Row{
 			ui.HeaderStyle.Sprint("No."),
 			ui.HeaderStyle.Sprint("Name"),
 			ui.HeaderStyle.Sprint("Reference"),
+			ui.HeaderStyle.Sprint(""),
 		}
 		t.AppendHeader(headers)
 
@@ -385,10 +424,17 @@ func displayAgentTable(agents []*agent.AgentDefinition, termWidth int) {
 				name = name[:22] + "..."
 			}
 
+			// Add a star for last selected agent
+			selected := ""
+			if agent.ID == lastSelectedAgent {
+				selected = ui.WarnStyle.Sprint("★")
+			}
+
 			t.AppendRow(table.Row{
 				ui.SuccessStyle.Sprintf("%d", i+1),
 				ui.InfoStyle.Sprint(name),
 				fmt.Sprintf("@%s.mdc", agent.ID),
+				selected,
 			})
 		}
 	} else {
@@ -398,6 +444,7 @@ func displayAgentTable(agents []*agent.AgentDefinition, termWidth int) {
 			ui.HeaderStyle.Sprint("Name"),
 			ui.HeaderStyle.Sprint("Reference ID"),
 			ui.HeaderStyle.Sprint("Version"),
+			ui.HeaderStyle.Sprint(""),
 		}
 		t.AppendHeader(headers)
 
@@ -405,11 +452,18 @@ func displayAgentTable(agents []*agent.AgentDefinition, termWidth int) {
 			// Clean up the name by removing redundant words
 			name := cleanAgentName(agent.Name)
 
+			// Add a star for last selected agent
+			selected := ""
+			if agent.ID == lastSelectedAgent {
+				selected = ui.WarnStyle.Sprint("★")
+			}
+
 			t.AppendRow(table.Row{
 				ui.SuccessStyle.Sprintf("%d", i+1),
 				ui.InfoStyle.Sprint(name),
 				fmt.Sprintf("@%s.mdc", agent.ID),
 				ui.WarnStyle.Sprint(agent.Version),
+				selected,
 			})
 		}
 	}
@@ -453,16 +507,31 @@ func cleanAgentName(name string) string {
 
 // displayAgentContent displays agent content with proper formatting
 // If paginated is true, the content will be displayed with pagination
-func displayAgentContent(agentDef *agent.AgentDefinition, paginated bool) {
+// Returns error if content loading fails
+func displayAgentContent(agentDef *agent.AgentDefinition, paginated bool) error {
 	// Get content from file if not loaded yet
 	content := agentDef.Content
 	if content == "" {
-		contentBytes, err := os.ReadFile(agentDef.DefinitionPath)
-		if err == nil {
-			content = string(contentBytes)
-		} else {
-			content = "Error loading content: " + err.Error()
+		// Validate path for security
+		if !validatePath(agentDef.DefinitionPath) {
+			return fmt.Errorf("invalid agent definition path")
 		}
+
+		contentBytes, err := os.ReadFile(agentDef.DefinitionPath)
+		if err != nil {
+			utils.Error("Failed to load agent content: " + err.Error())
+			return fmt.Errorf("failed to load agent content: %w", err)
+		}
+		content = string(contentBytes)
+	}
+
+	// Add multi-agent information
+	config := utils.LoadConfig()
+	if config.MultiAgentEnabled {
+		content = strings.Replace(content,
+			"# Agent System Integration:",
+			"# Multi-Agent System Integration:\n\n> Note: This agent is configured to work in multi-agent mode with other cursor++ agents.",
+			1)
 	}
 
 	// Split into lines
@@ -470,8 +539,8 @@ func displayAgentContent(agentDef *agent.AgentDefinition, paginated bool) {
 
 	// Display with formatting
 	if paginated {
-		// Calculate page size based on terminal height (assuming ~30 lines)
-		pageSize := 20
+		// Define page size as a constant or derive from terminal size
+		pageSize := calculatePageSize()
 		currentLine := 0
 		pageNum := 1
 
@@ -506,6 +575,83 @@ func displayAgentContent(agentDef *agent.AgentDefinition, paginated bool) {
 			formatAndDisplayLine(line)
 		}
 	}
+
+	return nil
+}
+
+// calculatePageSize determines an appropriate page size based on terminal dimensions
+// Default is 20 lines, but will adjust if terminal size is available
+func calculatePageSize() int {
+	// Default size
+	const defaultPageSize = 20
+
+	// Try to get terminal size
+	cmd := exec.Command("stty", "size")
+	cmd.Stdin = os.Stdin
+	out, err := cmd.Output()
+	if err != nil {
+		return defaultPageSize
+	}
+
+	// Parse output (rows columns)
+	parts := strings.Split(strings.TrimSpace(string(out)), " ")
+	if len(parts) != 2 {
+		return defaultPageSize
+	}
+
+	// Get rows and subtract buffer for prompt and status
+	rows, err := strconv.Atoi(parts[0])
+	if err != nil || rows <= 5 {
+		return defaultPageSize
+	}
+
+	// Leave space for prompts and headers
+	return rows - 5
+}
+
+// validatePath checks if a file path is safe to access
+// Returns false for paths containing directory traversal patterns or absolute paths
+func validatePath(path string) bool {
+	// Check for directory traversal attempts
+	if strings.Contains(path, "..") {
+		utils.Error("Security warning: path contains directory traversal pattern: " + path)
+		return false
+	}
+
+	// Get current directory
+	currentDir, err := os.Getwd()
+	if err != nil {
+		utils.Error("Failed to get current directory: " + err.Error())
+		return false
+	}
+
+	// Verify the path is within expected directory
+	config := utils.LoadConfig()
+
+	// Get absolute path of local agents directory
+	localAgentsDir := filepath.Join(currentDir, config.RulesDirName, config.AgentsDirName)
+	absAgentsDir, err := filepath.Abs(localAgentsDir)
+	if err != nil {
+		utils.Error("Failed to get absolute path for local agents directory: " + err.Error())
+		return false
+	}
+
+	// Get absolute path of file
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		utils.Error("Failed to get absolute path: " + err.Error())
+		return false
+	}
+
+	// Check if file is within agents directory
+	if !strings.HasPrefix(absPath, absAgentsDir) {
+		utils.Error("Security warning: path is outside agents directory: " + path)
+		utils.Debug("Expected prefix: " + absAgentsDir)
+		utils.Debug("Actual path: " + absPath)
+		return false
+	}
+
+	return true
 }
 
 // formatAndDisplayLine formats and displays a single line of agent content
@@ -530,118 +676,136 @@ func formatAndDisplayLine(line string) {
 func handleAgentSelect(registry *agent.Registry, config *utils.Config, appPaths utils.AppPaths) {
 	utils.Debug("Handling agent select subcommand")
 
+	// Create a cancellation context to handle user interrupts
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	agents := registry.ListAgents()
 	if len(agents) == 0 {
 		ui.Error("No agents available for selection.")
 		os.Exit(ExitAgentError)
 	}
 
-	// Create selector and run it
-	selector := ui.NewAgentSelector(agents)
-	selectedAgent, err := selector.Run()
-	if err != nil {
-		handleCommandError("Agent select", err, ExitAgentError)
+	// Add channel to handle user interrupts
+	interruptCh := make(chan os.Signal, 1)
+	signal.Notify(interruptCh, os.Interrupt)
+	go func() {
+		<-interruptCh
+		utils.Info("User interrupted agent selection")
+		cancel()
+	}()
+
+	// Create selector and run it in a separate goroutine with context awareness
+	selectorDone := make(chan struct{})
+	var selectedAgent *agent.AgentDefinition
+	var selectErr error
+
+	go func() {
+		selector := ui.NewAgentSelector(agents)
+		selectedAgent, selectErr = selector.Run()
+		close(selectorDone)
+	}()
+
+	// Wait for either selector completion or context cancellation
+	select {
+	case <-selectorDone:
+		if selectErr != nil {
+			handleCommandError("Agent select", selectErr, ExitAgentError)
+		}
+	case <-ctx.Done():
+		ui.Error("Agent selection was canceled")
+		os.Exit(ExitAgentError)
 	}
 
 	// Create loader and load the selected agent
 	loader := agent.NewLoader(registry, config)
-	agent, err := loader.LoadAgent(selectedAgent.ID)
+
+	// Load the agent
+	agentCtx := agent.NewAgentContext()
+	loadedAgent, err := loader.LoadAgentWithContext(selectedAgent.ID, agentCtx)
 	if err != nil {
 		handleCommandError("Agent load", err, ExitAgentError)
 	}
 
 	// Log the loaded agent context
-	utils.Debug("Agent loaded with context | last_updated=" + agent.Context.LastUpdated.String())
+	utils.Debug("Agent loaded with context | last_updated=" + loadedAgent.Context.LastUpdated.String())
 
-	ui.Success("Agent '%s' loaded successfully!", selectedAgent.Name)
+	// Save the selected agent ID to configuration
+	config.LastSelectedAgent = selectedAgent.ID
+	if err := utils.SaveConfig(config); err != nil {
+		utils.Warn("Failed to save last selected agent: " + err.Error())
+	} else {
+		utils.Info("Last selected agent saved | agent_id=" + selectedAgent.ID)
+	}
+
+	// Show success message with enhanced formatting
+	fmt.Println()
+	ui.Success("Agent '%s' selected and loaded successfully!", selectedAgent.Name)
 
 	// Ask user if they want to see the full agent definition
-	ui.Prompt("View full agent definition? (y/n): ")
+	ui.Prompt("View agent details? (y/n): ")
 	var input string
 	_, err = fmt.Scanln(&input)
 
 	if err == nil && (input == "y" || input == "Y") {
-		// Show the full agent definition with pagination
-		ui.Header("\nAgent Definition:")
-		ui.Plain("")
-		displayAgentContent(selectedAgent, true) // Display with pagination
+		// Use our enhanced agent info display
+		err = ui.DisplayAgentInfoEnhanced(selectedAgent, true)
+		if err != nil {
+			handleCommandError("Agent display", err, ExitAgentError)
+		}
 	} else {
-		// Just show a brief overview
-		ui.Plain("\nAgent overview:")
-		ui.Plain("  ID:       %s", selectedAgent.ID)
-		ui.Plain("  Name:     %s", selectedAgent.Name)
-		ui.Plain("  Version:  %s", selectedAgent.Version)
-		ui.Plain("  File:     %s", selectedAgent.DefinitionPath)
-
-		if len(selectedAgent.Capabilities) > 0 {
-			ui.Plain("\nCapabilities:")
-			for i, capability := range selectedAgent.Capabilities {
-				if i < 3 { // Show only first 3 capabilities
-					ui.Plain("  - %s", capability)
-				} else {
-					ui.Plain("  - ...")
-					break
-				}
-			}
+		// Just show basic agent info with enhanced display
+		err = ui.DisplayAgentInfoEnhanced(selectedAgent, false)
+		if err != nil {
+			handleCommandError("Agent display", err, ExitAgentError)
 		}
 	}
 
 	utils.Info("Agent select completed successfully | selected_agent=" + selectedAgent.ID)
 }
 
-func handleAgentInfo(registry *agent.Registry, agentParam string) {
+func handleAgentInfo(registry *agent.Registry, agentParam string, verbose bool) {
 	utils.Debug("Handling agent info subcommand | agent_param=" + agentParam)
 
 	var agentDef *agent.AgentDefinition
-	var exists bool
+	var err error
 
 	// Check if the input is a numeric index
-	if index, err := strconv.Atoi(agentParam); err == nil && index > 0 {
+	if index, convErr := strconv.Atoi(agentParam); convErr == nil {
+		// Validate the index is positive
+		if index <= 0 {
+			ui.Error("Invalid agent index: %d. Agent indexes start at 1.", index)
+			os.Exit(ExitAgentError)
+		}
+
 		// Get agent by numeric index
 		agents := registry.ListAgents()
 		if index <= len(agents) {
 			agentDef = agents[index-1] // Convert to 0-based index
-			exists = true
+		} else {
+			ui.Error("Agent index %d is out of range. Use a number between 1 and %d.", index, len(agents))
+			os.Exit(ExitAgentError)
 		}
 	} else {
 		// Get agent by string ID
-		agentDef, exists = registry.GetAgent(agentParam)
-	}
-
-	if !exists {
-		ui.Error("Agent '%s' not found. Use a valid agent ID or number from the agent list.", agentParam)
-		os.Exit(ExitAgentError)
-	}
-
-	// Display agent details
-	ui.Header("Agent details:")
-	ui.Plain("  ID:          %s", agentDef.ID)
-	ui.Plain("  Name:        %s", agentDef.Name)
-	ui.Plain("  Version:     %s", agentDef.Version)
-	ui.Plain("")
-
-	// Display full description with proper line wrapping
-	ui.Plain("Description:")
-	if agentDef.Description != "" {
-		displayAgentContent(agentDef, false) // Display without pagination
-	} else {
-		ui.Plain("  No description available.")
-	}
-
-	if len(agentDef.Capabilities) > 0 {
-		ui.Plain("\nCapabilities:")
-		for _, capability := range agentDef.Capabilities {
-			ui.Plain("  - %s", capability)
+		agentDef, err = registry.GetAgent(agentParam)
+		if err != nil {
+			ui.Error("Agent '%s' not found: %v", agentParam, err)
+			os.Exit(ExitAgentError)
 		}
 	}
 
-	ui.Plain("\nFile: %s", agentDef.DefinitionPath)
+	// Use enhanced agent info display with verbose parameter
+	err = ui.DisplayAgentInfoEnhanced(agentDef, verbose)
+	if err != nil {
+		handleCommandError("Agent display", err, ExitAgentError)
+	}
 
 	utils.Info("Agent info completed successfully | agent_param=" + agentParam + ", agent_id=" + agentDef.ID)
 }
 
 func printAgentUsage() {
-	ui.Header("Usage: crules agent [subcommand]")
+	ui.Header("Usage: cursor++ agent [subcommand]")
 
 	ui.Plain("\nSubcommands:")
 	ui.Plain("  <none>       List all available agents (default)")
@@ -649,48 +813,9 @@ func printAgentUsage() {
 	ui.Plain("  info <id>    Display detailed information about a specific agent")
 
 	ui.Plain("\nExample usage:")
-	ui.Plain("  crules agent               # List all available agents")
-	ui.Plain("  crules agent select        # Interactively select an agent")
-	ui.Plain("  crules agent info wizard   # Show detailed info about the wizard agent")
-	ui.Plain("  crules agent info 1        # Show detailed info about the first agent in the list")
+	ui.Plain("  cursor++ agent               # List all available agents")
+	ui.Plain("  cursor++ agent select        # Interactively select an agent")
+	ui.Plain("  cursor++ agent info wizard   # Show detailed info about the wizard agent")
+	ui.Plain("  cursor++ agent info 1        # Show detailed info about the first agent in the list")
 	ui.Plain("\nYou can also reference agents in the chatbox using @ (example: @wizard.mdc)")
-}
-
-// Add handler for import command
-func handleImport(manager *core.SyncManager) {
-	utils.Debug("Handling import command")
-
-	// Check if URL is provided
-	if len(os.Args) < 3 {
-		ui.Error("Import URL is required")
-		ui.Plain("Usage: crules import <url> [options]")
-		ui.Plain("Options:")
-		ui.Plain("  -f, --force   Force overwrite existing rules")
-		ui.Plain("  -w, --web     Enable web parsing mode (optimized for HTML content)")
-		os.Exit(ExitUsageError)
-	}
-
-	// Get URL parameter
-	url := os.Args[2]
-
-	// Check for flags
-	force := false
-	webMode := false
-
-	for i := 3; i < len(os.Args); i++ {
-		switch os.Args[i] {
-		case "-f", "--force":
-			force = true
-		case "-w", "--web":
-			webMode = true
-		}
-	}
-
-	// Call import function with options
-	if err := core.ImportRules(url, force, webMode); err != nil {
-		handleCommandError("Import", err, ExitImportError)
-	}
-
-	utils.Info("Import command completed successfully")
-	ui.Success("Successfully imported rules from URL")
 }
