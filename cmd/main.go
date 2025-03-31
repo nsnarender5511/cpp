@@ -289,37 +289,149 @@ func handleAgent(manager *core.AgentInitializer, appPaths utils.AppPaths, verbos
 		handleCommandError("Agent", fmt.Errorf("cannot get current directory: %v", err), ExitAgentError)
 	}
 
-	// Use local rules directory instead of global
-	localRulesDir := filepath.Join(currentDir, config.RulesDirName, config.AgentsDirName)
-	utils.Debug("Using local rules directory | path=" + localRulesDir)
+	// Try multiple possible locations for agent definitions
+	rulesDir := filepath.Join(currentDir, config.RulesDirName)
 
-	// Get agent registry from local directory
-	registry, err := agent.NewRegistry(config, localRulesDir)
+	// First location: .cursor/rules/cursor-rules (AgentsDirName subfolder)
+	localRulesDir := filepath.Join(rulesDir, config.AgentsDirName)
+
+	// Second location: directly in .cursor/rules (where init puts them)
+	directRulesDir := rulesDir
+
+	// Choose the appropriate directory based on what exists and has .mdc files
+	chosenDir := ""
+
+	// First check the subfolder location
+	if utils.DirExists(localRulesDir) {
+		// Check if it has .mdc files
+		hasMDC, _ := utils.HasMDCFiles(localRulesDir)
+		if hasMDC {
+			chosenDir = localRulesDir
+			if utils.IsDebug() {
+				utils.Debugf("Using agent subfolder path: %s", chosenDir)
+			}
+		}
+	}
+
+	// If we haven't found a valid directory yet, check the direct location
+	if chosenDir == "" && utils.DirExists(directRulesDir) {
+		// Check if it has .mdc files
+		hasMDC, _ := utils.HasMDCFiles(directRulesDir)
+		if hasMDC {
+			chosenDir = directRulesDir
+			if utils.IsDebug() {
+				utils.Debugf("Using direct rules path: %s", chosenDir)
+			}
+		}
+	}
+
+	if utils.IsVerbose() {
+		utils.Infof("Using agent directory: %s", chosenDir)
+	}
+
+	if utils.IsDebug() {
+		utils.Debugf("Agent configuration: %+v", config)
+		utils.Debugf("Directory details: CurrentDir=%s, RulesDirName=%s, AgentsDirName=%s",
+			currentDir, config.RulesDirName, config.AgentsDirName)
+		utils.Debugf("Checked directories: subfolder=%s, direct=%s, chosen=%s",
+			localRulesDir, directRulesDir, chosenDir)
+
+		// List files in the rules directory
+		if utils.DirExists(rulesDir) {
+			files, err := os.ReadDir(rulesDir)
+			if err == nil {
+				utils.Debugf("Contents of %s:", rulesDir)
+				for _, file := range files {
+					utils.Debugf("  - %s (dir: %v)", file.Name(), file.IsDir())
+				}
+			} else {
+				utils.Debugf("Error reading rules directory: %v", err)
+			}
+		} else {
+			utils.Debugf("Rules directory does not exist: %s", rulesDir)
+		}
+	}
+
+	// Check if we found a valid directory
+	if chosenDir == "" {
+		ui.Warning("No local agent definitions found in %s or %s", localRulesDir, directRulesDir)
+		ui.Plain("Run %s to initialize the agent system in this directory", ui.SuccessStyle.Sprint("cursor++ init"))
+		ui.Plain("Or use %s to get help", ui.SuccessStyle.Sprint("cursor++ agent --help"))
+		return
+	}
+
+	// Get agent registry from chosen directory
+	registry, err := agent.NewRegistry(config, chosenDir)
 	if err != nil {
 		handleCommandError("Agent", err, ExitAgentError)
 	}
 
-	// Check if there are no arguments after "agent"
-	if len(args) < 1 {
+	// Debug the registry scan results
+	if utils.IsDebug() {
+		agents := registry.ListAgents()
+		utils.Debugf("Registry scan complete - found %d agents", len(agents))
+		utils.Debugf("Rules directory used: %s", registry.GetRulesDir())
+
+		// Check for .mdc files in the directory
+		mdcFiles := 0
+		filepath.Walk(chosenDir, func(path string, info os.FileInfo, err error) error {
+			if err == nil && !info.IsDir() && strings.HasSuffix(info.Name(), ".mdc") {
+				mdcFiles++
+				utils.Debugf("Found MDC file: %s", path)
+			}
+			return nil
+		})
+		utils.Debugf("Manual MDC file count: %d", mdcFiles)
+	}
+
+	// Filter out any flag arguments (args starting with -) from the subcommand args
+	var filteredArgs []string
+	for _, arg := range args {
+		if !strings.HasPrefix(arg, "-") {
+			filteredArgs = append(filteredArgs, arg)
+		} else if utils.IsDebug() {
+			utils.Debugf("Skipping flag argument: %s", arg)
+		}
+	}
+
+	// Check if there are no non-flag arguments after "agent"
+	if len(filteredArgs) < 1 {
+		if utils.IsVerbose() {
+			utils.Info("No subcommand provided, displaying agent list")
+		}
 		displayAgentList(registry)
 		return
 	}
 
 	// Handle sub-commands
-	subCommand := args[0]
+	subCommand := filteredArgs[0]
 	utils.Info("Executing agent sub-command | sub_command=" + subCommand)
 
 	switch subCommand {
 	case "list":
+		if utils.IsVerbose() {
+			utils.Info("Displaying agent list")
+		}
 		displayAgentList(registry)
 	case "select":
+		if utils.IsVerbose() {
+			utils.Info("Entering agent selection mode")
+		}
 		handleAgentSelect(registry, config, appPaths)
 	case "info":
-		if len(args) < 2 {
+		if len(filteredArgs) < 2 {
 			ui.Error("Missing agent ID. Usage: cursor++ agent info <agent-id>")
 			os.Exit(ExitUsageError)
 		}
-		handleAgentInfo(registry, args[1], verbose)
+		if utils.IsVerbose() {
+			utils.Infof("Displaying agent info for: %s", filteredArgs[1])
+		}
+		handleAgentInfo(registry, filteredArgs[1], verbose)
+	case "help", "--help", "-h":
+		if utils.IsVerbose() {
+			utils.Info("Displaying agent usage help")
+		}
+		printAgentUsage()
 	default:
 		ui.Warning("Unknown agent sub-command: %s", subCommand)
 		printAgentUsage()
@@ -329,20 +441,50 @@ func handleAgent(manager *core.AgentInitializer, appPaths utils.AppPaths, verbos
 
 // displayAgentList shows available agents
 func displayAgentList(registry *agent.Registry) {
-	utils.Debug("Displaying agent list")
+	if utils.IsDebug() {
+		utils.Debug("Displaying agent list | registry path: " + registry.GetRulesDir())
+	}
 
 	// Get agents from registry
 	agents := registry.ListAgents()
 	count := len(agents)
 
+	// Add detailed debug information
+	if utils.IsDebug() {
+		utils.Debugf("Found %d agents in registry", count)
+		if count > 0 {
+			for i, agent := range agents {
+				utils.Debugf("Agent %d: ID=%s, Name=%s", i+1, agent.ID, agent.Name)
+			}
+		}
+	}
+
 	if count == 0 {
-		ui.Warning("No agents found.")
-		utils.Info("Agent list completed - no agents found")
+		ui.Header("Agent List")
+		ui.Warning("No agents found in the current directory.")
+
+		// Provide helpful information
+		ui.Plain("\nPossible reasons:")
+		ui.Plain("• This directory has not been initialized with cursor++ agents")
+		ui.Plain("• The agent files (.mdc files) were not properly copied")
+		ui.Plain("• The agent directory structure is incorrect")
+
+		ui.Plain("\nSolutions:")
+		ui.Plain("1. Run %s to initialize this directory", ui.SuccessStyle.Sprint("cursor++ init"))
+		ui.Plain("2. Check that %s exists", ui.InfoStyle.Sprint(".cursor/rules directory"))
+		ui.Plain("3. Verify that this directory contains %s files", ui.InfoStyle.Sprint(".mdc"))
+
+		if utils.IsVerbose() {
+			utils.Info("Agent list completed - no agents found")
+		}
 		return
 	}
 
 	// Get terminal width for display formatting
 	termWidth := getTerminalWidth()
+	if utils.IsDebug() {
+		utils.Debugf("Terminal width: %d characters", termWidth)
+	}
 
 	// Get last selected agent from config
 	configManager := utils.NewConfigManager()
@@ -352,6 +494,10 @@ func displayAgentList(registry *agent.Registry) {
 	config := configManager.GetConfig()
 	lastSelectedAgent := config.LastSelectedAgent
 
+	if utils.IsVerbose() && lastSelectedAgent != "" {
+		utils.Infof("Last selected agent: %s", lastSelectedAgent)
+	}
+
 	// Create display options
 	options := ui.DefaultAgentDisplayOptions()
 	options.TermWidth = termWidth
@@ -359,10 +505,24 @@ func displayAgentList(registry *agent.Registry) {
 	options.CompactMode = termWidth < 80
 	options.SelectedAgentID = lastSelectedAgent
 
+	if utils.IsDebug() {
+		utils.Debugf("Agent display options: %+v", options)
+	}
+
+	// Display header with count
+	ui.Header("Available Agents (%d)", count)
+
 	// Display with enhanced UI
 	ui.DisplayAgentListEnhanced(agents, options)
 
-	utils.Info("Agent list completed successfully | agent_count=" + fmt.Sprintf("%d", count))
+	// Add usage hint after the list
+	ui.Plain("\nTip: Use %s to get detailed information about a specific agent",
+		ui.SuccessStyle.Sprint("cursor++ agent info <agent-id>"))
+	ui.Plain("Reference agents in your editor using @ (example: @wizard.mdc)")
+
+	if utils.IsVerbose() {
+		utils.Info("Agent list completed successfully | agent_count=" + fmt.Sprintf("%d", count))
+	}
 }
 
 // cleanAgentName removes redundant words from agent names
@@ -630,34 +790,83 @@ func handleAgentSelect(registry *agent.Registry, config *utils.Config, appPaths 
 }
 
 func handleAgentInfo(registry *agent.Registry, agentParam string, verbose bool) {
-	utils.Debug("Handling agent info subcommand | agent_param=" + agentParam)
+	if utils.IsDebug() {
+		utils.Debugf("Handling agent info subcommand | agent_param=%s verbose=%t", agentParam, verbose)
+	}
 
 	var agentDef *agent.AgentDefinition
 	var err error
 
+	agents := registry.ListAgents()
+	if utils.IsDebug() {
+		utils.Debugf("Registry contains %d agents", len(agents))
+	}
+
+	// Check if there are no agents available
+	if len(agents) == 0 {
+		ui.Error("No agents available in the current directory.")
+		ui.Plain("\nTry running %s first to initialize the agent system.", ui.SuccessStyle.Sprint("cursor++ init"))
+		return
+	}
+
 	// Check if the input is a numeric index
 	if index, convErr := strconv.Atoi(agentParam); convErr == nil {
+		if utils.IsVerbose() {
+			utils.Infof("Looking up agent by numeric index: %d", index)
+		}
+
 		// Validate the index is positive
 		if index <= 0 {
 			ui.Error("Invalid agent index: %d. Agent indexes start at 1.", index)
+			if utils.IsDebug() {
+				utils.Debug("Agent lookup failed: index <= 0")
+			}
 			os.Exit(ExitAgentError)
 		}
 
 		// Get agent by numeric index
-		agents := registry.ListAgents()
 		if index <= len(agents) {
 			agentDef = agents[index-1] // Convert to 0-based index
+			if utils.IsVerbose() {
+				utils.Infof("Found agent at index %d: %s (%s)", index, agentDef.Name, agentDef.ID)
+			}
 		} else {
 			ui.Error("Agent index %d is out of range. Use a number between 1 and %d.", index, len(agents))
+			if utils.IsDebug() {
+				utils.Debugf("Agent lookup failed: index %d > available agents %d", index, len(agents))
+			}
 			os.Exit(ExitAgentError)
 		}
 	} else {
 		// Get agent by string ID
+		if utils.IsVerbose() {
+			utils.Infof("Looking up agent by ID: %s", agentParam)
+		}
+
 		agentDef, err = registry.GetAgent(agentParam)
 		if err != nil {
-			ui.Error("Agent '%s' not found: %v", agentParam, err)
+			ui.Error("Agent '%s' not found", agentParam)
+			if utils.IsVerbose() {
+				ui.Plain("\nAvailable agents:")
+				for i, agent := range agents {
+					ui.Plain("  %d. %s (%s)", i+1, agent.Name, agent.ID)
+				}
+			}
+			if utils.IsDebug() {
+				utils.Debugf("Agent lookup error: %v", err)
+			}
 			os.Exit(ExitAgentError)
+		} else if utils.IsVerbose() {
+			utils.Infof("Found agent with ID %s: %s", agentDef.ID, agentDef.Name)
 		}
+	}
+
+	// Display header with agent name before showing details
+	ui.Header("Agent: %s", agentDef.Name)
+
+	if utils.IsDebug() {
+		utils.Debugf("Displaying agent info | id=%s name=%s verbose=%t",
+			agentDef.ID, agentDef.Name, verbose)
 	}
 
 	// Use enhanced agent info display with verbose parameter
@@ -666,21 +875,30 @@ func handleAgentInfo(registry *agent.Registry, agentParam string, verbose bool) 
 		handleCommandError("Agent display", err, ExitAgentError)
 	}
 
-	utils.Info("Agent info completed successfully | agent_param=" + agentParam + ", agent_id=" + agentDef.ID)
+	if utils.IsVerbose() {
+		utils.Infof("Agent info displayed successfully | agent=%s (%s)", agentDef.Name, agentDef.ID)
+	}
 }
 
 func printAgentUsage() {
-	ui.Header("Usage: cursor++ agent [subcommand]")
+	ui.Header("Usage: cursor++ agent [OPTIONS] [subcommand]")
+
+	ui.Plain("\nOptions:")
+	ui.Plain("  --verbose        Show additional information")
+	ui.Plain("  --debug          Show detailed debug information")
 
 	ui.Plain("\nSubcommands:")
 	ui.Plain("  <none>       List all available agents (default)")
+	ui.Plain("  list         List all available agents")
 	ui.Plain("  select       Interactively select an agent")
 	ui.Plain("  info <id>    Display detailed information about a specific agent")
+	ui.Plain("  help         Show this help message")
 
 	ui.Plain("\nExample usage:")
-	ui.Plain("  cursor++ agent               # List all available agents")
-	ui.Plain("  cursor++ agent select        # Interactively select an agent")
-	ui.Plain("  cursor++ agent info wizard   # Show detailed info about the wizard agent")
-	ui.Plain("  cursor++ agent info 1        # Show detailed info about the first agent in the list")
+	ui.Plain("  cursor++ agent                 # List all available agents")
+	ui.Plain("  cursor++ agent --verbose       # List agents with verbose output")
+	ui.Plain("  cursor++ agent select          # Interactively select an agent")
+	ui.Plain("  cursor++ agent info wizard     # Show info about the wizard agent")
+	ui.Plain("  cursor++ agent info 1 --debug  # Show detailed info with debug output")
 	ui.Plain("\nYou can also reference agents in the chatbox using @ (example: @wizard.mdc)")
 }

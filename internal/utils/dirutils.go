@@ -91,3 +91,50 @@ func FormatFileSize(size int64) string {
 	}
 	return fmt.Sprintf("%.1f %cB", float64(size)/float64(div), "KMGTPE"[exp])
 }
+
+// CountFiles returns the number of files in a directory (non-recursive)
+func CountFiles(dir string) (int, error) {
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return 0, err
+	}
+
+	count := 0
+	for _, file := range files {
+		if !file.IsDir() {
+			count++
+		}
+	}
+	return count, nil
+}
+
+// CountFilesByExt returns the number of files with a specific extension (non-recursive)
+func CountFilesByExt(dir, ext string) (int, error) {
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return 0, err
+	}
+
+	count := 0
+	for _, file := range files {
+		if !file.IsDir() && filepath.Ext(file.Name()) == ext {
+			count++
+		}
+	}
+	return count, nil
+}
+
+// CountFilesRecursive returns the total number of files in a directory and its subdirectories
+func CountFilesRecursive(dir string) int {
+	total := 0
+	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			total++
+		}
+		return nil
+	})
+	return total
+}

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 
 	"cursor++/internal/utils"
 )
@@ -14,6 +15,7 @@ type Registry struct {
 	Projects []string `json:"projects"`
 	path     string   // path to registry file
 	config   *utils.Config
+	mutex    *sync.RWMutex
 }
 
 // LoadRegistry loads or creates the registry
@@ -126,4 +128,13 @@ func (r *Registry) save() error {
 
 	utils.Debug("Registry saved successfully | path=" + r.path)
 	return nil
+}
+
+// GetProjectCount returns the number of projects in the registry
+func (r *Registry) GetProjectCount() int {
+	if r.mutex != nil {
+		r.mutex.RLock()
+		defer r.mutex.RUnlock()
+	}
+	return len(r.Projects)
 }

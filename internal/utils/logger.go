@@ -38,6 +38,16 @@ func IsVerboseErrors() bool {
 	return verboseErrors
 }
 
+// IsDebug returns whether debug console output is enabled
+func IsDebug() bool {
+	return debugConsole
+}
+
+// IsVerbose returns whether verbose console output is enabled
+func IsVerbose() bool {
+	return verbose
+}
+
 // InitLogger initializes the logging system
 func InitLogger(appPaths AppPaths) {
 	// Create new logger instance
@@ -83,7 +93,7 @@ func Debug(msg string) {
 	log.Debug(msg)
 
 	if debugConsole {
-		fmt.Println("[DEBUG]", msg)
+		fmt.Printf("\033[38;5;246m[DEBUG]\033[0m %s\n", msg)
 	}
 }
 
@@ -92,7 +102,7 @@ func Info(msg string) {
 	log.Info(msg)
 
 	if verbose {
-		fmt.Println("[INFO]", msg)
+		fmt.Printf("\033[38;5;117m[INFO]\033[0m %s\n", msg)
 	}
 }
 
@@ -101,7 +111,7 @@ func Warn(msg string) {
 	log.Warn(msg)
 
 	// Always show warnings on console
-	fmt.Println("[WARN]", msg)
+	fmt.Printf("\033[38;5;220m[WARN]\033[0m %s\n", msg)
 }
 
 // Error logs an error message
@@ -109,7 +119,7 @@ func Error(msg string) {
 	log.Error(msg)
 
 	// Always show errors on console
-	fmt.Println("[ERROR]", msg)
+	fmt.Printf("\033[38;5;196m[ERROR]\033[0m %s\n", msg)
 }
 
 // Fatal logs a fatal message and exits

@@ -20,8 +20,8 @@ const (
 	// DefaultRegistryFileName is the default registry file name
 	DefaultRegistryFileName = "registry.json"
 
-	// DefaultRulesDirName is the default directory name for rules
-	DefaultRulesDirName = "rules"
+	// DefaultRulesDirName is the default directory name for rules - this is not to be changed ever
+	DefaultRulesDirName = ".cursor/rules"
 
 	// DefaultDirPermission is the default permission for directories
 	DefaultDirPermission = 0755

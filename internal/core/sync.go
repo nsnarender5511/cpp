@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"cursor++/internal/git"
 	"cursor++/internal/ui"
@@ -87,6 +88,21 @@ func (ai *AgentInitializer) Init() error {
 		return wrapOpError("Init", "cwd", err, "failed to get current directory")
 	}
 
+	// Add detailed debug info about configuration
+	if utils.IsDebug() {
+		utils.Debugf("Init configuration details | agentPath=%s | rulesDirName=%s | dataDir=%s",
+			ai.agentPath, ai.config.RulesDirName, ai.appPaths.DataDir)
+		utils.Debugf("Registry location | path=%s | projects=%d",
+			ai.appPaths.GetRegistryFile(ai.config.RegistryFileName), ai.registry.GetProjectCount())
+	}
+
+	// Add verbose info
+	if utils.IsVerbose() {
+		utils.Info("Initializing agent system in current directory")
+		utils.Infof("Using system agent path: %s", ai.agentPath)
+	}
+
+	// The target path is the rules directory in the current project
 	targetPath := filepath.Join(currentDir, ai.config.RulesDirName)
 	utils.Debug("Init target path | path=" + targetPath)
 
@@ -107,6 +123,8 @@ func (ai *AgentInitializer) Init() error {
 			utils.Debug("Agent location exists but contains no definitions | path=" + ai.agentPath)
 			ui.Warning("Agent location exists but contains no definitions: %s", ai.agentPath)
 			needsSetup = true
+		} else if utils.IsVerbose() {
+			utils.Info("Found existing agent definitions")
 		}
 	}
 
@@ -116,14 +134,52 @@ func (ai *AgentInitializer) Init() error {
 		}
 	}
 
-	// Copy agent definitions to project
+	// Log copy operation details
+	if utils.IsVerbose() {
+		utils.Infof("Copying agent definitions to project directory: %s", targetPath)
+	}
+
+	// Debug with more details about the copy operation
+	if utils.IsDebug() {
+		utils.Debugf("Copy operation details | source=%s | target=%s | permission=%o",
+			ai.agentPath, targetPath, ai.config.DirPermission)
+	}
+
+	// Ensure the target directory exists
+	if err := os.MkdirAll(targetPath, ai.config.DirPermission); err != nil {
+		return wrapOpError("Init", targetPath, err, "failed to create target directory")
+	}
+
+	// Copy agent definitions directly to the rules directory
+	// This is an important change to ensure agent definitions are in the expected location
 	if err := utils.CopyDir(ai.agentPath, targetPath); err != nil {
 		return wrapOpError("Init", targetPath, err, "failed to copy agent definitions")
+	}
+
+	if utils.IsDebug() {
+		// Verify the copy operation
+		mdcFiles := 0
+		err := filepath.Walk(targetPath, func(path string, info os.FileInfo, err error) error {
+			if err == nil && !info.IsDir() && strings.HasSuffix(info.Name(), ".mdc") {
+				mdcFiles++
+				utils.Debugf("Copied MDC file: %s", path)
+			}
+			return nil
+		})
+		if err != nil {
+			utils.Debugf("Error walking target directory: %v", err)
+		} else {
+			utils.Debugf("Total MDC files copied: %d", mdcFiles)
+		}
 	}
 
 	// Add project to registry
 	if err := ai.registry.AddProject(currentDir); err != nil {
 		return wrapOpError("Init", currentDir, err, "failed to register project")
+	}
+
+	if utils.IsVerbose() {
+		utils.Info("Project registered in agent registry")
 	}
 
 	ui.Success("Successfully initialized agent system in %s", currentDir)
@@ -132,57 +188,46 @@ func (ai *AgentInitializer) Init() error {
 
 // handleInitialSetup manages the initial setup of the agent system
 func (ai *AgentInitializer) handleInitialSetup() bool {
-	ui.Info("\nNo agent definitions found. Please choose an option:")
-	ui.Plain("1. Create empty agent directory")
-	ui.Plain("2. Clone from git repository")
-	ui.Plain("3. Cancel")
-	ui.Prompt("\nEnter choice (1-3): ")
+	// Default repository URL instead of prompting the user
+	defaultRepoURL := "https://github.com/nsnarender5511/AgenticSystem"
 
-	var choice string
-	if err := ai.readUserInput(&choice); err != nil {
+	ui.Info("\nNo agent definitions found. Automatically cloning from default repository...")
+	ui.Info("Repository URL: %s", defaultRepoURL)
+
+	// Add more verbose information
+	if utils.IsVerbose() {
+		utils.Infof("Target agent path: %s", ai.agentPath)
+	}
+
+	// Add detailed debug information
+	if utils.IsDebug() {
+		utils.Debugf("Clone operation details | repo=%s | path=%s | permission=%o",
+			defaultRepoURL, ai.agentPath, ai.config.DirPermission)
+		utils.Debugf("Agent registry details | projects=%d | registryPath=%s",
+			ai.registry.GetProjectCount(), ai.appPaths.GetRegistryFile(ai.config.RegistryFileName))
+	}
+
+	if err := ai.cloneRepository(defaultRepoURL); err != nil {
 		ui.Error(err.Error())
 		return false
 	}
 
-	switch choice {
-	case "1":
-		if err := ai.createEmptyDirectory(); err != nil {
-			ui.Error(err.Error())
-			return false
-		}
-		ui.Success("Created empty agent directory at %s", ai.agentPath)
-		return true
-
-	case "2":
-		var repoURL string
-		ui.Prompt("Enter git repository URL: ")
-
-		if err := ai.readUserInput(&repoURL); err != nil {
-			ui.Error(err.Error())
-			return false
+	// Verify and log the clone results
+	if utils.DirExists(ai.agentPath) {
+		if utils.IsVerbose() {
+			fileCount, _ := utils.CountFiles(ai.agentPath)
+			utils.Infof("Repository cloned successfully with %d files", fileCount)
 		}
 
-		if repoURL == "" {
-			ui.Error("Repository URL cannot be empty")
-			return false
+		if utils.IsDebug() {
+			mdcFiles, _ := utils.CountFilesByExt(ai.agentPath, ".mdc")
+			utils.Debugf("Agent definition details | total files=%d | mdc files=%d",
+				utils.CountFilesRecursive(ai.agentPath), mdcFiles)
 		}
-
-		if err := ai.cloneRepository(repoURL); err != nil {
-			ui.Error(err.Error())
-			return false
-		}
-
-		ui.Success("Successfully cloned repository to %s", ai.agentPath)
-		return true
-
-	case "3":
-		ui.Info("Operation cancelled by user")
-		return false
-
-	default:
-		ui.Error("Invalid choice")
-		return false
 	}
+
+	ui.Success("Successfully cloned repository to %s", ai.agentPath)
+	return true
 }
 
 func (ai *AgentInitializer) readUserInput(input *string) error {

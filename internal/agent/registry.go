@@ -280,3 +280,8 @@ func (r *Registry) findTemplates(agentID string) ([]string, error) {
 
 	return templates, nil
 }
+
+// GetRulesDir returns the rules directory path
+func (r *Registry) GetRulesDir() string {
+	return r.rulesDir
+}
