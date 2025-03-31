@@ -14,6 +14,17 @@ cursor++ is a command-line tool that enhances the Cursor IDE experience by provi
 - 📂 **Project Synchronization**: Keep agents in sync across your workspace
 - 📝 **Integrated Workflow**: Seamless integration with your development process
 
+> Advanced rule-based agents for the Cursor editor
+
+cursor++ enhances your Cursor editor experience with customizable rule-based agents.
+
+## Features
+
+- Seamless integration with Cursor editor
+- Customizable agents based on rule sets
+- Extensible architecture for creating your own agents
+- Built-in agents for common development tasks
+
 ---
 
 ## 🚀 Getting Started

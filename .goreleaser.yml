@@ -42,7 +42,7 @@ brews:
     description: "A tool for managing and synchronizing Cursor rules across multiple projects"
     license: MIT
     test: |
-      system "#{bin}/crules --version"
+      system "#{bin}/cursor++ --version"
 
 scoops:
   - repository:

@@ -1,16 +1,43 @@
-# Utility API Reference
+---
+title: Utils API
+description: Utility functions and helpers
+applies_to: cursor++ v0.1.0+
+---
 
-> 📘 This document provides detailed API reference for the utility components of crules.
+# Utils API
 
-## Overview
+The Utils API provides various utility functions for working with the cursor++ system.
 
-The Utility API provides helper functions and types used throughout the crules system, including:
+## File System Utilities
 
-- **Configuration**: Configuration loading and management
-- **App Paths**: Platform-specific path handling
-- **File Operations**: File and directory utilities
-- **Terminal UI Helpers**: Terminal UI formatting and display
-- **Error Handling**: Common error handling utilities
+### `EnsureDirectoryExists`
+
+```go
+func EnsureDirectoryExists(path string) error
+```
+
+Creates a directory if it doesn't exist.
+
+**Parameters:**
+- `path` - The directory path to create
+
+**Returns:**
+- `error` - An error if the directory couldn't be created
+
+### `WriteFile`
+
+```go
+func WriteFile(filePath string, content []byte) error
+```
+
+Writes content to a file, creating the file if it doesn't exist.
+
+**Parameters:**
+- `filePath` - The path to the file
+- `content` - The content to write
+
+**Returns:**
+- `error` - An error if the file couldn't be written
 
 ## Configuration
 
@@ -96,8 +123,9 @@ Returns the path to the configuration file for the specified application.
 
 **Example:**
 ```go
-configPath := utils.GetConfigPath("crules")
-fmt.Printf("Config path: %s\n", configPath)
+configPath := utils.GetConfigPath("cursor++")
+fmt.Println(configPath)
+// Output: /home/user/.config/cursor++/config.json (on Linux)
 ```
 
 ## App Paths
@@ -134,7 +162,9 @@ Returns application-specific paths for the specified application.
 
 **Example:**
 ```go
-paths := utils.GetAppPaths("crules")
+paths := utils.GetAppPaths("cursor++")
+fmt.Println(paths.ConfigDir)
+// Output: /home/user/.config/cursor++
 ```
 
 #### GetConfigDir
@@ -150,9 +180,9 @@ Returns the configuration directory for the application.
 
 **Example:**
 ```go
-paths := utils.GetAppPaths("crules")
-configDir := paths.GetConfigDir()
-fmt.Printf("Config directory: %s\n", configDir)
+paths := utils.GetAppPaths("cursor++")
+fmt.Println(paths.ConfigDir)
+// Output: /home/user/.config/cursor++
 ```
 
 #### GetDataDir
@@ -168,9 +198,9 @@ Returns the data directory for the application.
 
 **Example:**
 ```go
-paths := utils.GetAppPaths("crules")
-dataDir := paths.GetDataDir()
-fmt.Printf("Data directory: %s\n", dataDir)
+paths := utils.GetAppPaths("cursor++")
+fmt.Println(paths.DataDir)
+// Output: /home/user/.local/share/cursor++
 ```
 
 #### GetCacheDir
@@ -186,9 +216,9 @@ Returns the cache directory for the application.
 
 **Example:**
 ```go
-paths := utils.GetAppPaths("crules")
-cacheDir := paths.GetCacheDir()
-fmt.Printf("Cache directory: %s\n", cacheDir)
+paths := utils.GetAppPaths("cursor++")
+fmt.Println(paths.CacheDir)
+// Output: /home/user/.cache/cursor++
 ```
 
 #### GetRulesDir
@@ -207,10 +237,9 @@ Returns the rules directory path based on the configured rules directory name.
 
 **Example:**
 ```go
-paths := utils.GetAppPaths("crules")
-config := utils.LoadConfig()
-rulesDir := paths.GetRulesDir(config.RulesDirName)
-fmt.Printf("Rules directory: %s\n", rulesDir)
+paths := utils.GetAppPaths("cursor++")
+fmt.Println(paths.LogDir)
+// Output: /home/user/.local/state/cursor++/logs
 ```
 
 ## File Operations
@@ -371,7 +400,9 @@ Prints a formatted application banner with the application name and version.
 
 **Example:**
 ```go
-utils.PrintBanner("crules", "v0.1.0")
+utils.PrintBanner("cursor++", "v0.1.0")
+// Output:
+// ✨ cursor++ v0.1.0 ✨
 ```
 
 #### PrintSuccess
@@ -513,10 +544,11 @@ Initializes the logger with the specified application name and log level.
 
 **Example:**
 ```go
-err := utils.InitLogger("crules", "info")
+err := utils.InitLogger("cursor++", "info")
 if err != nil {
-    log.Fatalf("Failed to initialize logger: %v", err)
+    fmt.Println("Failed to initialize logger:", err)
 }
+// Logger initialized at /home/user/.local/state/cursor++/logs/cursor++.log
 ```
 
 #### LogDebug

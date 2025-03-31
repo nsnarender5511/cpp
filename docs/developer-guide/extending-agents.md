@@ -1,10 +1,72 @@
-# Extending the Agent System
+---
+title: Extending Agents
+description: Guidelines for creating and extending agents
+applies_to: cursor++ v0.1.0+
+---
 
-> 🧩 This guide explains how to create and extend agents in the crules system, including the format, structure, and best practices for agent definition files.
+# Extending Agents
+
+This guide explains how to create new agents or extend existing ones in the cursor++ system.
+
+## Agent System Overview
+
+The agent system in cursor++ is designed to be modular and extensible. An agent is a specialized component that performs a specific task or provides a specific capability within the application.
+
+## Creating a New Agent
+
+To create a new agent, follow these steps:
+
+1. Create a new directory for your agent in the appropriate location:
+   ```
+   internal/agent/youragent/
+   ```
+
+2. Create the main agent implementation file:
+   ```
+   internal/agent/youragent/youragent.go
+   ```
+
+3. Implement the Agent interface:
+   ```go
+   package youragent
+
+   type YourAgent struct {
+       // Agent state and dependencies
+   }
+
+   func NewYourAgent() *YourAgent {
+       return &YourAgent{
+           // Initialize state
+       }
+   }
+
+   // Implement Agent interface methods
+   func (a *YourAgent) Name() string {
+       return "youragent"
+   }
+
+   func (a *YourAgent) Description() string {
+       return "Description of what your agent does"
+   }
+
+   func (a *YourAgent) Execute(ctx context.Context, input string) (string, error) {
+       // Implementation of the agent logic
+   }
+   ```
+
+4. Register your agent in the agent registry:
+   ```go
+   // In internal/agent/registry.go
+   import "github.com/nsnarender5511/cursor++/internal/agent/youragent"
+
+   func init() {
+       RegisterAgent(youragent.NewYourAgent())
+   }
+   ```
 
 ## Agent Definition Files
 
-Agents in crules are defined using Markdown files with the `.mdc` extension. These files contain both the agent's metadata (name, description, role, capabilities) and the full agent definition (instructions, examples, etc.).
+Agents in cursor++ are defined using Markdown files with the `.mdc` extension. These files contain both the agent's metadata (name, description, role, capabilities) and the full agent definition (instructions, examples, etc.).
 
 ### File Structure
 
@@ -152,16 +214,16 @@ When interacting with the user:
 4. If asked to do something beyond your capabilities, politely explain your limitations
 ```
 
-3. Save the file and make it available to crules by running:
+3. Save the file and make it available to cursor++ by running:
 
 ```bash
-crules merge
+cursor++ merge
 ```
 
 4. Verify that your agent is recognized:
 
 ```bash
-crules agent
+cursor++ agent
 ```
 
 You should see your new agent in the list of available agents.
@@ -255,8 +317,8 @@ related: [feature-planner, implementer, code-reviewer]
 
 After creating an agent, test it thoroughly:
 
-1. Select it using `crules agent select`
-2. Verify that it appears correctly in `crules agent info`
+1. Select it using `cursor++ agent select`
+2. Verify that it appears correctly in `cursor++ agent info`
 3. Test it with various inputs to ensure it behaves as expected
 4. Make adjustments as needed and retest
 
@@ -355,11 +417,11 @@ For larger teams, consider setting up a dedicated repository for agent definitio
 3. Include README files explaining the available agents
 4. Use git tags for versioning
 
-Team members can initialize crules with this repository:
+Team members can initialize cursor++ with this repository:
 
 ```bash
 # During first-time setup
-crules init
+cursor++ init
 
 # When prompted, choose to fetch from git repository
 # Enter your team's repository URL

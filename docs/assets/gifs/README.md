@@ -1,6 +1,6 @@
 # GIF Assets Reference
 
-This directory contains animated GIF assets used in the crules documentation. This README serves as a reference guide to help maintain consistent naming and organization of GIF assets.
+This directory contains animated GIF assets used in the cursor++ documentation. This README serves as a reference guide to help maintain consistent naming and organization of GIF assets.
 
 ## Directory Structure
 
@@ -29,16 +29,15 @@ The following GIFs are required for the documentation:
 
 ### Installation
 
-- `installing-on-macos.gif` - Installing crules on macOS
-- `installing-on-linux.gif` - Installing crules on Linux
-- `installing-on-windows.gif` - Installing crules on Windows
+- `installing-on-macos.gif` - Installing cursor++ on macOS
+- `installing-on-linux.gif` - Installing cursor++ on Linux
+- `installing-on-windows.gif` - Installing cursor++ on Windows
 
 ### Usage
 
-- `initializing-project.gif` - Initializing a project with crules
-- `selecting-agent.gif` - Selecting an agent interactively
-- `syncing-rules.gif` - Syncing rules between projects
-- `merging-rules.gif` - Merging rules to main location
+- `initializing-project.gif` - Initializing a project with cursor++
+- `selecting-agent.gif` - Selecting an agent to use
+- `syncing-rules.gif` - Synchronizing rules across projects
 
 ### Workflows
 

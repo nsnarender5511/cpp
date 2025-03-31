@@ -1,10 +1,45 @@
-# Version API Reference
+---
+title: Version API
+description: Version information utilities
+applies_to: cursor++ v0.1.0+
+---
 
-> 🏷️ API reference for the version utilities of crules.
+# Version API
+
+The Version API provides utilities for accessing and comparing version information in cursor++.
+
+## Constants
+
+```go
+const (
+    // Version is the current version of the application
+    Version = "0.1.0"
+    
+    // MinCompatibleVersion is the minimum version that is compatible with the current version
+    MinCompatibleVersion = "0.1.0"
+)
+```
+
+## Functions
+
+### `CheckVersion`
+
+```go
+func CheckVersion(version string) (bool, error)
+```
+
+Checks if the provided version is compatible with the current version.
+
+**Parameters:**
+- `version` - The version to check
+
+**Returns:**
+- `bool` - True if the version is compatible
+- `error` - An error if the version check failed
 
 ## Overview
 
-The Version API provides utilities for managing and comparing version information in crules. It includes functions for parsing version strings, comparing versions, and checking compatibility.
+The Version API provides utilities for managing and comparing version information in cursor++. It includes functions for parsing version strings, comparing versions, and checking compatibility.
 
 This reference covers the most important types and functions in the Version package located at `/internal/version`.
 

@@ -1,14 +1,24 @@
-# Testing Guidelines
+---
+title: Testing Guide
+description: How to test the cursor++ application
+applies_to: cursor++ v0.1.0+
+---
 
-> 📌 **Summary**: Guidelines and best practices for testing the crules codebase.
+# Testing Guide
 
-## Overview
+This document explains how to test cursor++ during development.
 
-Testing is a critical part of the development process for crules. This document outlines the testing approach, tools, and best practices for ensuring the reliability and stability of the codebase.
+## Types of Tests
+
+The cursor++ project includes several types of tests:
+
+1. **Unit Tests** - Test individual functions and methods
+2. **Integration Tests** - Test the interaction between components
+3. **End-to-End Tests** - Test the entire application workflow
 
 ## Testing Stack
 
-crules uses the following testing components:
+cursor++ uses the following testing components:
 
 - **Go's built-in testing package**: For unit and integration tests
 - **testify**: For assertions and mocking
@@ -99,11 +109,11 @@ func TestCliWorkflow(t *testing.T) {
     defer os.Setenv("HOME", oldHome)
     
     // Run the init command
-    cmd := exec.Command("crules", "init", "--main", path.Join(testHome, "rules"))
+    cmd := exec.Command("cursor++", "init", "--main", path.Join(testHome, "rules"))
     assert.NoError(t, cmd.Run())
     
     // Verify the configuration was created
-    configPath := path.Join(testHome, ".config/crules/config.json")
+    configPath := path.Join(testHome, ".config/cursor++/config.json")
     assert.True(t, utils.FileExists(configPath))
     
     // Additional workflow steps...
@@ -112,20 +122,24 @@ func TestCliWorkflow(t *testing.T) {
 
 ## Running Tests
 
-### Running Unit Tests
+### Unit Tests
+
+To run all unit tests:
 
 ```bash
-# Run all unit tests
 go test ./...
+```
 
-# Run tests for a specific package
-go test ./internal/utils
+To run tests for a specific package:
 
-# Run a specific test
-go test ./internal/utils -run TestFileExists
+```bash
+go test ./internal/agent
+```
 
-# Run tests with verbose output
-go test -v ./...
+To run a specific test:
+
+```bash
+go test ./internal/agent -run TestAgentInitialization
 ```
 
 ### Running Integration Tests
@@ -188,15 +202,17 @@ func TestValidatePath(t *testing.T) {
 }
 ```
 
+## Test Mocks
+
+For testing functionality that interacts with external systems (like Git repositories), we use mocks.
+
+The `internal/utils/testutils` package provides helper functions and mock implementations to facilitate testing.
+
 ## Continuous Integration
 
-We use GitHub Actions for continuous integration testing:
+The cursor++ project uses GitHub Actions for continuous integration. The CI pipeline runs all tests on each pull request and commit to the main branch.
 
-- Every push and pull request triggers the test suite
-- Tests run on multiple operating systems (Linux, macOS, Windows)
-- Both Go 1.18 and 1.19 are tested
-
-See [.github/workflows/test.yml](https://github.com/nsnarender5511/crules/blob/main/.github/workflows/test.yml) for the CI configuration.
+See [.github/workflows/test.yml](https://github.com/nsnarender5511/cursor++/blob/main/.github/workflows/test.yml) for the CI configuration.
 
 ## Debugging Tests
 

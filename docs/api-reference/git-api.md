@@ -1,16 +1,16 @@
 ---
 version: v0.1.0
 last_updated: 2023-03-29
-applies_to: crules v0.1.0+
+applies_to: cursor++ v0.1.0+
 ---
 
 # Git API Reference
 
-> 🔄 API reference for the Git integration utilities of crules.
+> 🔄 API reference for the Git integration utilities of cursor++.
 
 ## Overview
 
-The Git API provides utilities for interacting with Git repositories in crules. It includes functions for Git repository detection, .gitignore management, and Git operations.
+The Git API provides utilities for interacting with Git repositories in cursor++. It includes functions for Git repository detection, .gitignore management, and Git operations.
 
 This reference covers the most important types and functions in the Git package located at `/internal/git`.
 

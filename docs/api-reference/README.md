@@ -362,6 +362,8 @@ Some of the most commonly used functions:
 | `PrintBanner` | `ui` | Prints the application banner |
 | `IsGitRepository` | `git` | Checks if a path is in a Git repository |
 | `Parse` | `version` | Parses a version string |
+| `InitProject` | `core` | Initializes a new cursor++ project |
+| `MergeRules` | `core` | Merges rules from multiple sources |
 
 ## Error Handling
 

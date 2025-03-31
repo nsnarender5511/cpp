@@ -1,101 +1,107 @@
 # Troubleshooting Guide
 
-> 🔧 This guide helps you diagnose and resolve common issues that may occur when using crules.
+> 🔧 This guide helps you diagnose and resolve common issues that may occur when using cursor++.
 
-## Common Issues and Solutions
+## Quick Reference
 
-### Installation Issues
+### Common Issues by Category
 
-#### Tool Not Found After Installation
+#### Installation Issues
+- Command `cursor++` not found error
+- "Command not found" when trying to run cursor++
+- Permission denied errors
+
+#### Installation Troubleshooting
 
 **Symptoms:**
-- Command `crules` not found error
-- "Command not found" when trying to run crules
+- Command not found error
+- Unable to execute cursor++
 
 **Solutions:**
-1. Check if the binary is in your PATH:
+1. Check if cursor++ is installed and in your PATH:
    ```bash
-   which crules
+   which cursor++
    ```
 
-2. Verify installation directory is in your PATH:
+2. Check your PATH environment variable:
    ```bash
    echo $PATH
    ```
 
-3. Reinstall crules:
+3. Reinstall cursor++:
    ```bash
-   curl -sL https://github.com/org/crules/releases/latest/download/install.sh | bash
+   curl -sL https://github.com/org/cursor++/releases/latest/download/install.sh | bash
    ```
 
-4. Add installation directory to your PATH:
+4. Add cursor++ to your PATH:
    ```bash
-   # For Bash (add to ~/.bashrc or ~/.bash_profile)
-   export PATH=$PATH:/path/to/crules/bin
-   
-   # For Zsh (add to ~/.zshrc)
-   export PATH=$PATH:/path/to/crules/bin
+   # Add to ~/.bashrc or ~/.zshrc
+   export PATH=$PATH:/path/to/cursor++/bin
+   # Then reload
+   source ~/.bashrc # or source ~/.zshrc
    ```
 
-#### Permission Denied Error
+#### Permission Issues
 
 **Symptoms:**
-- "Permission denied" when running crules
-- "Cannot execute binary file"
+- "Permission denied" when running cursor++
 
 **Solutions:**
 1. Make the binary executable:
    ```bash
-   chmod +x /path/to/crules
+   chmod +x /path/to/cursor++
    ```
 
-2. Check file ownership:
+2. Check file permissions:
    ```bash
-   ls -la /path/to/crules
+   ls -la /path/to/cursor++
    ```
 
-3. Run with sudo (if necessary):
+3. Try running with sudo:
    ```bash
-   sudo crules --version
+   sudo cursor++ --version
    ```
 
-### Initialization Issues
+### Configuration Issues
 
-#### Main Rules Location Not Set
+#### Config File Not Found
 
 **Symptoms:**
-- Error about main rules location not existing
-- "Main rules location does not exist" warning
+- "Config file not found" error
+- "Failed to load configuration"
 
 **Solutions:**
-1. Follow the first-time setup prompts to create or clone a main location
-2. Set main location manually in config:
+1. Check if config directory exists:
+   ```bash
+   ls -la ~/.config/cursor++/
+   ```
+
+2. Create a default config file:
    ```json
-   // ~/.config/crules/config.json
+   // ~/.config/cursor++/config.json
    {
-     "mainLocation": "/path/to/main/rules"
+     "mainLocation": "~/.cursor/rules"
    }
    ```
 
-3. Use environment variable:
+3. Try initializing again:
    ```bash
-   export APP_NAME=custom-name
-   crules init
+   cursor++ init
    ```
 
-#### Failed to Create Rules Directory
+#### Permission Errors with Config
 
 **Symptoms:**
-- "Failed to create directory" error
-- Permission-related errors on initialization
+- "Permission denied" when accessing config file
+- Unable to write to config directory
 
 **Solutions:**
 1. Check directory permissions:
    ```bash
-   ls -la ~/.cursor/
+   ls -la ~/.config/
    ```
 
-2. Create the directory manually:
+2. Create the directory with proper permissions:
    ```bash
    mkdir -p ~/.cursor/rules
    chmod 755 ~/.cursor/rules
@@ -108,7 +114,7 @@
 
 4. Try running with elevated privileges:
    ```bash
-   sudo crules init
+   sudo cursor++ init
    ```
 
 ### Synchronization Issues
@@ -133,12 +139,12 @@
 
 3. Run with debug output to see detailed errors:
    ```bash
-   crules --debug sync
+   cursor++ --debug sync
    ```
 
 4. Try resetting by reinitializing:
    ```bash
-   crules init
+   cursor++ init
    ```
 
 #### Merge Command Fails
@@ -155,17 +161,17 @@
 
 2. Verify your project is registered:
    ```bash
-   crules list
+   cursor++ list
    ```
 
 3. Check for file conflicts:
    ```bash
-   crules --debug merge
+   cursor++ --debug merge
    ```
 
 4. Try with `--verbose` flag:
    ```bash
-   crules --verbose merge
+   cursor++ --verbose merge
    ```
 
 ### Registry Issues
@@ -173,51 +179,51 @@
 #### Projects Missing from Registry
 
 **Symptoms:**
-- Projects not showing in `crules list`
+- Projects not showing in `cursor++ list`
 - "Project not registered" errors
 
 **Solutions:**
 1. Re-register the project:
    ```bash
-   crules init
+   cursor++ init
    ```
 
 2. Check registry file for corruption:
    ```bash
-   cat ~/.local/share/crules/registry.json
+   cat ~/.local/share/cursor++/registry.json
    ```
 
 3. Reset registry file:
    ```bash
-   rm ~/.local/share/crules/registry.json
+   rm ~/.local/share/cursor++/registry.json
    ```
 
 4. Run registry repair:
    ```bash
-   crules clean
+   cursor++ clean
    ```
 
 #### Cannot Clean Non-existent Projects
 
 **Symptoms:**
-- Error when running `crules clean`
+- Error when running `cursor++ clean`
 - Non-existent projects still showing in list
 
 **Solutions:**
 1. Check registry file permissions:
    ```bash
-   ls -la ~/.local/share/crules/registry.json
+   ls -la ~/.local/share/cursor++/registry.json
    ```
 
 2. Manually edit registry file:
    ```bash
    # Edit registry file directly
-   nano ~/.local/share/crules/registry.json
+   nano ~/.local/share/cursor++/registry.json
    ```
 
 3. Reset registry completely:
    ```bash
-   echo '{"projects":[]}' > ~/.local/share/crules/registry.json
+   echo '{"projects":[]}' > ~/.local/share/cursor++/registry.json
    ```
 
 ### Agent System Issues
@@ -245,12 +251,12 @@
 
 3. Sync rules from main location:
    ```bash
-   crules sync
+   cursor++ sync
    ```
 
 4. Import agents from URL:
    ```bash
-   crules import https://cursor.directory/example-agent
+   cursor++ import https://cursor.directory/example-agent
    ```
 
 #### Directory Structures Not Being Found
@@ -268,7 +274,7 @@
 
 2. Run init with debug mode to see directory detection process:
    ```bash
-   crules --debug init
+   cursor++ --debug init
    ```
 
 3. Check permissions on all potential rules directories:
@@ -305,7 +311,7 @@
    
 4. Retry with verbose output to see detailed clone and copy steps:
    ```bash
-   crules --verbose init
+   cursor++ --verbose init
    ```
 
 5. If the repository structure has changed, you may need to manually reorganize:
@@ -322,13 +328,13 @@
 #### Agent Selection Fails
 
 **Symptoms:**
-- Error when running `crules agent select`
+- Error when running `cursor++ agent select`
 - Selection UI crashes or exits unexpectedly
 
 **Solutions:**
 1. Try selecting by ID directly:
    ```bash
-   crules agent info wizard
+   cursor++ agent info wizard
    ```
 
 2. Check terminal compatibility:
@@ -341,164 +347,154 @@
    export TERM=xterm-256color
    ```
 
-4. Run in debug mode:
+4. Try running with debug flags:
    ```bash
-   crules --debug agent select
+   cursor++ --debug agent select
    ```
 
-### Configuration Issues
+### Configuration File Issues
 
-#### Configuration File Corruption
+#### Corrupt Configuration
 
 **Symptoms:**
 - "Failed to parse config" error
-- Unexpected behavior despite correct commands
+- "Invalid configuration format"
 
 **Solutions:**
-1. Check configuration file:
+1. Check the current configuration:
    ```bash
-   cat ~/.config/crules/config.json
+   cat ~/.config/cursor++/config.json
    ```
 
-2. Reset configuration file:
+2. Reset the configuration file:
    ```bash
-   rm ~/.config/crules/config.json
-   crules --version  # Creates new default config
+   rm ~/.config/cursor++/config.json
+   cursor++ --version  # Creates new default config
    ```
 
-3. Create minimal configuration:
+3. Create a minimal configuration file:
    ```bash
-   echo '{"mainLocation":"~/.cursor/rules"}' > ~/.config/crules/config.json
+   echo '{"mainLocation":"~/.cursor/rules"}' > ~/.config/cursor++/config.json
    ```
 
-#### Wrong Permissions on Config Directories
+### Permission and Ownership Issues
+
+#### Permission Denied Errors
 
 **Symptoms:**
-- Unable to write to config or data directories
-- Permission denied errors
+- "Permission denied" when accessing configuration
+- Unable to create or modify rules files
 
 **Solutions:**
-1. Check directory permissions:
+1. Check file permissions:
    ```bash
-   ls -la ~/.config/crules/
-   ls -la ~/.local/share/crules/
+   ls -la ~/.config/cursor++/
+   ls -la ~/.local/share/cursor++/
    ```
 
 2. Fix permissions:
    ```bash
-   chmod 755 ~/.config/crules/
-   chmod 644 ~/.config/crules/config.json
-   chmod 755 ~/.local/share/crules/
-   chmod 644 ~/.local/share/crules/registry.json
+   chmod 755 ~/.config/cursor++/
+   chmod 644 ~/.config/cursor++/config.json
+   chmod 755 ~/.local/share/cursor++/
+   chmod 644 ~/.local/share/cursor++/registry.json
    ```
 
-3. Check ownership:
+3. Fix ownership:
    ```bash
-   chown -R $(whoami) ~/.config/crules/
-   chown -R $(whoami) ~/.local/share/crules/
+   chown -R $(whoami) ~/.config/cursor++/
+   chown -R $(whoami) ~/.local/share/cursor++/
    ```
 
-## Diagnostic Commands
+## Common Commands for Diagnosis
 
-### Version Check
+### Check Installation Status
 
-Check that crules is properly installed and get version information:
-
-```bash
-crules --version
-```
-
-### Debug Output
-
-Run any command with `--debug` to get detailed diagnostic information:
+Check that cursor++ is properly installed and get version information:
 
 ```bash
-crules --debug init
-crules --debug sync
-crules --debug agent select
+cursor++ --version
 ```
 
-### Check Configuration
-
-View current configuration settings:
+### Debug Mode for Operations
 
 ```bash
-cat ~/.config/crules/config.json
+cursor++ --debug init
+cursor++ --debug sync
+cursor++ --debug agent select
 ```
 
-### Check Registry
-
-View registered projects:
+### Check Configuration Files
 
 ```bash
-cat ~/.local/share/crules/registry.json
+# View configuration file
+cat ~/.config/cursor++/config.json
+
+# View registry file
+cat ~/.local/share/cursor++/registry.json
 ```
 
-### Log Examination
-
-Check log files for detailed error information:
+### View Logs
 
 ```bash
-# View most recent log file
-ls -la ~/.local/share/crules/logs/ | sort | tail -n 1
-cat ~/.local/share/crules/logs/latest.log
+# List log files
+ls -la ~/.local/share/cursor++/logs/ | sort | tail -n 1
+cat ~/.local/share/cursor++/logs/latest.log
 ```
 
-## Complete Reset
+### Complete Reset
 
-If you want to completely reset crules to its initial state:
+If you want to completely reset cursor++ to its initial state:
 
 ```bash
 # Remove configuration
-rm -rf ~/.config/crules/
+rm -rf ~/.config/cursor++/
 
-# Remove data files
-rm -rf ~/.local/share/crules/
+# Remove registry
+rm -rf ~/.local/share/cursor++/
 
 # Remove logs
-rm -rf ~/.local/share/crules/logs/
+rm -rf ~/.local/share/cursor++/logs/
 
-# Run a simple command to reinitialize
-crules --version
+# Create fresh installation
+cursor++ --version
 ```
 
 ## Getting Help
 
-If you're still experiencing issues:
+### Community Resources
 
-1. Check for open issues on GitHub: [github.com/org/crules/issues](https://github.com/org/crules/issues)
-2. File a new issue with:
-   - Your operating system and version
-   - Output of `crules --version`
-   - Full error message and context
+1. Check for open issues on GitHub: [github.com/org/cursor++/issues](https://github.com/org/cursor++/issues)
+2. When reporting an issue, include:
+   - Output of `cursor++ --version`
+   - Error messages you're seeing
    - Steps to reproduce the issue
+   - Operating system and version
 
-## Common Error Messages and Meanings
+### Common Error Messages
 
 | Error Message | Likely Cause | Solution |
 |---------------|--------------|----------|
-| "Failed to create config directory" | Permission issues or disk space | Check directory permissions and available disk space |
-| "Main rules location does not exist" | First time setup or incorrect path | Follow setup prompts or update config manually |
-| "Failed to parse config file" | Corrupted configuration file | Reset configuration file |
-| "Agent not found" | Missing agent files or typo in agent ID | Verify agent exists, check spelling, run `crules agent` to list available agents |
-| "Failed to sync rules" | Permission issues or connectivity problems | Check file permissions, ensure main location is accessible |
-| "Failed to register project" | Registry file issues | Check registry file permissions |
-| "Failed to copy rules" | File system issues | Check directory permissions and disk space |
+| "Command not found" | Installation problem | Add cursor++ to PATH or reinstall |
+| "Failed to initialize" | Permission or configuration issue | Check permissions, recreate config |
+| "Rules directory not found" | Directory structure issue | Create required directories |
+| "Agent not found" | Missing agent files or typo in agent ID | Verify agent exists, check spelling, run `cursor++ agent` to list available agents |
+| "Cannot sync rules" | Permission or path issue | Check directory permissions and paths |
 
 ## See Also
 
-- [Getting Started Guide](./getting-started.md): Quick introduction to crules
-- [Configuration Guide](./configuration.md): How to configure crules
+- [Getting Started Guide](./getting-started.md): Quick introduction to cursor++
+- [Configuration Guide](./configuration.md): How to configure cursor++
 - [Command Reference](./commands.md): Detailed information about all commands
 
 ## Still Having Issues?
 
 If you're still encountering problems after trying the solutions in this guide:
 
-1. Check our [GitHub issues](https://github.com/nsnarender5511/crules/issues) to see if others have reported similar problems
+1. Check our [GitHub issues](https://github.com/nsnarender5511/cursor++/issues) to see if others have reported similar problems
 2. Open a new issue with detailed information about your problem, including:
    - Your operating system and version
-   - Your crules version (run `crules --version`)
+   - Your cursor++ version (run `cursor++ --version`)
    - Steps to reproduce the issue
    - Any error messages or logs
    - What you've already tried to resolve the issue

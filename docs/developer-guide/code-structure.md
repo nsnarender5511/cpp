@@ -1,38 +1,40 @@
 ---
 version: v0.1.0
 last_updated: 2023-03-29
-applies_to: crules v0.1.0+
+applies_to: cursor++ v0.1.0+
 ---
 
 # Code Structure
 
-> 📁 This guide explains the organization of the codebase and the purpose of each component.
+> 📚 This document provides an overview of how the codebase is organized, to help developers understand and navigate the project.
 
 ## Directory Structure
 
-The crules codebase is organized into the following main directories:
+The cursor++ codebase is organized into the following main directories:
 
 ```
-crules/
-├── cmd/            # Command-line interface entry points
-├── internal/       # Internal packages
-│   ├── agent/      # Agent system implementation
-│   ├── core/       # Core functionality
-│   ├── git/        # Git integration utilities
-│   ├── ui/         # User interface components
-│   ├── utils/      # Utility functions and helpers
-│   └── version/    # Version information
-├── docs/           # Documentation
-└── assets/         # Static assets
+cursor++/
+├── .github/         # GitHub workflows and templates
+├── cmd/             # Command-line interface entry points
+├── docs/            # Documentation
+├── internal/        # Internal packages
+│   ├── agent/       # Agent system implementation
+│   ├── constants/   # Common constants
+│   ├── core/        # Core logic and functionality
+│   ├── git/         # Git integration utilities
+│   ├── ui/          # User interface utilities
+│   ├── utils/       # Utility functions
+│   └── version/     # Version information
+└── LICENSE          # License file
 ```
 
 ## Key Components
 
-### Command Line Interface (cmd/)
+### Command Line Interface
 
-The `cmd/` directory contains the entry points for the command-line interface:
+- `cmd/main.go`: The main entry point for the cursor++ CLI tool, implementing all commands and their functionality
 
-- `cmd/main.go`: The main entry point for the crules CLI tool, implementing all commands and their functionality
+The main file implements the command-line interface using a simple flag-based approach, with commands as the first argument.
 
 ### Internal Packages (internal/)
 
@@ -82,6 +84,40 @@ The `internal/version/` package manages version information:
 
 - Provides version details
 - Handles version checking and comparison
+
+### Core Components
+
+#### Registry (`internal/core/registry.go`)
+
+The Registry manages the list of projects and their associated rules. Key features:
+
+- Project management (add, remove, list)
+- Thread-safe operations with mutex protection
+- Project count and validation functionality
+
+This component acts as the central database for the cursor++ system.
+
+#### Utils (`internal/utils/`)
+
+Utility functions for file operations, configuration, and other common tasks:
+
+- `config.go`: Configuration management
+- `dirutils.go`: Directory utilities, including path validation, file counting, and recursive operations
+- `logger.go`: Logging with color support
+
+The `dirutils.go` file includes several useful utilities for directory operations:
+- `DirExists`: Checks if a directory exists
+- `CountFiles`: Counts files in a directory (non-recursive)
+- `CountFilesByExt`: Counts files with a specific extension
+- `CountFilesRecursive`: Recursively counts all files in a directory
+- `EnsureDirExists`: Creates a directory if it doesn't exist
+
+#### Agent System (`internal/agent/`)
+
+Manages interaction with the agent system:
+
+- `registry.go`: Handles agent discovery and metadata extraction
+- `GetRulesDir`: Detects and returns the rules directory, checking multiple possible locations for better reliability
 
 ## Key Data Structures
 
@@ -160,10 +196,10 @@ The codebase is designed with several extension points:
 
 ## Development Workflow
 
-When working on crules, the typical workflow is:
+When working on cursor++, the typical workflow is:
 
 1. Make code changes
-2. Build with `go build ./cmd/crules`
+2. Build with `go build ./cmd/cursor++`
 3. Run tests with `go test ./...`
 4. Test manually with the built binary
 

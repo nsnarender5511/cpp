@@ -1,7 +1,7 @@
 ---
 version: v0.1.0
 last_updated: 2023-03-29
-applies_to: crules v0.1.0+
+applies_to: cursor++ v0.1.0+
 ---
 
 # Agent API

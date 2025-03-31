@@ -1,16 +1,16 @@
 ---
 version: v0.1.0
 last_updated: 2023-03-29
-applies_to: crules v0.1.0+
+applies_to: cursor++ v0.1.0+
 ---
 
-# Contributing to crules
+# Contributing to cursor++
 
-> 🤝 Guidelines for contributing to the crules project.
+> 🤝 Guidelines for contributing to cursor++.
 
 ## Introduction
 
-Thank you for considering contributing to crules! This document provides guidelines and instructions for contributing to the project. By following these guidelines, you help maintain the quality and consistency of the codebase.
+Thank you for considering contributing to cursor++! This document provides guidelines and instructions for contributing to the project. By following these guidelines, you help maintain the quality and consistency of the codebase.
 
 ## Code of Conduct
 
@@ -28,16 +28,16 @@ Please read and follow our [Code of Conduct](./code-of-conduct.md). We expect al
 1. Fork the repository on GitHub
 2. Clone your fork to your local machine:
    ```bash
-   git clone https://github.com/your-username/crules.git
-   cd crules
+   git clone https://github.com/YOUR-USERNAME/cursor++.git
+   cd cursor++
    ```
 3. Add the original repository as an upstream remote:
    ```bash
-   git remote add upstream https://github.com/original-owner/crules.git
+   git remote add upstream https://github.com/nsnarender5511/cursor++.git
    ```
 4. Install dependencies:
    ```bash
-   go mod download
+   go mod tidy
    ```
 
 ## Development Workflow
@@ -157,7 +157,7 @@ feat(agent): add support for selection by index
   ---
   version: v0.1.0
   last_updated: YYYY-MM-DD
-  applies_to: crules v0.1.0+
+  applies_to: cursor++ v0.1.0+
   ---
   ```
 - Include a table of contents for files longer than 100 lines
@@ -200,7 +200,7 @@ feat(agent): add support for selection by index
 The project follows a standard Go layout:
 
 ```
-crules/
+cursor++/
 ├── cmd/           # Command-line applications
 ├── internal/      # Private application code
 │   ├── agent/     # Agent-related code
@@ -258,7 +258,7 @@ If you have questions or need help, you can:
 - Join our community chat
 - Email the maintainers
 
-Thank you for contributing to crules! Your help makes the project better for everyone.
+Thank you for contributing to cursor++! Your help makes the project better for everyone.
 
 ## See Also
 

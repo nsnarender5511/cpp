@@ -125,6 +125,27 @@ You should see output similar to:
 cursor++ v1.0.0
 ```
 
+## Helpful Debugging Options
+
+The cursor++ tool provides several options for troubleshooting and getting more information:
+
+```bash
+# Get verbose output
+cursor++ --verbose command
+
+# Get detailed debug information with color-coded output
+cursor++ --debug command
+```
+
+The debug output is now color-coded for better readability:
+- Error messages: Red
+- Warning messages: Yellow
+- Success messages: Green
+- Info messages: Blue
+- Debug messages: Cyan
+
+This makes it easier to identify the nature of the messages at a glance.
+
 ## First-Time Setup
 
 After installing cursor++, the first time you run it, you'll need to set up your main rules location. This is where all your rules will be stored and synced from.

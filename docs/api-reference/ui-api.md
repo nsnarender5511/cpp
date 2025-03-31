@@ -1,10 +1,51 @@
-# UI API Reference
+---
+title: UI API
+description: User interface utilities
+applies_to: cursor++ v0.1.0+
+---
 
-> 📊 API reference for the user interface components of crules.
+# UI API
+
+The UI API provides utilities for building user interfaces in cursor++.
+
+## Terminal UI Components
+
+### `PrintSuccess`
+
+```go
+func PrintSuccess(message string)
+```
+
+Prints a success message to the terminal.
+
+**Parameters:**
+- `message` - The success message to display
+
+### `PrintError`
+
+```go
+func PrintError(message string)
+```
+
+Prints an error message to the terminal.
+
+**Parameters:**
+- `message` - The error message to display
+
+### `PrintWarning`
+
+```go
+func PrintWarning(message string)
+```
+
+Prints a warning message to the terminal.
+
+**Parameters:**
+- `message` - The warning message to display
 
 ## Overview
 
-The UI API provides components and utilities for building the terminal user interface in crules. It includes functions for displaying banners, messages, and interactive components like selectors.
+The UI API provides components and utilities for building the terminal user interface in cursor++. It includes functions for displaying banners, messages, and interactive components like selectors.
 
 This reference covers the most important types and functions in the UI package located at `/internal/ui`.
 
@@ -93,7 +134,7 @@ ui.PrintBanner("v0.1.0")
 
 Output:
 ```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
+✨ cursor++ - Cursor Rules Manager v0.1.0 ✨
 ```
 
 ### `PrintAppName` Function
@@ -112,7 +153,7 @@ ui.PrintAppName()
 
 Output:
 ```
-✨ crules ✨
+✨ cursor++ ✨
 ```
 
 ## Message Functions

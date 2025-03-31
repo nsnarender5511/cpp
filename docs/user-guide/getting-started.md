@@ -1,10 +1,10 @@
-# Getting Started with crules
+# Getting Started with cursor++
 
-> 🚀 This guide will help you get up and running with crules quickly, showing you how to set up your environment, initialize projects, and work with agents.
+> 🚀 This guide will help you get up and running with cursor++ quickly, showing you how to set up your environment, initialize projects, and work with agents.
 
 ## Overview
 
-Crules is a command-line tool that simplifies the management of Cursor rules across multiple projects. It solves several key challenges:
+Cursor++ is a command-line tool that simplifies the management of Cursor rules across multiple projects. It solves several key challenges:
 
 - **Centralized Rule Management**: Maintain all your AI agent rules in one main location
 - **Automatic Synchronization**: Ensure all projects have the latest versions of your rules
@@ -13,33 +13,33 @@ Crules is a command-line tool that simplifies the management of Cursor rules acr
 
 ## Installation
 
-If you haven't installed crules yet, follow the [Installation Guide](./installation.md) for step-by-step instructions.
+If you haven't installed cursor++ yet, follow the [Installation Guide](./installation.md) for step-by-step instructions.
 
 Quick installation options:
 
 ```bash
 # Using Homebrew (macOS)
-brew install crules
+brew install cursor++
 
 # Manual installation
-curl -sL https://github.com/org/crules/releases/latest/download/install.sh | bash
+curl -sL https://github.com/org/cursor++/releases/latest/download/install.sh | bash
 ```
 
 Verify your installation:
 
 ```bash
-crules --version
+cursor++ --version
 ```
 
 ## Basic Usage
 
 ### Initial Setup
 
-When you first use crules, you'll need to set up your main rules location. This is where all your rules will be centrally managed.
+When you first use cursor++, you'll need to set up your main rules location. This is where all your rules will be centrally managed.
 
 ```bash
 # Initialize rules in the current project
-crules init
+cursor++ init
 ```
 
 The first time you run this command, you'll be guided through setting up your main rules location. Options include:
@@ -62,7 +62,7 @@ sequenceDiagram
     participant System as 🔧 Core System
     participant Files as 📁 Files
     
-    User->>CLI: crules init
+    User->>CLI: cursor++ init
     CLI->>System: Check main location
     Note over System: First-time setup
     System->>User: Display options
@@ -100,24 +100,24 @@ Once your main rules location is set up, you can initialize rules in any project
 
 ```bash
 cd /path/to/your/project
-crules init
+cursor++ init
 ```
 
 This will:
 1. Copy rules from your main location to the current project
-2. Register the project in the crules registry
+2. Register the project in the cursor++ registry
 3. Update your `.gitignore` to exclude the `.cursor/` directory
 
 View all registered projects:
 
 ```bash
-crules list
+cursor++ list
 ```
 
 Clean up non-existent projects:
 
 ```bash
-crules clean
+cursor++ clean
 ```
 
 ### Rule Synchronization
@@ -125,13 +125,13 @@ crules clean
 To ensure your project has the latest rules from your main location:
 
 ```bash
-crules sync
+cursor++ sync
 ```
 
 When you've made changes to rules in your project that you want to share:
 
 ```bash
-crules merge
+cursor++ merge
 ```
 
 This will:
@@ -150,7 +150,7 @@ This will:
 To see all available agents:
 
 ```bash
-crules agent
+cursor++ agent
 ```
 
 This will display a formatted table of all agents with their information.
@@ -160,7 +160,7 @@ This will display a formatted table of all agents with their information.
 To interactively select and load an agent:
 
 ```bash
-crules agent select
+cursor++ agent select
 ```
 
 This will present a menu of available agents. Use the arrow keys to navigate, then press Enter to select.
@@ -175,7 +175,7 @@ This will present a menu of available agents. Use the arrow keys to navigate, th
 To view detailed information about a specific agent:
 
 ```bash
-crules agent info <id>
+cursor++ agent info <id>
 ```
 
 Replace `<id>` with either:
@@ -187,7 +187,7 @@ Replace `<id>` with either:
 You can import agent rules from a URL:
 
 ```bash
-crules import https://cursor.directory/example-agent
+cursor++ import https://cursor.directory/example-agent
 ```
 
 This will:
@@ -209,17 +209,17 @@ cd my-new-project
 git init
 
 # Initialize rules
-crules init
+cursor++ init
 
 # Start using agents in your project
-crules agent select
+cursor++ agent select
 ```
 
 ### Creating Custom Agents
 
 1. Create a new `.mdc` file in your main rules location
 2. Define your agent with the appropriate metadata and instructions
-3. Use `crules merge` to share it with all your projects
+3. Use `cursor++ merge` to share it with all your projects
 
 ## Troubleshooting
 
@@ -233,9 +233,9 @@ If you encounter persistent issues, check the [Troubleshooting Guide](./troubles
 
 ## Next Steps
 
-Now that you've got crules up and running, you might want to explore:
+Now that you've got cursor++ up and running, you might want to explore:
 
-- [Configuration](./configuration.md) to customize your crules setup
+- [Configuration](./configuration.md) to customize your cursor++ setup
 - [Commands](./commands.md) to learn all available commands
 - [Agent System](./agents.md) to understand how to work with AI agents
 
