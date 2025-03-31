@@ -229,10 +229,14 @@
 - "No agents available" message
 
 **Solutions:**
-1. Check if any agent files exist:
+1. Check if any agent files exist in any of these locations:
    ```bash
    ls -la ~/.cursor/rules/*.mdc
+   ls -la ./.cursor/rules/*.mdc
+   ls -la /usr/local/share/cursor-rules/*.mdc
    ```
+
+   > **Note**: Since the v1.1 update, the system automatically checks multiple locations for agent rules: the project directory, home directory, and system-wide directory. This makes it more robust when finding agents.
 
 2. Create a basic agent file:
    ```bash
@@ -247,6 +251,72 @@
 4. Import agents from URL:
    ```bash
    crules import https://cursor.directory/example-agent
+   ```
+
+#### Directory Structures Not Being Found
+
+**Symptoms:**
+- System doesn't recognize the rules directory
+- Path-related errors when accessing rules
+
+**Solutions:**
+1. Verify the directory structure exists:
+   ```bash
+   mkdir -p ~/.cursor/rules
+   mkdir -p ./.cursor/rules
+   ```
+
+2. Run init with debug mode to see directory detection process:
+   ```bash
+   crules --debug init
+   ```
+
+3. Check permissions on all potential rules directories:
+   ```bash
+   ls -la ~/.cursor/
+   ls -la ./.cursor/
+   ls -la /usr/local/share/
+   ```
+
+#### Source Folder Not Found
+
+**Symptoms:**
+- "Source folder does not exist" error during init
+- Failed repository cloning with folder-related errors
+
+**Solutions:**
+1. Verify the source folder exists in the repository:
+   ```bash
+   # Clone the repository temporarily to check its structure
+   git clone https://github.com/repository-url.git temp-check
+   ls -la temp-check/
+   ```
+
+2. Configure a different source folder if needed:
+   ```bash
+   # Edit config to change source folder name
+   echo "SOURCE_FOLDER=new-folder-name" >> ~/.config/cursor++/config.env
+   ```
+   
+3. Check your configuration to see what source folder is currently set:
+   ```bash
+   grep SOURCE_FOLDER ~/.config/cursor++/config.env
+   ```
+   
+4. Retry with verbose output to see detailed clone and copy steps:
+   ```bash
+   crules --verbose init
+   ```
+
+5. If the repository structure has changed, you may need to manually reorganize:
+   ```bash
+   # Clone repository to a temporary location
+   git clone https://github.com/repository-url.git temp-repo
+   # Create the source folder structure if it doesn't exist
+   mkdir -p temp-repo/default
+   # Move needed files to the source folder
+   mv temp-repo/*.mdc temp-repo/default/
+   # Commit and push changes if you own the repository
    ```
 
 #### Agent Selection Fails

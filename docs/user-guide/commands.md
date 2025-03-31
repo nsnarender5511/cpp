@@ -53,6 +53,14 @@ cursor++ init
 - Creates the `.cursor/rules` directory if it doesn't exist
 - Updates `.gitignore` to exclude the `.cursor/` directory if needed
 - Displays available agents after initialization
+- Performs verification steps to ensure successful initialization
+- Provides detailed feedback if issues are detected
+
+**Verification Steps:**
+- Checks that all required directories exist
+- Verifies permissions on directories
+- Counts files in the rules directory to confirm proper setup
+- Provides diagnostic information if verification fails
 
 **First-time Setup Options:**
 1. Create an empty directory structure
@@ -75,6 +83,7 @@ Choose an option:
 Enter git repository URL: [git@github.com:cursor-ai/cursor-plus-plus.git]
 
 ✓ Successfully initialized agents in /path/to/project/.cursor/rules
+✓ Verification complete: 12 rule files found and configured correctly
 
 Next Steps:
 1. Use cursor++ agent to see available agents
@@ -118,6 +127,8 @@ cursor++ agent
 | 1   | Document Syncer     | @doc-syncer.mdc    | 1.0      |
 +-----+---------------------+--------------------+----------+
 ```
+
+> **Note**: The `agent` command will automatically search for rules in multiple locations, checking first in the project-specific location (`.cursor/rules`), then in the user's home directory (`~/.cursor/rules`), and finally in the default system-wide location (`/usr/local/share/cursor-rules`). This ensures that agents are found regardless of where they are stored.
 
 #### `agent info` Subcommand
 

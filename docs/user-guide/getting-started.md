@@ -48,6 +48,13 @@ The first time you run this command, you'll be guided through setting up your ma
 2. Fetching rules from a git repository
 3. Importing rules from a URL
 
+> **Note**: Rules are searched for in multiple locations in this order:
+> 1. Your current project's directory (`.cursor/rules`)
+> 2. Your home directory (`~/.cursor/rules`)
+> 3. The system-wide location (`/usr/local/share/cursor-rules`)
+>
+> This ensures that rules are found regardless of where they are stored, making the system more reliable and flexible.
+
 ```mermaid
 sequenceDiagram
     participant User as 👤 User
@@ -79,6 +86,8 @@ sequenceDiagram
     style System fill:#9966ff,stroke:#6600cc
     style Files fill:#66cc99,stroke:#009966
 ```
+
+> **New in v1.2**: When cloning from a Git repository with multiple folders, the system will now clone the entire repository to the agents directory but only copy files from a specific subfolder (default: "default") to your rules directory. This allows repository maintainers to organize different sets of agents in separate folders.
 
 <details>
   <summary>📺 View First-Time Setup Process</summary>

@@ -12,7 +12,7 @@ import (
 // Default configuration values - centralized here
 const (
 	// DefaultAgentsDirName is the default directory name for agent rules
-	DefaultAgentsDirName = "cursor-rules"
+	DefaultAgentsDirName = "cursor++"
 
 	// DefaultConfigFileName is the default configuration file name
 	DefaultConfigFileName = "config.json"
@@ -22,6 +22,9 @@ const (
 
 	// DefaultRulesDirName is the default directory name for rules - this is not to be changed ever
 	DefaultRulesDirName = ".cursor/rules"
+
+	// DefaultSourceFolder is the name of the folder to copy from the cloned repo
+	DefaultSourceFolder = "default"
 
 	// DefaultDirPermission is the default permission for directories
 	DefaultDirPermission = 0755
@@ -39,6 +42,7 @@ type Config struct {
 	MultiAgentEnabled bool        `json:"multiAgentEnabled"`
 	AgentsDirName     string      `json:"agentsDirName"`
 	LastSelectedAgent string      `json:"lastSelectedAgent"`
+	SourceFolder      string      `json:"sourceFolder"`
 }
 
 // ConfigValidator defines a validation function for config values
@@ -67,6 +71,7 @@ func NewConfigManager() *ConfigManager {
 			AgentsDirName:     DefaultAgentsDirName,
 			MultiAgentEnabled: false,
 			LastSelectedAgent: "",
+			SourceFolder:      DefaultSourceFolder,
 		},
 		validators: make(map[string]ConfigValidator),
 	}
@@ -141,6 +146,7 @@ func (cm *ConfigManager) GetConfig() *Config {
 		MultiAgentEnabled: cm.config.MultiAgentEnabled,
 		AgentsDirName:     cm.config.AgentsDirName,
 		LastSelectedAgent: cm.config.LastSelectedAgent,
+		SourceFolder:      cm.config.SourceFolder,
 	}
 }
 

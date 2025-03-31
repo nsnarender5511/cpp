@@ -25,6 +25,7 @@ This file is created when you first run cursor++. You can edit it directly or us
 AGENTS_DIR_NAME=agents
 REGISTRY_FILE_NAME=registry.json
 RULES_DIR_NAME=.cursor/rules
+SOURCE_FOLDER=default
 DIR_PERMISSION=755
 FILE_PERMISSION=644
 MULTI_AGENT_ENABLED=true
@@ -48,10 +49,24 @@ By default, this is set to `.cursor/rules`, which creates a hidden directory in 
 The `AGENTS_DIR_NAME` setting defines the directory name within the rules directory where agent definitions are stored.
 
 ```env
-AGENTS_DIR_NAME=agents
+AGENTS_DIR_NAME=cursor-rules
 ```
 
-This is where the agent definition files (`.mdc`) are stored.
+By default, this is set to `cursor-rules`, which is a dedicated directory for Cursor-specific rules. This directory is where agent definition files (`.mdc`) are stored and should be included in version control if you want to share your agents with your team.
+
+> **Note**: In versions prior to v1.1, this was set to "test" by default. The change to "cursor-rules" provides better clarity about its purpose and improves compatibility with standard practices.
+
+### Source Folder
+
+The `SOURCE_FOLDER` setting defines the subfolder within a cloned repository that contains the agent definitions to be used.
+
+```env
+SOURCE_FOLDER=default
+```
+
+By default, this is set to `default`. When initializing from a git repository that contains multiple folders, the system will clone the entire repository but only copy files from this specified subfolder to your rules directory. This allows repositories to maintain multiple sets of agent definitions while your local setup uses only the ones you need.
+
+> **Note**: If the source folder doesn't exist in the cloned repository, the operation will fail with an error message.
 
 ### Registry File Name
 
@@ -117,6 +132,7 @@ cursor++ respects the following environment variables:
 | `AGENTS_DIR_NAME` | Overrides the agents directory name |
 | `REGISTRY_FILE_NAME` | Overrides the registry file name |
 | `RULES_DIR_NAME` | Overrides the rules directory name |
+| `SOURCE_FOLDER` | Specifies which subfolder to use from cloned repositories |
 | `DIR_PERMISSION` | Overrides the directory permission mode (in octal) |
 | `FILE_PERMISSION` | Overrides the file permission mode (in octal) |
 | `MULTI_AGENT_ENABLED` | Controls multi-agent mode (`true`, `1`, or `yes` to enable) |
