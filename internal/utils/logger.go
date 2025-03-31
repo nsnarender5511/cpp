@@ -13,8 +13,9 @@ var log *logrus.Logger
 
 // Console output control flags
 var (
-	debugConsole bool
-	verbose      bool
+	debugConsole  bool
+	verbose       bool
+	verboseErrors bool
 )
 
 // SetDebugConsole controls debug message console output
@@ -25,6 +26,16 @@ func SetDebugConsole(enabled bool) {
 // SetVerbose controls info message console output
 func SetVerbose(enabled bool) {
 	verbose = enabled
+}
+
+// SetVerboseErrors controls detailed error message output
+func SetVerboseErrors(enabled bool) {
+	verboseErrors = enabled
+}
+
+// IsVerboseErrors returns whether verbose error reporting is enabled
+func IsVerboseErrors() bool {
+	return verboseErrors
 }
 
 // InitLogger initializes the logging system

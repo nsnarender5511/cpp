@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"crules/internal/ui"
-	"crules/internal/utils"
+	"cursor++/internal/ui"
+	"cursor++/internal/utils"
 )
 
 // StoreRules saves parsed rules to the filesystem

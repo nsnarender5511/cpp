@@ -6,10 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"crules/internal/utils"
+	"cursor++/internal/utils"
 )
 
-// Registry keeps track of all projects using crules
+// Registry keeps track of all projects using cursor++
 type Registry struct {
 	Projects []string `json:"projects"`
 	path     string   // path to registry file

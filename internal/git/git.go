@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 
-	"crules/internal/utils"
+	"cursor++/internal/utils"
 )
 
 // Clone clones a git repository to the specified local path

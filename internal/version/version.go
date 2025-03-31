@@ -1,6 +1,6 @@
 package version
 
-// Version is the current version of crules.
+// Version is the current version of cursor++.
 // This is overridden during build by ldflags
 var Version = "dev"
 

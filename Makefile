@@ -2,7 +2,7 @@
 
 # Build the binary
 build:
-	go build -o crules cmd/main.go
+	go build -o cursor++ cmd/main.go
 
 # Run tests
 test:
@@ -15,7 +15,7 @@ release-test:
 
 # Clean build artifacts
 clean:
-	rm -f crules
+	rm -f cursor++
 	rm -rf dist/
 
 # Trigger a GitHub Actions release by creating and pushing a tag
@@ -249,7 +249,7 @@ release:
 	@echo ""
 	@echo "📦 Users can now install with:"
 	@echo "   brew tap nsnarender5511/tap"
-	@echo "   brew install crules"
+	@echo "   brew install cursor++"
 
 # Show help
 help:

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"crules/internal/utils"
+	"cursor++/internal/utils"
 )
 
 // ContextData represents the serializable part of agent context

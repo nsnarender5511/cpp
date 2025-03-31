@@ -5,9 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"crules/internal/git"
-	"crules/internal/ui"
-	"crules/internal/utils"
+	"cursor++/internal/agent"
+	"cursor++/internal/git"
+	"cursor++/internal/ui"
+	"cursor++/internal/utils"
 )
 
 // SyncManager handles all sync operations
@@ -151,6 +152,16 @@ func (sm *SyncManager) Init() error {
 		return fmt.Errorf("failed to copy rules: %v", err)
 	}
 
+	// After copying, use the animation to show agent loading process
+	animator := ui.NewAnimator()
+
+	// Create the registry to identify agents
+	agentRegistry, err := sm.createAgentRegistryWithAnimation(animator, targetPath)
+	if err != nil {
+		utils.Error("Failed to create agent registry | error=" + err.Error())
+		return fmt.Errorf("failed to create agent registry: %v", err)
+	}
+
 	// Register this project
 	utils.Debug("Registering project | project=" + currentDir)
 	if err := sm.registry.AddProject(currentDir); err != nil {
@@ -168,9 +179,72 @@ func (sm *SyncManager) Init() error {
 		utils.Info("Updated gitignore to exclude .cursor/ directory")
 	}
 
+	// Get agent count for final summary
+	agentCount := len(agentRegistry.ListAgents())
+
 	utils.Info("Rules initialized successfully | project=" + currentDir)
-	ui.Success("Successfully initialized rules in %s", targetPath)
+	ui.Success("Successfully initialized rules in %s with %d agents", targetPath, agentCount)
 	return nil
+}
+
+// createAgentRegistryWithAnimation creates a registry for the agents with animated progress
+func (sm *SyncManager) createAgentRegistryWithAnimation(animator *ui.TerminalAnimator, targetPath string) (*agent.Registry, error) {
+	// Get agent directory path - use the targetPath directly since we know it points to .cursor/rules
+	agentDir := filepath.Join(targetPath, sm.config.AgentsDirName)
+	utils.Debug("Looking for agents in | path=" + agentDir)
+
+	// Start animation
+	animator.StartAnimation("Initializing Agents")
+
+	// Add a generic initialization step
+	animator.AddItem("init", "Preparing agent system...")
+
+	// Create registry with a progress callback
+	registry, err := agent.NewRegistry(sm.config, agentDir)
+	if err != nil {
+		animator.UpdateStatus("init", "error")
+		animator.StopAnimation("Failed to initialize agents")
+		return nil, err
+	}
+
+	animator.UpdateStatus("init", "success")
+
+	// Set up progress tracking
+	registry.SetProgressCallback(func(event string, message string) {
+		switch event {
+		case "scan_start":
+			animator.AddItem("scan", "Scanning for agent definitions...")
+		case "scan_error":
+			animator.UpdateStatus("scan", "error")
+		case "file_found":
+			// Don't add an item for each file to avoid cluttering the display
+		case "processing_file":
+			// Use the message (agent ID) as the item ID
+			animator.AddItem(message, "Loading agent: "+message)
+		case "process_success":
+			animator.UpdateStatus(message, "success")
+		case "process_error":
+			animator.UpdateStatus(message, "error")
+		case "scan_complete":
+			animator.UpdateStatus("scan", "success")
+			// Final step - show loading complete
+			animator.AddItem("complete", "Agent initialization complete")
+			animator.UpdateStatus("complete", "success")
+
+			// Stop animation with success message
+			numAgents := len(registry.ListAgents())
+			animator.StopAnimation(fmt.Sprintf("Successfully loaded %d agents", numAgents))
+		}
+	})
+
+	// Trigger a rescan to show the animation
+	// This is safe because NewRegistry already did the initial scan
+	err = registry.ScanAgentsWithAnimation()
+	if err != nil {
+		return nil, err
+	}
+
+	return registry, nil
 }
 
 // offerMainLocationOptions presents options for an empty or non-existent main location

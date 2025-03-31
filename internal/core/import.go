@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"crules/internal/ui"
-	"crules/internal/utils"
+	"cursor++/internal/ui"
+	"cursor++/internal/utils"
 )
 
 // ImportRules handles the end-to-end process of importing rules from a URL

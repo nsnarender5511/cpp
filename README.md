@@ -1,209 +1,116 @@
 # crules
 
-> 🧩 A powerful tool for managing AI agent rules across multiple projects
+[![Go](https://github.com/cursor-ai/crules/workflows/Go/badge.svg)](https://github.com/cursor-ai/crules/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)]()
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/nsnarender5511/crules)](https://goreportcard.com/report/github.com/nsnarender5511/crules)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+## 📚 Overview
 
-## Overview
+crules is a command-line tool that enhances the Cursor IDE experience by providing a synchronized multi-agent system. It enables multiple specialized AI agents to work together seamlessly, providing:
 
-crules (Cursor Rules) is a command-line tool that helps you manage AI agent rules across multiple projects. It provides commands for initializing, syncing, and merging rule files, as well as an interactive agent selection system.
+- 🤖 **Specialized Agents**: Each agent has unique capabilities and expertise
+- 🔄 **Multi-Agent Collaboration**: Agents can share context and work together
+- 📂 **Project Synchronization**: Keep agents in sync across your workspace
+- 📝 **Integrated Workflow**: Seamless integration with your development process
 
-**Features Overview**: Command-line tool for managing AI agent rules across projects
+---
 
-## 🌟 Features
+## 🚀 Getting Started
 
-- **Rule Synchronization**: Keep rules in sync across multiple projects
-- **Agent System**: Work with specialized AI agents for different tasks
-- **Interactive Selection**: Choose agents through an intuitive terminal UI
-- **Project Management**: Register and track projects with rule directories
+### Installation Options
 
-**Try it out!** The tool provides an intuitive interface for working with AI agent rules.
+#### Download Release
 
-## 📦 Installation
+1. Visit the [Releases](https://github.com/cursor-ai/crules/releases) page
+2. Download the appropriate version for your operating system
+3. Extract the archive and follow the installation instructions
 
-### Using Homebrew (macOS and Linux)
+#### Manual Installation
 
-```bash
-# Add the tap
-brew tap nsnarender5511/tap
-
-# Install crules
-brew install crules
-```
-
-**Note**: Follow these commands to install via Homebrew.
-
-### Manual Installation
-
-1. Download the appropriate binary for your operating system from the [Releases page](https://github.com/nsnarender5511/crules/releases).
-2. Extract the archive (if applicable).
+1. Clone this repository
+2. Build the binary using `go build`
 3. Move the `crules` binary to a location in your PATH.
 
 **Note**: These steps will install crules manually on your system.
 
-## Homebrew Tap Setup (for maintainers)
+### Quick Start Commands
 
-To set up the Homebrew tap repository:
-
-1. Create a new GitHub repository named `homebrew-tap` under your GitHub account.
-2. Initialize it with a README.md file.
-3. Once the repository is created, you can release crules using GoReleaser:
-
-```bash
-# Tag the release
-git tag -a v1.0.0 -m "Release v1.0.0"
-git push origin v1.0.0
-
-# Run GoReleaser (requires a GITHUB_TOKEN)
-export GITHUB_TOKEN=your_github_token
-goreleaser release --clean
+#### Initialize in Current Directory
+```
+crules init
 ```
 
-This will automatically build the binaries, create the release on GitHub, and update the Homebrew tap.
-
-## 🚀 Quick Start
-
-```bash
-# Initialize rules in the current directory
-crules init
-
-# List available agents
+#### View Available Agents
+```
 crules agent list
+```
 
-# Select an agent interactively
+#### Select an Agent Interactively
+```
 crules agent select
+```
 
-# Get detailed information about a specific agent
+#### View Detailed Agent Information
+```
 crules agent info wizard
-
-# Synchronize rules from the main location
-crules sync
-
-# Merge rules from the current directory to the main location
-crules merge
-
-# List all registered projects
-crules list
 ```
 
 **Quick Start Guide**: These commands will help you get started with crules quickly.
 
-## 🤖 Agent System
+---
 
-The Agent System allows you to work with specialized AI agents for different tasks in software development:
+## 🛠️ Configuration
 
-| Agent | Description |
-|-------|-------------|
-| **Technical Wizard** | Provides high-level technical guidance and coordinates other agents |
-| **Feature Planner** | Breaks down requirements into implementation tasks |
-| **Fix Planner** | Analyzes issues and develops fix strategies |
-| **Implementer** | Translates plans into code |
-| **Runner** | Executes and tests code |
-| **Documentation** | Creates and maintains documentation |
-| **Code Reviewer** | Performs thorough code reviews |
-| **Git Committer** | Creates conventional format commit messages |
+### Environment Variables
 
-**Note**: Use the agent selection interface to choose the right agent for your task.
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VERBOSE` | Enable verbose output | `false` |
+| `DEBUG` | Enable debug logging | `false` |
+| `CONFIG_PATH` | Custom config file path | OS-specific |
+| `LOG_LEVEL` | Logging level (debug,info,warn,error) | `info` |
 
-![Agent Selection](./docs/assets/gifs/usage/agent-selection.gif)
+### Command Line Arguments
 
-Learn more about the Agent System in the [documentation](./docs/user-guide/agents.md).
+| Argument | Description |
+|----------|-------------|
+| `--verbose` | Enable verbose output |
+| `--debug` | Enable debug logging |
+| `--version` | Display version information |
+| `--help` | Show help message |
 
-## 📋 Commands
+### Commands
 
 | Command | Description |
 |---------|-------------|
-| `init` | Initializes the current directory with rules from the main location |
-| `merge` | Merges current rules to the main location and syncs them to all locations |
-| `sync` | Forces synchronization from the main location to the current directory |
-| `list` | Displays all registered projects |
-| `clean` | Removes non-existent projects from the registry |
-| `agent list` | Lists all available agents |
-| `agent info <id>` | Shows detailed information about a specific agent |
-| `agent select` | Interactively selects and loads an agent |
+| `init` | Initializes the current directory with crules agents |
+| `agent` | Manages agents (list, select, info) |
 
-**Note**: See the command documentation for detailed usage information.
-
-![Command Usage](./docs/assets/gifs/usage/command-usage.gif)
-
-For detailed information about commands, see the [Command Reference](./docs/user-guide/commands.md).
-
-## ⚙️ Configuration
+### Configuration File
 
 crules stores its configuration in `~/.config/crules/config.json`. This file contains:
 
-- The main rules location
-- Registered project locations
+- Agent preferences
+- System settings
+- User customizations
 
-You can view your current configuration with:
+---
 
-```bash
-crules config show
-```
+## 📖 Documentation
 
-**Note**: Use configuration commands to manage your crules setup.
-
-![Configuration](./docs/assets/gifs/usage/configuration.gif)
-
-## 📋 Documentation
-
-Our comprehensive documentation is available in the [docs](./docs) directory:
-
-- **[Documentation Map](./docs/documentation-map.md)**: Complete overview of all documentation
+- **[Installation](./docs/installation/)**: Detailed installation instructions
 - **[User Guide](./docs/user-guide/)**: Instructions for using crules
-  - [Installation](./docs/user-guide/installation.md)
-  - [Configuration](./docs/user-guide/configuration.md)
-  - [Commands](./docs/user-guide/commands.md)
-  - [Agent System](./docs/user-guide/agents.md)
-  - [Troubleshooting](./docs/user-guide/troubleshooting.md)
+- **[Agent Reference](./docs/agents/)**: Detailed information about available agents
+- **[API Documentation](./docs/api/)**: Reference for programmatic integration
+- **[FAQ](./docs/faq/)**: Frequently Asked Questions
 
-- **[Developer Guide](./docs/developer-guide/)**: Information for developers
-  - [Architecture](./docs/developer-guide/architecture.md)
-  - [Code Structure](./docs/developer-guide/code-structure.md)
-  - [Contributing](./docs/developer-guide/contributing.md)
-  - [Testing](./docs/developer-guide/testing.md)
-  - [Extending Agents](./docs/developer-guide/extending-agents.md)
+---
 
-- **[Examples](./docs/examples/)**: Usage examples and workflows
-  - [Basic Usage](./docs/examples/basic-usage.md)
-  - [Advanced Usage](./docs/examples/advanced-usage.md)
-  - [Agent Workflows](./docs/examples/agent-workflows.md)
+## 🤝 Contributing
 
-- **[API Reference](./docs/api-reference/)**: Technical reference for the internal APIs
-  - [Core API](./docs/api-reference/core-api.md)
-  - [Agent API](./docs/api-reference/agent-api.md)
-  - [UI API](./docs/api-reference/ui-api.md)
-  - [Utils API](./docs/api-reference/utils-api.md)
-  - [Git API](./docs/api-reference/git-api.md)
-  - [Version API](./docs/api-reference/version-api.md)
+Contributions are welcome! Please read the [contributing guidelines](CONTRIBUTING.md) before submitting a PR.
 
-The documentation includes detailed explanations, examples, screenshots, and animated GIFs to help you understand how to use crules effectively.
-
-## 👥 Contributing
-
-Contributions are welcome! Please see our [Contributing Guidelines](./docs/developer-guide/contributing.md) for more information on how to get started.
-
-## 📋 Release Process
-
-There are two ways to create a new release:
-
-### 1. Local Release (using GoReleaser locally)
-
-```bash
-# Create a .env file with your GitHub token
-make release TAG=v0.0.1
-```
-
-### 2. GitHub Actions Release (recommended)
-
-```bash
-# Trigger the GitHub Actions release workflow
-make release-github TAG=v0.0.1
-```
-
-For detailed release instructions, see [RELEASING.md](RELEASING.md).
-
-## 📜 License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 

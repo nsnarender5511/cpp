@@ -6,14 +6,15 @@ import (
 	"path/filepath"
 	"strings"
 
-	"crules/internal/utils"
+	"cursor++/internal/utils"
 )
 
 // Registry manages the collection of available agents
 type Registry struct {
-	agents   map[string]*AgentDefinition
-	rulesDir string
-	config   *utils.Config
+	agents       map[string]*AgentDefinition
+	rulesDir     string
+	config       *utils.Config
+	progressFunc func(event string, message string)
 }
 
 // NewRegistry creates a new agent registry
@@ -21,9 +22,10 @@ func NewRegistry(config *utils.Config, rulesDir string) (*Registry, error) {
 	utils.Debug("Creating new agent registry | rulesDir=" + rulesDir)
 
 	registry := &Registry{
-		agents:   make(map[string]*AgentDefinition),
-		rulesDir: rulesDir,
-		config:   config,
+		agents:       make(map[string]*AgentDefinition),
+		rulesDir:     rulesDir,
+		config:       config,
+		progressFunc: nil,
 	}
 
 	// Scan for agent definitions
@@ -35,13 +37,27 @@ func NewRegistry(config *utils.Config, rulesDir string) (*Registry, error) {
 	return registry, nil
 }
 
+// SetProgressCallback sets a callback function to report progress during agent loading
+func (r *Registry) SetProgressCallback(progressFunc func(event string, message string)) {
+	r.progressFunc = progressFunc
+}
+
+// reportProgress reports progress to the callback if available
+func (r *Registry) reportProgress(event string, message string) {
+	if r.progressFunc != nil {
+		r.progressFunc(event, message)
+	}
+}
+
 // scanAgents discovers agent definition files in the rules directory
 func (r *Registry) scanAgents() error {
 	utils.Debug("Scanning for agent definitions | rulesDir=" + r.rulesDir)
+	r.reportProgress("scan_start", "Scanning for agent definitions...")
 
 	// Ensure rules directory exists
 	if err := os.MkdirAll(r.rulesDir, r.config.DirPermission); err != nil {
 		utils.Error("Failed to create rules directory | rulesDir=" + r.rulesDir + ", error=" + err.Error())
+		r.reportProgress("scan_error", "Failed to create rules directory: "+err.Error())
 		return fmt.Errorf("failed to create rules directory: %v", err)
 	}
 
@@ -55,6 +71,7 @@ func (r *Registry) scanAgents() error {
 		// Only process regular files with .mdc extension
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".mdc") {
 			utils.Debug("Found agent definition file | path=" + path)
+			r.reportProgress("file_found", path)
 			mdcFiles = append(mdcFiles, path)
 		}
 
@@ -63,19 +80,29 @@ func (r *Registry) scanAgents() error {
 
 	if err != nil {
 		utils.Error("Error walking rules directory | error=" + err.Error())
+		r.reportProgress("scan_error", "Error walking rules directory: "+err.Error())
 		return fmt.Errorf("error walking rules directory: %v", err)
 	}
 
 	utils.Info("Found agent definition files | count=" + fmt.Sprintf("%d", len(mdcFiles)))
+	r.reportProgress("files_count", fmt.Sprintf("%d", len(mdcFiles)))
 
 	// Process each .mdc file
 	for _, path := range mdcFiles {
+		base := filepath.Base(path)
+		id := strings.TrimSuffix(base, ".mdc")
+		r.reportProgress("processing_file", id)
+
 		if err := r.processAgentFile(path); err != nil {
 			utils.Warn("Failed to process agent file | path=" + path + ", error=" + err.Error())
+			r.reportProgress("process_error", id+": "+err.Error())
 			// Continue with other files, don't stop on error
+		} else {
+			r.reportProgress("process_success", id)
 		}
 	}
 
+	r.reportProgress("scan_complete", fmt.Sprintf("%d agents loaded", len(r.agents)))
 	return nil
 }
 
@@ -151,9 +178,37 @@ func (r *Registry) processAgentFile(path string) error {
 }
 
 // GetAgent returns an agent by ID
-func (r *Registry) GetAgent(id string) (*AgentDefinition, bool) {
+// Returns the agent and error instead of a boolean to provide better error context
+func (r *Registry) GetAgent(id string) (*AgentDefinition, error) {
+	// Validate agent ID
+	if !validateAgentID(id) {
+		utils.Error("Invalid agent ID format | id=" + id)
+		return nil, fmt.Errorf("invalid agent ID format: %s", id)
+	}
+
 	agent, exists := r.agents[id]
-	return agent, exists
+	if !exists {
+		utils.Warn("Agent not found | id=" + id)
+		return nil, fmt.Errorf("agent not found: %s", id)
+	}
+	return agent, nil
+}
+
+// validateAgentID checks if the provided agent ID is valid and safe
+func validateAgentID(id string) bool {
+	// Check for potentially unsafe characters
+	if strings.Contains(id, "/") || strings.Contains(id, "\\") ||
+		strings.Contains(id, "..") || strings.Contains(id, ".") ||
+		strings.Contains(id, " ") {
+		return false
+	}
+
+	// Ensure ID is not empty and has a reasonable length
+	if id == "" || len(id) > 100 {
+		return false
+	}
+
+	return true
 }
 
 // ListAgents returns all available agents
@@ -167,6 +222,20 @@ func (r *Registry) ListAgents() []*AgentDefinition {
 
 // AgentExists checks if an agent with the given ID exists
 func (r *Registry) AgentExists(id string) bool {
+	// Validate agent ID before checking
+	if !validateAgentID(id) {
+		return false
+	}
+
 	_, exists := r.agents[id]
 	return exists
+}
+
+// ScanAgentsWithAnimation rescans the agents directory with progress reporting
+func (r *Registry) ScanAgentsWithAnimation() error {
+	// Clear existing agents for a fresh scan
+	r.agents = make(map[string]*AgentDefinition)
+
+	// Scan for agents using the existing method that will call progress callbacks
+	return r.scanAgents()
 }
