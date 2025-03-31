@@ -491,7 +491,7 @@ cursor++ --version
 
 If you're still encountering problems after trying the solutions in this guide:
 
-1. Check our [GitHub issues](https://github.com/nsnarender5511/cursor++/issues) to see if others have reported similar problems
+1. Check our [GitHub issues](https://github.com/nsnarender5511/cpp/issues) to see if others have reported similar problems
 2. Open a new issue with detailed information about your problem, including:
    - Your operating system and version
    - Your cursor++ version (run `cursor++ --version`)

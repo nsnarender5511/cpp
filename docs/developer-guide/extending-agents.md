@@ -57,7 +57,7 @@ To create a new agent, follow these steps:
 4. Register your agent in the agent registry:
    ```go
    // In internal/agent/registry.go
-   import "github.com/nsnarender5511/cursor++/internal/agent/youragent"
+   import "github.com/nsnarender5511/cpp/internal/agent/youragent"
 
    func init() {
        RegisterAgent(youragent.NewYourAgent())

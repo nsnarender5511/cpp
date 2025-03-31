@@ -212,7 +212,7 @@ The `internal/utils/testutils` package provides helper functions and mock implem
 
 The cursor++ project uses GitHub Actions for continuous integration. The CI pipeline runs all tests on each pull request and commit to the main branch.
 
-See [.github/workflows/test.yml](https://github.com/nsnarender5511/cursor++/blob/main/.github/workflows/test.yml) for the CI configuration.
+See [.github/workflows/test.yml](https://github.com/nsnarender5511/cpp/blob/main/.github/workflows/test.yml) for the CI configuration.
 
 ## Debugging Tests
 
