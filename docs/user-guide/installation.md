@@ -1,190 +1,220 @@
 # Installation Guide
 
-> 📥 This guide explains how to install and set up the crules tool on different operating systems.
+> 📥 This guide explains how to install cursor++ on different platforms.
+
+## Overview
+
+cursor++ is available for macOS, Linux, and Windows. There are several installation methods depending on your platform and preferences.
 
 ## System Requirements
 
-Before installing crules, ensure your system meets the following requirements:
+- **Operating System**:
+  - macOS 10.15 (Catalina) or later
+  - Linux (Ubuntu 18.04+, Debian 10+, Fedora 32+, or compatible distributions)
+  - Windows 10 or later
 
-- **Operating System**: Windows, macOS, or Linux
-- **Disk Space**: At least 20MB of free disk space
-- **Dependencies**: Git (for certain operations)
+- **Disk Space**: Minimum 10MB free space
+- **Optional Dependencies**:
+  - Git (for repository-based rule management)
 
 ## Installation Methods
 
-### Using Go
+### Method 1: Using the Install Script (macOS and Linux)
 
-If you have Go 1.20 or later installed, you can install crules directly:
+The fastest way to install cursor++ is using the install script:
 
 ```bash
-go install github.com/yourusername/crules/cmd/crules@latest
+curl -sL https://github.com/cursor-ai/cursor-plus-plus/releases/latest/download/install.sh | bash
 ```
 
-This command will download the source code, compile it, and install the binary in your `$GOPATH/bin` directory. Make sure this directory is in your system's PATH.
+This script will:
+1. Detect your operating system
+2. Download the appropriate binary
+3. Install it to `~/.local/bin` (or `/usr/local/bin` if run with sudo)
+4. Add it to your PATH (if needed)
 
-### From Binary Releases
+### Method 2: Homebrew (macOS)
+
+If you use Homebrew on macOS, you can install cursor++ with:
+
+```bash
+brew install cursor++
+```
+
+### Method 3: Manual Installation
+
+You can manually download and install the binary for your platform:
 
 #### macOS
 
-1. **Using Homebrew**:
-
-```bash
-# Add the tap
-brew tap yourusername/tap
-# Install crules
-brew install yourusername/tap/crules
-```
-
-2. **Manual Installation**:
-
 ```bash
 # Download the latest macOS binary
-curl -L https://github.com/yourusername/crules/releases/latest/download/crules_darwin_amd64.tar.gz -o crules.tar.gz
-
-# Extract the archive
-tar -xzf crules.tar.gz
-
-# Move to a directory in your PATH
-sudo mv crules /usr/local/bin/
+curl -Lo cursor++ https://github.com/cursor-ai/cursor-plus-plus/releases/latest/download/cursor++-darwin-amd64
 
 # Make it executable
-chmod +x /usr/local/bin/crules
+chmod +x cursor++
 
-# Clean up
-rm crules.tar.gz
+# Move it to a directory in your PATH
+sudo mv cursor++ /usr/local/bin/
 ```
 
 #### Linux
 
-1. **Using pre-built binaries**:
-
 ```bash
-# Download and extract
-curl -L https://github.com/yourusername/crules/releases/latest/download/crules_linux_amd64.tar.gz | tar xz
-
-# Move to a directory in your PATH
-sudo mv crules /usr/local/bin/
+# Download the latest Linux binary
+curl -Lo cursor++ https://github.com/cursor-ai/cursor-plus-plus/releases/latest/download/cursor++-linux-amd64
 
 # Make it executable
-chmod +x /usr/local/bin/crules
-```
+chmod +x cursor++
 
-2. **Using packages (Debian/Ubuntu)**:
-
-```bash
-# Download the .deb package
-curl -LO https://github.com/yourusername/crules/releases/latest/download/crules_amd64.deb
-
-# Install the package
-sudo dpkg -i crules_amd64.deb
-```
-
-3. **Using packages (RHEL/Fedora)**:
-
-```bash
-# Download the .rpm package
-curl -LO https://github.com/yourusername/crules/releases/latest/download/crules_amd64.rpm
-
-# Install the package
-sudo rpm -i crules_amd64.rpm
+# Move it to a directory in your PATH
+sudo mv cursor++ /usr/local/bin/
 ```
 
 #### Windows
 
-1. **Using Scoop**:
+1. Download the [latest Windows binary](https://github.com/cursor-ai/cursor-plus-plus/releases/latest/download/cursor++-windows-amd64.exe)
+2. Rename it to `cursor++.exe`
+3. Move it to a directory in your PATH (e.g., `C:\Windows\System32\`)
+
+Alternatively, using PowerShell:
 
 ```powershell
-# Add the bucket
-scoop bucket add yourusername https://github.com/yourusername/scoop-bucket
+# Download the latest Windows binary
+Invoke-WebRequest -Uri https://github.com/cursor-ai/cursor-plus-plus/releases/latest/download/cursor++-windows-amd64.exe -OutFile cursor++.exe
 
-# Install crules
-scoop install crules
+# Move it to a directory in your PATH
+Move-Item -Path cursor++.exe -Destination "$env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\"
 ```
 
-2. **Manual installation**:
+### Method 4: Building from Source
 
-- Download the latest Windows archive from the [Releases page](https://github.com/yourusername/crules/releases)
-- Extract the archive
-- Add the location to your PATH or move the binary to a directory in your PATH
+If you prefer to build from source, follow these steps:
 
-### Building from source
+1. Ensure you have Go 1.23+ installed
+2. Clone the repository:
+   ```bash
+   git clone https://github.com/cursor-ai/cursor-plus-plus.git
+   ```
+3. Navigate to the directory:
+   ```bash
+   cd cursor-plus-plus
+   ```
+4. Build the binary:
+   ```bash
+   go build -o cursor++ ./cmd
+   ```
+5. Install it:
+   ```bash
+   sudo mv cursor++ /usr/local/bin/
+   ```
 
-If you prefer to build from source:
+For detailed build instructions, see the [Building from Source](../developer-guide/building.md) guide.
+
+## Verifying Installation
+
+After installation, verify that cursor++ is installed correctly:
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/crules.git
-cd crules
-
-# Build the binary
-go build -o crules ./cmd/crules
-
-# Make it executable (macOS/Linux)
-chmod +x crules
-
-# Move to a directory in your PATH (optional)
-sudo mv crules /usr/local/bin/
+cursor++ --version
 ```
 
-## Verifying the Installation
+You should see output similar to:
 
-To verify that crules is installed correctly:
+```
+cursor++ v1.0.0
+```
+
+## Helpful Debugging Options
+
+The cursor++ tool provides several options for troubleshooting and getting more information:
 
 ```bash
-crules --version
+# Get verbose output
+cursor++ --verbose command
+
+# Get detailed debug information with color-coded output
+cursor++ --debug command
 ```
 
-This should display the version information of the installed crules tool.
+The debug output is now color-coded for better readability:
+- Error messages: Red
+- Warning messages: Yellow
+- Success messages: Green
+- Info messages: Blue
+- Debug messages: Cyan
 
-## First-time Setup
+This makes it easier to identify the nature of the messages at a glance.
 
-After installing crules, you should initialize it in your project:
+## First-Time Setup
+
+After installing cursor++, the first time you run it, you'll need to set up your main rules location. This is where all your rules will be stored and synced from.
 
 ```bash
-# Navigate to your project directory
-cd your-project
-
-# Initialize crules
-crules init
+cursor++ init
 ```
 
-This will set up the necessary directory structure and configuration files for crules.
+The first time you run this command, you'll be guided through the setup process. See the [Getting Started Guide](./getting-started.md) for more information.
 
 ## Updating
 
-### Using Go
+### Using the Install Script
 
-If you installed using Go, update with:
-
-```bash
-go install github.com/yourusername/crules/cmd/crules@latest
-```
-
-### Using package managers
-
-If you installed using a package manager, update through that package manager:
+To update cursor++ using the install script:
 
 ```bash
-# Homebrew
-brew upgrade yourusername/tap/crules
-
-# Scoop
-scoop update crules
+curl -sL https://github.com/cursor-ai/cursor-plus-plus/releases/latest/download/install.sh | bash
 ```
 
-### From binary releases
+### Using Homebrew
 
-For manual installations, download the latest release and replace your existing binary.
+If you installed using Homebrew:
 
-## Troubleshooting
+```bash
+brew upgrade cursor++
+```
 
-If you encounter issues during installation, see the [Troubleshooting Guide](./troubleshooting.md) for common problems and solutions.
+### Manual Update
 
-## Next Steps
+To update manually, download the latest binary for your platform and replace the existing binary.
 
-Now that you have installed crules, you can:
+## Uninstalling
 
-- Learn about [Configuration](./configuration.md)
-- Explore the [Agent System](./agents.md)
-- Review the [Command Reference](./commands.md)
-- Try out some [Examples](../examples/agent-workflows.md)
+### macOS and Linux
+
+```bash
+# Remove the binary
+sudo rm /usr/local/bin/cursor++
+
+# Remove configuration and data (optional)
+rm -rf ~/.config/cursor++
+rm -rf ~/.local/share/cursor++
+```
+
+### Windows
+
+```powershell
+# Remove the binary
+Remove-Item "$env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\cursor++.exe"
+
+# Remove configuration and data (optional)
+Remove-Item -Recurse -Force "$env:APPDATA\cursor++"
+```
+
+## Troubleshooting Installation
+
+If you encounter any issues during installation, please refer to the [Troubleshooting Guide](./troubleshooting.md#installation-issues) for common problems and solutions.
+
+You can also open an issue on our [GitHub repository](https://github.com/cursor-ai/cursor-plus-plus/issues) for additional help.
+
+## See Also
+
+- [Getting Started Guide](./getting-started.md): Quick introduction to cursor++
+- [Command Reference](./commands.md): Detailed information about all commands
+- [Configuration Guide](./configuration.md): How to configure cursor++
+
+## Navigation
+
+- Next: [Getting Started](./getting-started.md)
+- Up: [User Guide](../README.md#user-guide)
+- Home: [Documentation Home](../README.md)

@@ -1,34 +1,144 @@
-# crules Documentation
+---
+version: v1.0.0
+last_updated: 2023-03-31
+applies_to: cursor++ v1.0.0+
+---
 
-> 📚 Welcome to the crules documentation! This guide will help you understand how to use and extend the crules tool for managing and synchronizing Cursor rules across multiple projects.
+# cursor++ Documentation
 
-## Overview
+> 📚 Welcome to the comprehensive documentation for the cursor++ tool. This documentation aims to help you understand, use, and extend the functionality of cursor++.
 
-Crules is a command-line tool that simplifies the management of Cursor rules across multiple projects. It provides a centralized location for your rules and ensures they stay in sync across all your projects.
+![cursor++ Logo](./assets/images/logo.png)
 
-## Documentation Sections
+## 📋 Quick Navigation
 
-- [**User Guide**](./user-guide/): Instructions for end users on how to install, configure, and use crules
-  - [Installation](./user-guide/installation.md): How to install crules on different platforms
-  - [Configuration](./user-guide/configuration.md): Configuring crules for your environment
-  - [Commands](./user-guide/commands.md): Detailed documentation of all available commands
-  - [Troubleshooting](./user-guide/troubleshooting.md): Common issues and their solutions
+Looking for something specific? Check out our [Documentation Map](./documentation-map.md) for a complete overview of all documentation resources.
 
-- [**Developer Guide**](./developer-guide/): Documentation for developers who want to extend or modify crules
-  - [Architecture](./developer-guide/architecture.md): Overview of the system architecture
-  - [Code Structure](./developer-guide/code-structure.md): Understanding the codebase organization
-  - [Contributing](./developer-guide/contributing.md): Guidelines for contributors
-  - [Testing](./developer-guide/testing.md): How to test your changes
+## 📋 Table of Contents
 
-- [**API Reference**](./api/): Technical reference for the internal APIs
+- [User Guide](#user-guide)
+- [Developer Guide](#developer-guide)
+- [Examples](#examples)
+- [API Reference](#api-reference)
+- [Contributing](#contributing)
 
-- [**Examples**](./examples/): Practical examples and use cases
+## 🚀 User Guide
 
-## Agent System
+The User Guide provides comprehensive information on how to use cursor++ effectively.
 
-One of the key features of crules is its Agent System, which provides an interactive way to work with specialized AI agents. These agents are defined in `.mdc` files and can be used for various tasks like planning features, fixing issues, implementing code, and more.
+### 📥 Installation
 
-For detailed information about the Agent System, see:
-- [Agent System Overview](./user-guide/agents.md)
-- [Using the Agent Commands](./user-guide/commands.md#agent-commands)
-- [Extending the Agent System](./developer-guide/extending-agents.md)
+Learn how to install cursor++ on different operating systems:
+
+- [Installation Guide](./user-guide/installation.md)
+- [System Requirements](./user-guide/installation.md#system-requirements)
+- [Environment Setup](./user-guide/installation.md#environment-setup)
+
+### 📝 Getting Started
+
+Quickly get up and running with cursor++:
+
+- [Quick Start](./user-guide/getting-started.md)
+- [Basic Usage](./user-guide/getting-started.md#basic-usage)
+- [Command Reference](./user-guide/commands.md)
+
+### 🧠 Agent System
+
+Understand how to work with the cursor++ Agent System:
+
+- [Agent Overview](./user-guide/agents.md)
+- [Using Agents](./user-guide/agents.md#using-agents)
+- [Agent Relationships](./user-guide/agents.md#agent-ecosystem)
+- [Creating Your Own Agents](./user-guide/agents.md#creating-your-own-agents)
+
+## 🛠️ Developer Guide
+
+The Developer Guide provides in-depth information for developers who want to extend or modify cursor++.
+
+### 🏗️ Architecture
+
+Understand the internal architecture of cursor++:
+
+- [System Components](./developer-guide/architecture.md)
+- [Architecture Diagrams](./developer-guide/architecture.md#architecture)
+- [Data Flow](./developer-guide/architecture.md#data-flow)
+- [Extension Points](./developer-guide/architecture.md#extension-points)
+
+### 🔧 Building from Source
+
+Learn how to build cursor++ from source:
+
+- [Build Process](./developer-guide/building.md)
+- [Dependencies](./developer-guide/building.md#dependencies)
+- [Development Environment](./developer-guide/building.md#development-environment)
+
+### 🧩 Extending cursor++
+
+Discover how to extend and customize cursor++:
+
+- [Extending Agents](./developer-guide/extending-agents.md)
+- [API Integration](./developer-guide/extending-agents.md#api-integration)
+- [Custom Commands](./developer-guide/extending-agents.md#custom-commands)
+
+## 📊 Examples
+
+Explore practical examples of using cursor++:
+
+- [Basic Usage Examples](./examples/basic-usage.md)
+- [Advanced Configurations](./examples/advanced-configurations.md)
+- [Agent Workflows](./examples/agent-workflows.md)
+- [Integration Examples](./examples/integration.md)
+
+## 📘 API Reference
+
+Detailed API documentation for developers:
+
+- [Core API](./api-reference/core-api.md)
+- [Agent API](./api-reference/agent-api.md)
+- [UI API](./api-reference/ui-api.md)
+- [Utils API](./api-reference/utils-api.md)
+- [Git API](./api-reference/git-api.md)
+- [Version API](./api-reference/version-api.md)
+
+## 🤝 Contributing
+
+Learn how you can contribute to cursor++:
+
+- [Contribution Guidelines](./developer-guide/contributing.md)
+- [Code of Conduct](./developer-guide/code-of-conduct.md)
+- [Development Workflow](./developer-guide/contributing.md#development-workflow)
+
+## 📊 Available Agents
+
+cursor++ includes a rich ecosystem of specialized agents to assist with various aspects of the development workflow:
+
+### Planning Agents
+- **Technical Wizard** (`wizard.mdc`): Provides high-level technical guidance and coordinates other agents
+- **Feature Planner** (`feature-planner.mdc`): Designs implementation plans for new features
+- **Fix Planner** (`fix-planner.mdc`): Analyzes bugs and plans targeted fixes
+- **Architecture Planner** (`architecture-planner.mdc`): Designs high-level system structures and component relationships
+- **Scraper Planner** (`scraper-planner.mdc`): Plans implementations for data scraping tasks
+- **Git Actions Planner** (`git-actions-planner.mdc`): Designs GitHub Actions workflows
+- **Refactoring Guru** (`refactoring-guru.mdc`): Identifies code smells and plans refactoring strategies
+
+### Implementation Agents
+- **Implementer** (`implementer.mdc`): Converts plans into working code
+- **Runner** (`runner.mdc`): Tests and verifies implementations
+
+### Support Agents
+- **Code Reviewer** (`code-reviewer.mdc`): Reviews code for quality and issues
+- **Git Committer** (`git-committer.mdc`): Creates structured commit messages
+- **Quick Answer** (`quick-answer-agent.mdc`): Provides concise, direct answers
+- **Document Syncer** (`document-syncer.mdc`): Synchronizes documentation with code
+- **Documentation Agent** (`documentation-agent.mdc`): Creates and improves documentation
+- **Document Reviewer** (`document-reviewer-agent.mdc`): Reviews documentation quality
+- **Agent Selector** (`agent-selector.mdc`): Selects appropriate agents for specific tasks
+
+## 📈 Version History
+
+- Current Version: 1.0.0
+- [Changelog](../CHANGELOG.md)
+
+---
+
+© 2023 cursor++ Contributors | [License](../LICENSE)

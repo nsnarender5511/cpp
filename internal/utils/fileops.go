@@ -37,7 +37,12 @@ func ConfirmOverwrite(dirName string) bool {
 func CopyDir(src, dst string) error {
 	Debug("Copying directory | source=" + src + ", destination=" + dst)
 
-	config := LoadConfig()
+	cm := NewConfigManager()
+	if err := cm.Load(); err != nil {
+		Error("Failed to load configuration: " + err.Error())
+		return err
+	}
+	config := cm.GetConfig()
 
 	// Define directories to skip
 	dirsToSkip := map[string]bool{
@@ -101,7 +106,12 @@ func CopyDir(src, dst string) error {
 
 // CopyFile copies a single file
 func CopyFile(src, dst string) error {
-	config := LoadConfig()
+	cm := NewConfigManager()
+	if err := cm.Load(); err != nil {
+		Error("Failed to load configuration: " + err.Error())
+		return err
+	}
+	config := cm.GetConfig()
 
 	sourceFile, err := os.Open(src)
 	if err != nil {
@@ -129,4 +139,41 @@ func CopyFile(src, dst string) error {
 
 	Debug("File copied successfully | source=" + src + ", destination=" + dst)
 	return nil
+}
+
+// CopyDirSelective copies a specific subfolder from a source directory to a destination
+// If sourceFolderName is empty, it behaves like CopyDir and copies everything
+func CopyDirSelective(src, dst, sourceFolderName string) error {
+	Debug("Copying directory selectively | source=" + src + ", destination=" + dst + ", sourceFolder=" + sourceFolderName)
+
+	cm := NewConfigManager()
+	if err := cm.Load(); err != nil {
+		Error("Failed to load configuration: " + err.Error())
+		return err
+	}
+	config := cm.GetConfig()
+
+	// If no source folder specified, use normal copy
+	if sourceFolderName == "" {
+		Debug("No source folder specified, using standard copy")
+		return CopyDir(src, dst)
+	}
+
+	// Check if the source subfolder exists
+	sourceFolderPath := filepath.Join(src, sourceFolderName)
+	if !DirExists(sourceFolderPath) {
+		errorMsg := fmt.Sprintf("Source folder does not exist: %s", sourceFolderPath)
+		Error(errorMsg)
+		return fmt.Errorf(errorMsg)
+	}
+
+	// Create destination directory
+	if err := os.MkdirAll(dst, config.DirPermission); err != nil {
+		Error("Failed to create destination directory | path=" + dst + ", error=" + err.Error())
+		return err
+	}
+
+	// Now copy from the source subfolder to destination
+	Debug("Copying from source subfolder | path=" + sourceFolderPath)
+	return CopyDir(sourceFolderPath, dst)
 }

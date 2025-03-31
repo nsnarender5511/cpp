@@ -1,184 +1,201 @@
 # Configuration Guide
 
-> ⚙️ This guide explains how to configure the crules tool to suit your workflow and preferences.
+> ⚙️ This guide explains how to configure cursor++ to match your workflow and preferences.
 
 ## Configuration Overview
 
-crules uses a configuration file to store:
+cursor++ uses a configuration system that allows you to customize its behavior. Configuration settings define:
 
-- The main rules location
-- Registered project locations
-- User preferences
+- Where your agent definitions are stored
+- How the agent system behaves
+- Visual and formatting preferences
 
-## Configuration File Location
+## Configuration File
 
-The configuration file is stored in a platform-specific location:
+cursor++ automatically creates a configuration file at:
 
-- **Windows**: `%APPDATA%\crules\config.json`
-- **macOS**: `~/Library/Application Support/crules/config.json`
-- **Linux**: `~/.config/crules/config.json`
+- **macOS/Linux**: `~/.config/cursor++/config.env`
+- **Windows**: `%APPDATA%\cursor++\config.env`
 
-## Configuration Structure
+This file is created when you first run cursor++. You can edit it directly or use the command-line interface to modify settings.
 
-The configuration file uses JSON format and has the following structure:
+### Example Configuration File
 
-```json
-{
-  "mainLocation": "/path/to/main/rules/directory",
-  "locations": {
-    "/path/to/project1": {
-      "path": "/path/to/project1",
-      "createdAt": "2023-03-29T10:00:00Z"
-    },
-    "/path/to/project2": {
-      "path": "/path/to/project2",
-      "createdAt": "2023-03-29T11:00:00Z"
-    }
-  },
-  "selectedAgent": "wizard"
-}
+```env
+AGENTS_DIR_NAME=agents
+REGISTRY_FILE_NAME=registry.json
+RULES_DIR_NAME=.cursor/rules
+SOURCE_FOLDER=default
+DIR_PERMISSION=755
+FILE_PERMISSION=644
+MULTI_AGENT_ENABLED=true
+LAST_SELECTED_AGENT=wizard
 ```
 
-### Key Configuration Fields
+## Core Settings
 
-- **`mainLocation`**: The path to the main rules directory where rules are synchronized from.
-- **`locations`**: A map of registered project paths to location objects that include:
-  - **`path`**: The path to the project.
-  - **`createdAt`**: Timestamp of when the project was registered.
-- **`selectedAgent`**: The ID of the currently selected agent.
+### Rules Directory Name
 
-## Configuring with Environment Variables
+The `RULES_DIR_NAME` setting defines the directory name used to store rules within each project.
 
-You can override certain configuration values using environment variables:
+```env
+RULES_DIR_NAME=.cursor/rules
+```
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `CRULES_MAIN_LOCATION` | Main rules location | Platform-specific user config directory |
-| `CRULES_RULES_DIR` | Rules directory name | `.cursor/rules` |
-| `CRULES_LOG_LEVEL` | Logging level | `info` |
+By default, this is set to `.cursor/rules`, which creates a hidden directory in your project root. This directory is typically added to `.gitignore`.
 
-## Initial Configuration
+### Agents Directory Name
 
-The first time you run `crules init` in a project directory, crules will:
+The `AGENTS_DIR_NAME` setting defines the directory name within the rules directory where agent definitions are stored.
 
-1. Create a configuration file if it doesn't exist
-2. Set the main location to the default location or the one specified by environment variables
-3. Register the current project in the configuration
+```env
+AGENTS_DIR_NAME=cursor-rules
+```
+
+By default, this is set to `cursor-rules`, which is a dedicated directory for Cursor-specific rules. This directory is where agent definition files (`.mdc`) are stored and should be included in version control if you want to share your agents with your team.
+
+> **Note**: In versions prior to v1.1, this was set to "test" by default. The change to "cursor-rules" provides better clarity about its purpose and improves compatibility with standard practices.
+
+### Source Folder
+
+The `SOURCE_FOLDER` setting defines the subfolder within a cloned repository that contains the agent definitions to be used.
+
+```env
+SOURCE_FOLDER=default
+```
+
+By default, this is set to `default`. When initializing from a git repository that contains multiple folders, the system will clone the entire repository but only copy files from this specified subfolder to your rules directory. This allows repositories to maintain multiple sets of agent definitions while your local setup uses only the ones you need.
+
+> **Note**: If the source folder doesn't exist in the cloned repository, the operation will fail with an error message.
+
+### Registry File Name
+
+The `REGISTRY_FILE_NAME` setting defines the name of the file used to store the agent registry.
+
+```env
+REGISTRY_FILE_NAME=registry.json
+```
+
+The registry file keeps track of available agents and their metadata.
+
+### Multi-Agent Mode
+
+The `MULTI_AGENT_ENABLED` setting controls whether multiple agents can be used simultaneously.
+
+```env
+MULTI_AGENT_ENABLED=true
+```
+
+When enabled, you can reference multiple agents in your conversations.
+
+### Last Selected Agent
+
+The `LAST_SELECTED_AGENT` setting stores the ID of the last agent you selected.
+
+```env
+LAST_SELECTED_AGENT=wizard
+```
+
+This is used to remember your last selection when using the agent system.
+
+## Permissions
+
+### Directory Permission
+
+The `DIR_PERMISSION` setting defines the permission mode used when creating directories.
+
+```env
+DIR_PERMISSION=755
+```
+
+This value is equivalent to `0755` in octal notation (read/write/execute for owner, read/execute for group and others).
+
+### File Permission
+
+The `FILE_PERMISSION` setting defines the permission mode used when creating files.
+
+```env
+FILE_PERMISSION=644
+```
+
+This value is equivalent to `0644` in octal notation (read/write for owner, read for group and others).
+
+## Environment Variables
+
+cursor++ respects the following environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `APP_NAME` | Overrides the application name (`cursor++` by default) |
+| `COLUMNS` | Defines the terminal width (useful for testing) |
+| `NO_COLOR` | Disables colored output when set to any value |
+| `AGENTS_DIR_NAME` | Overrides the agents directory name |
+| `REGISTRY_FILE_NAME` | Overrides the registry file name |
+| `RULES_DIR_NAME` | Overrides the rules directory name |
+| `SOURCE_FOLDER` | Specifies which subfolder to use from cloned repositories |
+| `DIR_PERMISSION` | Overrides the directory permission mode (in octal) |
+| `FILE_PERMISSION` | Overrides the file permission mode (in octal) |
+| `MULTI_AGENT_ENABLED` | Controls multi-agent mode (`true`, `1`, or `yes` to enable) |
+| `LAST_SELECTED_AGENT` | Sets the last selected agent ID |
+
+Example:
 
 ```bash
-# Initialize crules in the current directory
-crules init
+# Override the application name
+export APP_NAME=custom-cursor++
+
+# Set terminal width
+export COLUMNS=120
+
+# Disable colored output
+export NO_COLOR=1
+
+# Enable multi-agent mode
+export MULTI_AGENT_ENABLED=true
 ```
 
-## Changing the Main Location
+## Configuration Strategies
 
-To change the main rules location:
+### Per-User Configuration
+
+The default configuration is stored per user, ensuring each user can have their own settings.
+
+### Command-Line Flags
+
+You can override certain configuration options using command-line flags:
 
 ```bash
-# Set a different main location using an environment variable
-export CRULES_MAIN_LOCATION=/path/to/new/main/location
-crules init
+# Enable multi-agent mode for the current session
+cursor++ --multi-agent init
 ```
-
-## Managing Project Locations
-
-Projects are automatically registered when you run `crules init` in their directories. You can view all registered projects with:
-
-```bash
-crules list
-```
-
-To remove non-existent projects from the registry:
-
-```bash
-crules clean
-```
-
-## Agent Configuration
-
-### Selecting an Agent
-
-You can select an agent with the interactive selector:
-
-```bash
-crules agent select
-```
-
-This updates the `selectedAgent` field in the configuration file.
-
-### Viewing the Selected Agent
-
-To see which agent is currently selected, use:
-
-```bash
-crules agent info
-```
-
-Without specifying an agent ID, this shows information about the currently selected agent.
 
 ## Advanced Configuration
 
-### Rules Directory
+### Agent Definitions
 
-By default, rules are stored in the `.cursor/rules` directory in each project. You can change this with the `CRULES_RULES_DIR` environment variable:
+Agent definition files (`.mdc`) are stored in the agents directory within your rules directory. These files define the capabilities and behavior of each agent.
 
-```bash
-export CRULES_RULES_DIR=.custom-rules-dir
+Example agent definition structure:
+
+```
+# 🧙‍♂️ Technical Wizard Agent Prompt
+
+## 🎯 Role:
+You are a wise **Technical Wizard Agent**, a versatile technical expert...
+
+## 🛠️ Core Responsibilities:
+...
 ```
 
-### Logging Level
+## See Also
 
-You can change the logging level to control the verbosity of output:
+- [Commands](./commands.md) for details on cursor++ commands
+- [Agent System](./agents.md) for information on working with agents
+- [Building from Source](../developer-guide/building.md) for developer configuration
 
-```bash
-export CRULES_LOG_LEVEL=debug
-```
+## Navigation
 
-Available log levels (from most to least verbose):
-- `trace`
-- `debug`
-- `info` (default)
-- `warn`
-- `error`
-- `fatal`
-- `panic`
-
-## Configuration Backup
-
-It's a good practice to back up your configuration file, especially if you have many registered projects. You can copy the configuration file to a safe location:
-
-```bash
-# On macOS
-cp ~/Library/Application\ Support/crules/config.json ~/crules-config-backup.json
-
-# On Linux
-cp ~/.config/crules/config.json ~/crules-config-backup.json
-
-# On Windows (PowerShell)
-Copy-Item "$env:APPDATA\crules\config.json" -Destination "$env:USERPROFILE\crules-config-backup.json"
-```
-
-## Troubleshooting Configuration Issues
-
-If you encounter configuration-related issues, you can:
-
-1. Check the configuration file contents:
-   ```bash
-   cat ~/.config/crules/config.json
-   ```
-
-2. Reset the configuration by removing the file:
-   ```bash
-   rm ~/.config/crules/config.json
-   ```
-   Then reinitialize crules with `crules init`.
-
-3. See the [Troubleshooting Guide](./troubleshooting.md) for more detailed help.
-
-## Next Steps
-
-Now that you understand how to configure crules, you can:
-
-- Learn about the [Agent System](./agents.md)
-- Review the [Command Reference](./commands.md)
-- Try out some [Examples](../examples/agent-workflows.md)
+- Previous: [Installation](./installation.md)
+- Next: [Commands](./commands.md)
+- Up: [User Guide](../README.md#user-guide)
+- Home: [Documentation Home](../README.md)

@@ -1,260 +1,191 @@
-# Agent Workflow Examples
+# Documentation Workflows
 
-> 📋 This guide provides practical examples of how to use the agent system in real-world scenarios.
+> 📋 This guide provides practical examples of using the Document Syncer agent in real-world scenarios.
 
-## Example 1: Implementing a New Feature
+## Overview
 
-This workflow demonstrates how to use multiple agents to plan and implement a new feature.
+The Document Syncer agent in cursor++ is designed to help you maintain consistent documentation across your codebase. This guide shows practical workflows for common documentation tasks.
 
-### Step 1: Plan with the Technical Wizard
+## Current Documentation Workflows
 
-First, use the Technical Wizard agent to get high-level guidance:
+### Documentation Synchronization Workflow
 
-```bash
-$ crules agent select
-# Select "Technical Wizard Agent"
+The following workflow demonstrates how to use the Document Syncer agent to maintain consistency between code and documentation:
 
-User: I need to add a new command to our CLI that will generate a report of all the rules in a project.
+```mermaid
+sequenceDiagram
+    participant User as 👤 User
+    participant DocSyncer as 🔄 Document Syncer
+    
+    User->>DocSyncer: Request consistency check
+    Note over DocSyncer: Analyzes code and docs
+    DocSyncer->>User: Report inconsistencies
+    User->>DocSyncer: Request doc updates
+    DocSyncer->>User: Propose changes
+    User->>DocSyncer: Approve changes
+    DocSyncer->>User: Apply approved changes
 
-Agent: This is a good feature addition. Here's how I'd approach it:
-
-1. Create a new command called "report" in the CLI package
-2. Implement a report generator that can scan rules and extract metadata
-3. Provide output in multiple formats (text, JSON, markdown)
-4. Add appropriate tests
-
-Let's break this down into concrete tasks for implementation.
+    style User fill:#ff9966,stroke:#ff6600
+    style DocSyncer fill:#66cc99,stroke:#009966
 ```
 
-### Step 2: Detailed Feature Planning
+#### Step-by-Step Procedure
 
-Next, switch to the Feature Planner agent for detailed requirements:
+1. Start with a consistency check:
+   ```
+   @doc-syncer.mdc Check for inconsistencies between our code and documentation
+   ```
 
-```bash
-$ crules agent select
-# Select "Feature Planner Agent"
+2. Review the report and request updates:
+   ```
+   @doc-syncer.mdc Update the documentation to match our current code implementation
+   ```
 
-User: I need to plan a "report" command that will generate a summary of all rules in a project.
+3. Review proposed changes before approval:
+   ```
+   @doc-syncer.mdc Go ahead and implement the changes we discussed
+   ```
 
-Agent: Here's a detailed plan for the "report" command:
+### Documentation Migration Workflow
 
-## Requirements
-- Command: `crules report [--format=<format>] [--output=<file>]`
-- Formats: text (default), json, markdown
-- Information to include:
-  - Number of rules
-  - Rule types breakdown
-  - File sizes
-  - Last modified dates
-  - Content summary
+For migrating documentation between formats or systems:
 
-## Implementation Tasks
-1. Create a new file `internal/cli/report.go`
-2. Add report command to root command
-3. Implement rule scanning logic
-4. Create formatters for each output type
-5. Implement file output option
+```mermaid
+sequenceDiagram
+    participant User as 👤 User
+    participant DocSyncer as 🔄 Document Syncer
+    
+    User->>DocSyncer: Request migration plan
+    Note over DocSyncer: Analyzes current docs
+    DocSyncer->>User: Propose migration strategy
+    User->>DocSyncer: Approve strategy
+    DocSyncer->>User: Execute migration
+    DocSyncer->>User: Verify cross-references
+
+    style User fill:#ff9966,stroke:#ff6600
+    style DocSyncer fill:#66cc99,stroke:#009966
 ```
 
-### Step 3: Implementation
+#### Step-by-Step Procedure
 
-Now, switch to the Implementer agent to write the code:
+1. Start with planning the migration:
+   ```
+   @doc-syncer.mdc I need to migrate our Markdown documentation to a new format. Create a migration plan.
+   ```
 
-```bash
-$ crules agent select
-# Select "Implementer Agent"
+2. Review and approve the migration plan:
+   ```
+   @doc-syncer.mdc The migration plan looks good. Please proceed with the migration.
+   ```
 
-User: I need to implement the "report" command as planned. Please start with the basic structure in internal/cli/report.go.
+3. Verify the migration results:
+   ```
+   @doc-syncer.mdc Check that all documentation links and cross-references are working after the migration
+   ```
 
-Agent: I'll implement the report command. First, let's create the file structure:
+## Specific Documentation Tasks
 
-[Agent provides implementation code for report.go with command structure, flags, and basic reporting logic]
+### Task 1: Updating API Documentation
+
+When your API implementation changes, you need to update the documentation:
+
+```mermaid
+flowchart TD
+    User((👤 User)) --> DocSyncer(🔄 Document Syncer)
+    DocSyncer --> Analysis[Analyze API Changes]
+    Analysis --> UpdateDocs[Update API Documentation]
+    UpdateDocs --> VerifyConsistency[Verify Documentation Consistency]
+    
+    style User fill:#ff9966,stroke:#ff6600,stroke-width:2px
+    style DocSyncer fill:#66cc99,stroke:#009966,stroke-width:2px
+    style Analysis fill:#f5f5f5,stroke:#cccccc,stroke-width:1px
+    style UpdateDocs fill:#f5f5f5,stroke:#cccccc,stroke-width:1px
+    style VerifyConsistency fill:#f5f5f5,stroke:#cccccc,stroke-width:1px
 ```
 
-### Step 4: Testing
+#### Example Conversation
 
-Use the Runner agent to test the implementation:
+```
+User: @doc-syncer.mdc We've updated our API endpoints in the code, but our API documentation is now out of date.
 
-```bash
-$ crules agent select
-# Select "Runner Agent"
+Document Syncer: I'll help you synchronize your API documentation with the current implementation. First, I'll analyze the changes between your code and documentation.
 
-User: I need to test the new report command.
+[Agent analyzes code and documentation]
 
-Agent: Let's run some tests for the new report command:
+Document Syncer: I've identified several inconsistencies in your API documentation:
+1. The '/users' endpoint now accepts 'email' as a query parameter, but this isn't documented
+2. The response format for '/products' has changed to include a 'category' field
+3. A new endpoint '/orders/status' exists in the code but isn't documented
 
-1. First, let's build the binary:
-   ```
-   go build -o crules ./cmd/crules
-   ```
+Would you like me to update the API documentation to address these issues?
 
-2. Now, let's run basic functionality tests:
-   ```
-   ./crules report
-   ./crules report --format=json
-   ./crules report --format=markdown --output=report.md
-   ```
+User: Yes, please update the documentation.
 
-[Agent provides analysis of the test results]
+Document Syncer: Here's my proposed update to the API documentation:
+[Detailed changes to API documentation]
+
+Should I apply these changes?
+
+User: The changes look good. Please apply them.
+
+Document Syncer: I've updated your API documentation to match the current implementation. All endpoints and parameters are now correctly documented.
 ```
 
-### Step 5: Documentation
+### Task 2: Synchronizing README Files
 
-Finally, use the Documentation agent to document the new feature:
+When your project evolves, you need to keep README files up-to-date:
 
-```bash
-$ crules agent select
-# Select "Documentation Agent"
-
-User: I need to document the new report command.
-
-Agent: I'll add documentation for the new report command:
-
-[Agent provides documentation updates for the command, including usage examples, parameter descriptions, and output formats]
+```mermaid
+flowchart TD
+    User((👤 User)) --> DocSyncer(🔄 Document Syncer)
+    DocSyncer --> CheckReadme[Check README Against Code]
+    CheckReadme --> UpdateReadme[Update README Content]
+    UpdateReadme --> VerifyLinks[Verify Links and Examples]
+    
+    style User fill:#ff9966,stroke:#ff6600,stroke-width:2px
+    style DocSyncer fill:#66cc99,stroke:#009966,stroke-width:2px
+    style CheckReadme fill:#f5f5f5,stroke:#cccccc,stroke-width:1px
+    style UpdateReadme fill:#f5f5f5,stroke:#cccccc,stroke-width:1px
+    style VerifyLinks fill:#f5f5f5,stroke:#cccccc,stroke-width:1px
 ```
 
-## Example 2: Fixing a Bug
+#### Example Conversation
 
-This workflow demonstrates how to use agents to diagnose and fix a bug.
+```
+User: @doc-syncer.mdc Our main README.md file mentions commands and features that have changed. Please update it.
 
-### Step 1: Analyze with Fix Planner
+Document Syncer: I'll help you update your README.md file to reflect the current state of your project. First, I'll analyze the inconsistencies.
 
-Start with the Fix Planner agent to analyze the issue:
+[Agent analyzes code and README]
 
-```bash
-$ crules agent select
-# Select "Fix Planner Agent"
+Document Syncer: I've found several areas in the README.md that need updating:
+1. The command syntax has changed from 'cursor++ agent list' to 'cursor++ agent'
+2. It references agents that aren't implemented in the current version
+3. The installation instructions are referencing an outdated version
 
-User: The sync command isn't correctly preserving file permissions. Files end up with 644 permissions after sync.
+Here's my proposed update to the README:
+[Detailed changes to README.md]
 
-Agent: Let's analyze this file permission issue:
+Would you like me to apply these changes?
 
-## Problem Analysis
-- The sync command is changing file permissions to 644
-- This suggests we're not preserving the original file permissions during copy
-- Likely location: internal/projects/sync.go
+User: Yes, that looks correct. Please update the README.
 
-## Potential Causes
-1. Using simple file copy that doesn't preserve permissions
-2. Explicitly setting permissions to 644
-3. Not using appropriate OS functions
-
-## Fix Strategy
-1. Check how files are copied in the sync function
-2. Ensure we use functions that preserve metadata (like os.Copy with appropriate flags)
-3. Add tests to verify permission preservation
+Document Syncer: I've updated your README.md file to accurately reflect the current state of your project. All commands, features, and installation instructions are now up-to-date.
 ```
 
-### Step 2: Implementation with Implementer
+## Future Agent Extensions
 
-Switch to the Implementer agent to fix the code:
+In future releases, cursor++ will expand its agent ecosystem to include:
 
-```bash
-$ crules agent select
-# Select "Implementer Agent"
+- **Documentation Agent**: Create new documentation from code
+- **Document Reviewer Agent**: Review documentation for quality and completeness
+- **Architecture Documenter Agent**: Create and maintain architecture documentation
 
-User: I need to fix the file permission issue in the sync command as analyzed by the Fix Planner.
+Until these agents are available, the Document Syncer agent can help with many documentation tasks by focusing on synchronization between existing documentation and code.
 
-Agent: I'll fix the file permission issue in the sync command. Let's look at the current implementation first.
+## Navigation
 
-[Agent reviews the code, identifies the issue, and provides a fix that preserves file permissions]
-```
-
-### Step 3: Verification with Runner
-
-Use the Runner agent to verify the fix:
-
-```bash
-$ crules agent select
-# Select "Runner Agent"
-
-User: I need to test the fix for the file permissions issue.
-
-Agent: Let's test the fix for the file permissions issue:
-
-1. First, let's build the binary:
-   ```
-   go build -o crules ./cmd/crules
-   ```
-
-2. Now, let's create a test file with specific permissions:
-   ```
-   touch testfile
-   chmod 755 testfile
-   ```
-
-3. Let's run the sync command and check if permissions are preserved:
-   ```
-   ./crules sync
-   ls -la testfile
-   ```
-
-[Agent analyzes the results and confirms that permissions are now preserved]
-```
-
-## Example 3: Code Review
-
-This example shows how to use agents for code review.
-
-### Step 1: Review with Technical Wizard
-
-Use the Technical Wizard agent to review code at a high level:
-
-```bash
-$ crules agent select
-# Select "Technical Wizard Agent"
-
-User: Can you review this new implementation of the agent selection UI?
-
-Agent: I'll review the agent selection UI implementation:
-
-## High-Level Review
-- The approach using a terminal UI library is solid
-- The separation of UI logic from business logic is good
-- There are a few architectural concerns to address
-
-## Strengths
-- Clean component-based design
-- Good error handling
-- Responsive UI with keyboard shortcuts
-
-## Areas for Improvement
-- Consider extracting the UI theme into a configuration
-- The agent loading might benefit from background caching
-- Some error messages could be more user-friendly
-
-Overall, this is a well-implemented feature but with room for some architectural refinements.
-```
-
-### Step 2: Detailed Implementation Feedback
-
-Switch to the Implementer agent for detailed code feedback:
-
-```bash
-$ crules agent select
-# Select "Implementer Agent"
-
-User: Can you provide detailed implementation feedback on the agent selection UI?
-
-Agent: Here's my detailed implementation feedback:
-
-[Agent provides specific code-level feedback, including suggestions for refactoring, optimizing performance, and improving error handling]
-```
-
-## Best Practices for Agent Workflows
-
-1. **Use specialized agents for specific tasks**: Each agent is optimized for certain types of tasks.
-
-2. **Chain agents in a logical sequence**: Start with planning, move to implementation, then testing and documentation.
-
-3. **Provide context when switching agents**: When you select a new agent, briefly summarize what previous agents have done.
-
-4. **Be specific in your requests**: Clearly state what you need from each agent to get the most relevant help.
-
-5. **Review agent suggestions critically**: While agents provide expert guidance, always review their suggestions critically.
-
-## See Also
-
-- [Agent System Documentation](../user-guide/agents.md)
-- [Command Reference](../user-guide/commands.md)
-- [Extending Agents](../developer-guide/extending-agents.md) 
+- Previous: [Basic Usage](./basic-usage.md)
+- Next: [Advanced Usage](./advanced-usage.md)
+- Up: [Examples](../README.md#examples)
+- Home: [Documentation Home](../README.md) 

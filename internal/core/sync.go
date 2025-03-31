@@ -1,33 +1,40 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
-	"crules/internal/git"
-	"crules/internal/ui"
-	"crules/internal/utils"
+	"cursor++/internal/git"
+	"cursor++/internal/ui"
+	"cursor++/internal/utils"
 )
 
-// SyncManager handles all sync operations
-type SyncManager struct {
-	mainPath string
-	registry *Registry
-	config   *utils.Config
-	appPaths utils.AppPaths
+// AgentInitializer handles agent system initialization
+type AgentInitializer struct {
+	agentPath string
+	registry  *Registry
+	config    *utils.Config
+	appPaths  utils.AppPaths
+	gitMgr    *git.GitManager
 }
 
-// NewSyncManager creates a new sync manager
-func NewSyncManager() (*SyncManager, error) {
+// NewAgentInitializer creates a new agent initializer
+func NewAgentInitializer() (*AgentInitializer, error) {
 	// Load config
-	config := utils.LoadConfig()
+	cm := utils.NewConfigManager()
+	if err := cm.Load(); err != nil {
+		return nil, wrapOpError("NewAgentInitializer", "config", err, "failed to load configuration")
+	}
+	config := cm.GetConfig()
 	utils.Debug("Loaded configuration")
 
 	// Get app name from environment
 	appName := os.Getenv("APP_NAME")
 	if appName == "" {
-		appName = utils.DefaultAppName
+		appName = utils.DefaultAgentsDirName
 	}
 
 	// Get system paths
@@ -35,318 +42,281 @@ func NewSyncManager() (*SyncManager, error) {
 	utils.Debug("Loaded system paths for current platform")
 
 	// Use OS-specific paths
-	mainPath := appPaths.GetRulesDir(config.RulesDirName)
+	agentPath := appPaths.GetRulesDir(config.RulesDirName)
 	registryPath := appPaths.GetRegistryFile(config.RegistryFileName)
 
 	// Ensure required directories exist
 	if err := utils.EnsureDirExists(appPaths.ConfigDir, config.DirPermission); err != nil {
-		utils.Error("Cannot create config directory | path=" + appPaths.ConfigDir + ", error=" + err.Error())
-		return nil, fmt.Errorf("cannot create config directory: %v", err)
+		return nil, wrapOpError("NewAgentInitializer", appPaths.ConfigDir, err, "failed to create config directory")
 	}
 
 	if err := utils.EnsureDirExists(appPaths.DataDir, config.DirPermission); err != nil {
-		utils.Error("Cannot create data directory | path=" + appPaths.DataDir + ", error=" + err.Error())
-		return nil, fmt.Errorf("cannot create data directory: %v", err)
+		return nil, wrapOpError("NewAgentInitializer", appPaths.DataDir, err, "failed to create data directory")
 	}
 
 	if err := utils.EnsureDirExists(appPaths.LogDir, config.DirPermission); err != nil {
-		utils.Error("Cannot create log directory | path=" + appPaths.LogDir + ", error=" + err.Error())
-		return nil, fmt.Errorf("cannot create log directory: %v", err)
+		return nil, wrapOpError("NewAgentInitializer", appPaths.LogDir, err, "failed to create log directory")
 	}
 
-	utils.Debug("Using main rules path | path=" + mainPath)
+	utils.Debug("Using agent path | path=" + agentPath)
 
-	// Ensure main directory exists
-	if err := os.MkdirAll(mainPath, config.DirPermission); err != nil {
-		utils.Error("Cannot create main directory | path=" + mainPath + ", error=" + err.Error())
-		return nil, fmt.Errorf("cannot create main directory: %v", err)
+	// Ensure agent directory exists
+	if err := os.MkdirAll(agentPath, config.DirPermission); err != nil {
+		return nil, wrapOpError("NewAgentInitializer", agentPath, err, "failed to create agent directory")
 	}
 
 	// Load or create registry
 	registry, err := LoadRegistry(registryPath, config)
 	if err != nil {
-		utils.Error("Cannot load registry | error=" + err.Error())
-		return nil, fmt.Errorf("cannot load registry: %v", err)
+		return nil, wrapOpError("NewAgentInitializer", registryPath, err, "failed to load registry")
 	}
 	utils.Debug("Registry loaded successfully")
 
-	return &SyncManager{
-		mainPath: mainPath,
-		registry: registry,
-		config:   config,
-		appPaths: appPaths,
+	return &AgentInitializer{
+		agentPath: agentPath,
+		registry:  registry,
+		config:    config,
+		appPaths:  appPaths,
+		gitMgr:    git.NewGitManager(nil),
 	}, nil
 }
 
-// Init copies rules from main location to current directory
-func (sm *SyncManager) Init() error {
+// Init initializes the agent system in the current directory
+func (ai *AgentInitializer) Init() error {
 	currentDir, err := os.Getwd()
 	if err != nil {
-		utils.Error("Cannot get current directory | error=" + err.Error())
-		return fmt.Errorf("cannot get current directory: %v", err)
+		return wrapOpError("Init", "cwd", err, "failed to get current directory")
 	}
 
-	targetPath := filepath.Join(currentDir, sm.config.RulesDirName)
+	// Add detailed debug info about configuration
+	if utils.IsDebug() {
+		utils.Debugf("Init configuration details | agentPath=%s | rulesDirName=%s | dataDir=%s | sourceFolder=%s",
+			ai.agentPath, ai.config.RulesDirName, ai.appPaths.DataDir, ai.config.SourceFolder)
+		utils.Debugf("Registry location | path=%s | projects=%d",
+			ai.appPaths.GetRegistryFile(ai.config.RegistryFileName), ai.registry.GetProjectCount())
+	}
+
+	// Add verbose info
+	if utils.IsVerbose() {
+		utils.Info("Initializing agent system in current directory")
+		utils.Infof("Using system agent path: %s", ai.agentPath)
+	}
+
+	// The target path is the rules directory in the current project
+	targetPath := filepath.Join(currentDir, ai.config.RulesDirName)
 	utils.Debug("Init target path | path=" + targetPath)
 
-	// Check if the main rules location exists
-	mainLocationNeedsSetup := false
+	// Check if the agent location exists and has valid definitions
+	needsSetup := false
 
-	if !utils.DirExists(sm.mainPath) {
-		utils.Debug("Main rules location does not exist | path=" + sm.mainPath)
-		ui.Warning("Main rules location does not exist: %s", sm.mainPath)
-		mainLocationNeedsSetup = true
+	if !utils.DirExists(ai.agentPath) {
+		utils.Debug("Agent location does not exist | path=" + ai.agentPath)
+		ui.Warning("Agent location does not exist: %s", ai.agentPath)
+		needsSetup = true
 	} else {
-		// Main location exists, but check if it has any .mdc files
-		hasMDCFiles, err := utils.HasMDCFiles(sm.mainPath)
-		if err != nil {
-			utils.Error("Failed to check for .mdc files | path=" + sm.mainPath + ", error=" + err.Error())
-			return fmt.Errorf("failed to check for .mdc files: %v", err)
-		}
+		// Check source folder if it's specified
+		if ai.config.SourceFolder != "" {
+			sourceFolderPath := filepath.Join(ai.agentPath, ai.config.SourceFolder)
+			if !utils.DirExists(sourceFolderPath) {
+				utils.Debug("Source folder does not exist | path=" + sourceFolderPath)
+				ui.Warning("Source folder does not exist: %s", sourceFolderPath)
+				needsSetup = true
+			} else {
+				hasMDCFiles, err := utils.HasMDCFiles(sourceFolderPath)
+				if err != nil {
+					return wrapOpError("Init", sourceFolderPath, err, "failed to check for agent definitions in source folder")
+				}
 
-		if !hasMDCFiles {
-			utils.Debug("Main rules location exists but contains no .mdc files | path=" + sm.mainPath)
-			ui.Warning("Main rules location exists but contains no rules: %s", sm.mainPath)
-			mainLocationNeedsSetup = true
-		}
-	}
-
-	// If main location doesn't exist or is empty, offer options
-	if mainLocationNeedsSetup {
-		if !sm.offerMainLocationOptions() {
-			ui.Info("Operation cancelled by user")
-			return fmt.Errorf("operation cancelled by user")
-		}
-	}
-
-	// Check if target already exists and list its contents
-	if utils.DirExists(targetPath) {
-		utils.Debug("Rules directory already exists | path=" + targetPath)
-
-		// List files that will be overwritten
-		files, err := utils.ListDirectoryContents(targetPath)
-		if err != nil {
-			utils.Error("Failed to list directory contents | path=" + targetPath + ", error=" + err.Error())
-			return fmt.Errorf("failed to list directory contents: %v", err)
-		}
-
-		if len(files) > 0 {
-			ui.Header("The following files will be deleted:")
-			ui.DisplayFileTable(files)
-
-			ui.Plain("")
-			if !ui.PromptYesNo("Do you want to continue and overwrite these files?") {
-				ui.Info("Operation cancelled by user")
-				return fmt.Errorf("operation cancelled by user")
+				if !hasMDCFiles {
+					utils.Debug("Source folder exists but contains no definitions | path=" + sourceFolderPath)
+					ui.Warning("Source folder exists but contains no definitions: %s", sourceFolderPath)
+					needsSetup = true
+				} else if utils.IsVerbose() {
+					utils.Info("Found existing agent definitions in source folder")
+				}
 			}
 		} else {
-			ui.Info("Destination directory exists but is empty")
+			hasMDCFiles, err := utils.HasMDCFiles(ai.agentPath)
+			if err != nil {
+				return wrapOpError("Init", ai.agentPath, err, "failed to check for agent definitions")
+			}
+
+			if !hasMDCFiles {
+				utils.Debug("Agent location exists but contains no definitions | path=" + ai.agentPath)
+				ui.Warning("Agent location exists but contains no definitions: %s", ai.agentPath)
+				needsSetup = true
+			} else if utils.IsVerbose() {
+				utils.Info("Found existing agent definitions")
+			}
 		}
 	}
 
-	// Copy from main to current
-	utils.Debug("Copying rules to current directory | source=" + sm.mainPath + ", target=" + targetPath)
-	if err := utils.CopyDir(sm.mainPath, targetPath); err != nil {
-		utils.Error("Failed to copy rules | source=" + sm.mainPath + ", target=" + targetPath + ", error=" + err.Error())
-		return fmt.Errorf("failed to copy rules: %v", err)
+	if needsSetup {
+		if !ai.handleInitialSetup() {
+			return wrapValidationError("setup", "agent system initialization cancelled")
+		}
 	}
 
-	// Register this project
-	utils.Debug("Registering project | project=" + currentDir)
-	if err := sm.registry.AddProject(currentDir); err != nil {
-		utils.Error("Failed to register project | project=" + currentDir + ", error=" + err.Error())
-		return err
+	// Log copy operation details
+	if utils.IsVerbose() {
+		if ai.config.SourceFolder != "" {
+			utils.Infof("Copying agent definitions from '%s' subfolder to project directory: %s",
+				ai.config.SourceFolder, targetPath)
+		} else {
+			utils.Infof("Copying all agent definitions to project directory: %s", targetPath)
+		}
 	}
 
-	// Ensure .cursor/ is in gitignore
-	utils.Debug("Ensuring .cursor/ is in gitignore | project=" + currentDir)
-	if err := utils.EnsureGitIgnoreEntry(currentDir, ".cursor/"); err != nil {
-		utils.Warn("Failed to update gitignore | project=" + currentDir + ", error=" + err.Error())
-		// Don't fail the operation just for gitignore issues
-		// Just log a warning
-	} else {
-		utils.Info("Updated gitignore to exclude .cursor/ directory")
+	// Debug with more details about the copy operation
+	if utils.IsDebug() {
+		utils.Debugf("Copy operation details | source=%s | sourceFolder=%s | target=%s | permission=%o",
+			ai.agentPath, ai.config.SourceFolder, targetPath, ai.config.DirPermission)
 	}
 
-	utils.Info("Rules initialized successfully | project=" + currentDir)
-	ui.Success("Successfully initialized rules in %s", targetPath)
+	// Ensure the target directory exists
+	if err := os.MkdirAll(targetPath, ai.config.DirPermission); err != nil {
+		return wrapOpError("Init", targetPath, err, "failed to create target directory")
+	}
+
+	// Copy agent definitions selectively to the rules directory
+	if err := utils.CopyDirSelective(ai.agentPath, targetPath, ai.config.SourceFolder); err != nil {
+		return wrapOpError("Init", targetPath, err, "failed to copy agent definitions")
+	}
+
+	if utils.IsDebug() {
+		// Verify the copy operation
+		mdcFiles := 0
+		err := filepath.Walk(targetPath, func(path string, info os.FileInfo, err error) error {
+			if err == nil && !info.IsDir() && strings.HasSuffix(info.Name(), ".mdc") {
+				mdcFiles++
+				utils.Debugf("Copied MDC file: %s", path)
+			}
+			return nil
+		})
+		if err != nil {
+			utils.Debugf("Error walking target directory: %v", err)
+		} else {
+			utils.Debugf("Total MDC files copied: %d", mdcFiles)
+		}
+	}
+
+	// Add project to registry
+	if err := ai.registry.AddProject(currentDir); err != nil {
+		return wrapOpError("Init", currentDir, err, "failed to register project")
+	}
+
+	if utils.IsVerbose() {
+		utils.Info("Project registered in agent registry")
+	}
+
+	ui.Success("Successfully initialized agent system in %s", currentDir)
 	return nil
 }
 
-// offerMainLocationOptions presents options for an empty or non-existent main location
-// Returns true if operation should continue, false if cancelled
-func (sm *SyncManager) offerMainLocationOptions() bool {
-	options := []string{
-		"Create empty directory structure",
-		"Fetch from git repository",
-		"Cancel operation",
+// handleInitialSetup manages the initial setup of the agent system
+func (ai *AgentInitializer) handleInitialSetup() bool {
+	// Default repository URL instead of prompting the user
+	defaultRepoURL := "https://github.com/nsnarender5511/AgenticSystem"
+
+	ui.Info("\nNo agent definitions found. Automatically cloning from default repository...")
+	ui.Info("Repository URL: %s", defaultRepoURL)
+
+	// Add more verbose information
+	if utils.IsVerbose() {
+		utils.Infof("Target agent path: %s", ai.agentPath)
+		if ai.config.SourceFolder != "" {
+			utils.Infof("Will use '%s' subfolder for rules", ai.config.SourceFolder)
+		}
 	}
 
-	choice := ui.PromptOptions("Choose an option:", options)
+	// Add detailed debug information
+	if utils.IsDebug() {
+		utils.Debugf("Clone operation details | repo=%s | path=%s | permission=%o | sourceFolder=%s",
+			defaultRepoURL, ai.agentPath, ai.config.DirPermission, ai.config.SourceFolder)
+		utils.Debugf("Agent registry details | projects=%d | registryPath=%s",
+			ai.registry.GetProjectCount(), ai.appPaths.GetRegistryFile(ai.config.RegistryFileName))
+	}
 
-	switch choice {
-	case 0: // Create empty directory
-		ui.Info("Creating empty directory structure...")
-
-		// Clean up existing directory if it exists
-		if utils.DirExists(sm.mainPath) {
-			utils.Debug("Existing directory found | path=" + sm.mainPath)
-			ui.Warning("Directory already exists: %s", sm.mainPath)
-
-			if !ui.PromptYesNo("Remove existing directory and create empty structure?") {
-				ui.Info("Operation cancelled by user")
-				return false
-			}
-
-			utils.Debug("Removing existing directory | path=" + sm.mainPath)
-			if err := os.RemoveAll(sm.mainPath); err != nil {
-				utils.Error("Failed to remove existing directory | path=" + sm.mainPath + ", error=" + err.Error())
-				ui.Error("Failed to remove existing directory: %v", err)
-				return false
-			}
-		}
-
-		if err := os.MkdirAll(sm.mainPath, sm.config.DirPermission); err != nil {
-			utils.Error("Failed to create main directory | path=" + sm.mainPath + ", error=" + err.Error())
-			ui.Error("Failed to create main directory: %v", err)
-			return false
-		}
-		ui.Success("Created empty directory structure at %s", sm.mainPath)
-		return true
-
-	case 1: // Fetch from git repository
-		// Default repository URL
-		defaultGitRepo := "git@github.com:nsnarender5511/AgenticSystem.git"
-		gitURL := ui.PromptInputWithDefault("Enter git repository URL:", defaultGitRepo, ui.ValidateURL)
-
-		// Clean up existing directory if it exists
-		if utils.DirExists(sm.mainPath) {
-			utils.Debug("Existing directory found | path=" + sm.mainPath)
-			ui.Warning("Directory already exists: %s", sm.mainPath)
-
-			if !ui.PromptYesNo("Remove existing directory before cloning?") {
-				ui.Info("Operation cancelled by user")
-				return false
-			}
-
-			ui.Info("Removing existing directory before cloning...")
-			utils.Debug("Removing existing directory | path=" + sm.mainPath)
-			if err := os.RemoveAll(sm.mainPath); err != nil {
-				utils.Error("Failed to remove existing directory | path=" + sm.mainPath + ", error=" + err.Error())
-				ui.Error("Failed to remove existing directory: %v", err)
-				return false
-			}
-		}
-
-		// Verify if the repository exists
-		ui.Info("Verifying git repository...")
-		if !git.IsValidRepo(gitURL) {
-			ui.Error("Invalid git repository URL or repository not accessible")
-			return false
-		}
-
-		// Clone the repository
-		ui.Info("Cloning git repository to %s...", sm.mainPath)
-		if err := git.Clone(gitURL, sm.mainPath); err != nil {
-			git.CleanupOnFailure(sm.mainPath)
-			ui.Error("Failed to clone repository: %v", err)
-			return false
-		}
-		ui.Success("Repository cloned successfully")
-		return true
-
-	default: // Cancel
+	if err := ai.cloneRepository(defaultRepoURL); err != nil {
+		ui.Error(err.Error())
 		return false
 	}
-}
 
-// Merge copies current rules to main and syncs to all locations
-func (sm *SyncManager) Merge() error {
-	currentDir, err := os.Getwd()
-	if err != nil {
-		utils.Error("Cannot get current directory | error=" + err.Error())
-		return fmt.Errorf("cannot get current directory: %v", err)
-	}
+	// Verify and log the clone results
+	if utils.DirExists(ai.agentPath) {
+		// Check if source folder exists
+		if ai.config.SourceFolder != "" {
+			sourceFolderPath := filepath.Join(ai.agentPath, ai.config.SourceFolder)
+			if !utils.DirExists(sourceFolderPath) {
+				ui.Error("Source folder '%s' does not exist in the cloned repository", ai.config.SourceFolder)
+				return false
+			}
 
-	sourcePath := filepath.Join(currentDir, sm.config.RulesDirName)
-	utils.Debug("Checking for rules in current directory | path=" + sourcePath)
-	if !utils.DirExists(sourcePath) {
-		utils.Error("Rules not found in current directory | path=" + sourcePath)
-		return fmt.Errorf("%s not found in current directory", sm.config.RulesDirName)
-	}
-
-	// Copy to main
-	utils.Debug("Copying rules to main location | source=" + sourcePath + ", target=" + sm.mainPath)
-	if err := utils.CopyDir(sourcePath, sm.mainPath); err != nil {
-		utils.Error("Failed to copy to main | source=" + sourcePath + ", target=" + sm.mainPath + ", error=" + err.Error())
-		return fmt.Errorf("failed to copy to main: %v", err)
-	}
-	utils.Info("Rules merged to main location | source=" + sourcePath)
-
-	// Sync to all registered projects
-	utils.Debug("Starting sync to all registered projects")
-	return sm.syncToAll()
-}
-
-// Sync forces sync from main to current
-func (sm *SyncManager) Sync() error {
-	currentDir, err := os.Getwd()
-	if err != nil {
-		utils.Error("Cannot get current directory | error=" + err.Error())
-		return fmt.Errorf("cannot get current directory: %v", err)
-	}
-
-	targetPath := filepath.Join(currentDir, sm.config.RulesDirName)
-	utils.Debug("Syncing rules from main location | source=" + sm.mainPath + ", target=" + targetPath)
-
-	if err := utils.CopyDir(sm.mainPath, targetPath); err != nil {
-		utils.Error("Failed to sync rules | source=" + sm.mainPath + ", target=" + targetPath + ", error=" + err.Error())
-		return err
-	}
-
-	utils.Info("Rules synced successfully | target=" + targetPath)
-	return nil
-}
-
-// syncToAll syncs main rules to all registered projects
-func (sm *SyncManager) syncToAll() error {
-	projects := sm.registry.GetProjects()
-	utils.Debug("Syncing to all projects | count=" + fmt.Sprintf("%d", len(projects)))
-
-	succeeded := 0
-	failed := 0
-
-	for _, project := range projects {
-		// Check if project directory exists
-		if !utils.DirExists(project) {
-			utils.Warn("Project directory does not exist | project=" + project)
-			fmt.Printf("Warning: skipping non-existent project: %s\n", project)
-			failed++
-			continue
+			// Verify it has MDC files
+			hasMDCFiles, _ := utils.HasMDCFiles(sourceFolderPath)
+			if !hasMDCFiles {
+				ui.Warning("Source folder '%s' exists but contains no agent definitions", ai.config.SourceFolder)
+			}
 		}
 
-		targetPath := filepath.Join(project, sm.config.RulesDirName)
-		utils.Debug("Syncing to project | project=" + project + ", target=" + targetPath)
+		if utils.IsVerbose() {
+			fileCount, _ := utils.CountFiles(ai.agentPath)
+			utils.Infof("Repository cloned successfully with %d files", fileCount)
 
-		if err := utils.CopyDir(sm.mainPath, targetPath); err != nil {
-			utils.Warn("Failed to sync to project | project=" + project + ", error=" + err.Error())
-			fmt.Printf("Warning: failed to sync to %s: %v\n", project, err)
-			failed++
-		} else {
-			succeeded++
+			if ai.config.SourceFolder != "" {
+				sourceFolderPath := filepath.Join(ai.agentPath, ai.config.SourceFolder)
+				sourceFileCount, _ := utils.CountFiles(sourceFolderPath)
+				utils.Infof("Source folder '%s' contains %d files", ai.config.SourceFolder, sourceFileCount)
+			}
+		}
+
+		if utils.IsDebug() {
+			if ai.config.SourceFolder != "" {
+				sourceFolderPath := filepath.Join(ai.agentPath, ai.config.SourceFolder)
+				mdcFiles, _ := utils.CountFilesByExt(sourceFolderPath, ".mdc")
+				utils.Debugf("Source folder definition details | path=%s | total files=%d | mdc files=%d",
+					sourceFolderPath, utils.CountFilesRecursive(sourceFolderPath), mdcFiles)
+			} else {
+				mdcFiles, _ := utils.CountFilesByExt(ai.agentPath, ".mdc")
+				utils.Debugf("Agent definition details | total files=%d | mdc files=%d",
+					utils.CountFilesRecursive(ai.agentPath), mdcFiles)
+			}
 		}
 	}
 
-	utils.Info("Sync to all projects completed | successful=" + fmt.Sprintf("%d", succeeded) + ", failed=" + fmt.Sprintf("%d", failed))
+	ui.Success("Successfully cloned repository to %s", ai.agentPath)
+	return true
+}
+
+func (ai *AgentInitializer) readUserInput(input *string) error {
+	if _, err := fmt.Scanln(input); err != nil {
+		return wrapOpError("readUserInput", "stdin", err, "failed to read user input")
+	}
 	return nil
 }
 
-// GetRegistry returns the registry instance
-func (sm *SyncManager) GetRegistry() *Registry {
-	return sm.registry
+func (ai *AgentInitializer) createEmptyDirectory() error {
+	if err := os.MkdirAll(ai.agentPath, ai.config.DirPermission); err != nil {
+		return wrapOpError("createEmptyDirectory", ai.agentPath, err, "failed to create agent directory")
+	}
+	return nil
 }
 
-// Clean removes non-existent projects from registry
-func (sm *SyncManager) Clean() (int, error) {
-	return sm.registry.CleanProjects()
+func (ai *AgentInitializer) cloneRepository(repoURL string) error {
+	ui.Info("Cloning repository %s to %s...", repoURL, ai.agentPath)
+
+	if err := os.MkdirAll(filepath.Dir(ai.agentPath), ai.config.DirPermission); err != nil {
+		return wrapOpError("cloneRepository", ai.agentPath, err, "failed to create parent directory")
+	}
+
+	if err := ai.gitMgr.CloneOrPull(context.Background(), repoURL, ai.agentPath); err != nil {
+		return wrapOpError("cloneRepository", repoURL, err, "failed to clone repository")
+	}
+
+	return nil
+}
+
+// GetRegistry returns the registry
+func (ai *AgentInitializer) GetRegistry() *Registry {
+	return ai.registry
 }

@@ -7,7 +7,7 @@ import (
 )
 
 // Default application name if not specified
-const DefaultAppName = "crules"
+const DefaultAppName = "cursor++"
 
 // AppPaths holds all relevant paths for the application
 type AppPaths struct {
@@ -45,20 +45,20 @@ func GetAppPaths(appName string) AppPaths {
 func getWindowsAppPaths(appName string) AppPaths {
 	p := AppPaths{}
 
-	// Configuration: %APPDATA%\crules
+	// Configuration: %APPDATA%\cursor++
 	p.ConfigDir = filepath.Join(os.Getenv("APPDATA"), appName)
 
-	// Data: %LOCALAPPDATA%\crules
+	// Data: %LOCALAPPDATA%\cursor++
 	localAppData := os.Getenv("LOCALAPPDATA")
 	if localAppData == "" {
 		localAppData = filepath.Join(os.Getenv("USERPROFILE"), "AppData", "Local")
 	}
 	p.DataDir = filepath.Join(localAppData, appName)
 
-	// Cache: %LOCALAPPDATA%\crules\Cache
+	// Cache: %LOCALAPPDATA%\cursor++\Cache
 	p.CacheDir = filepath.Join(localAppData, appName, "Cache")
 
-	// Logs: %LOCALAPPDATA%\crules\Logs
+	// Logs: %LOCALAPPDATA%\cursor++\Logs
 	p.LogDir = filepath.Join(localAppData, appName, "Logs")
 
 	return p
@@ -73,16 +73,16 @@ func getDarwinAppPaths(appName string) AppPaths {
 		home = "."
 	}
 
-	// Configuration: ~/Library/Application Support/crules
+	// Configuration: ~/Library/Application Support/cursor++
 	p.ConfigDir = filepath.Join(home, "Library", "Application Support", appName)
 
-	// Data: ~/Library/Application Support/crules
+	// Data: ~/Library/Application Support/cursor++
 	p.DataDir = filepath.Join(home, "Library", "Application Support", appName)
 
-	// Cache: ~/Library/Caches/crules
+	// Cache: ~/Library/Caches/cursor++
 	p.CacheDir = filepath.Join(home, "Library", "Caches", appName)
 
-	// Logs: ~/Library/Logs/crules
+	// Logs: ~/Library/Logs/cursor++
 	p.LogDir = filepath.Join(home, "Library", "Logs", appName)
 
 	return p
@@ -118,16 +118,16 @@ func getUnixAppPaths(appName string) AppPaths {
 		xdgStateHome = filepath.Join(home, ".local", "state")
 	}
 
-	// Configuration: ~/.config/crules
+	// Configuration: ~/.config/cursor++
 	p.ConfigDir = filepath.Join(xdgConfigHome, appName)
 
-	// Data: ~/.local/share/crules
+	// Data: ~/.local/share/cursor++
 	p.DataDir = filepath.Join(xdgDataHome, appName)
 
-	// Cache: ~/.cache/crules
+	// Cache: ~/.cache/cursor++
 	p.CacheDir = filepath.Join(xdgCacheHome, appName)
 
-	// Logs: ~/.local/state/crules/logs
+	// Logs: ~/.local/state/cursor++/logs
 	p.LogDir = filepath.Join(xdgStateHome, appName, "logs")
 
 	return p
@@ -152,7 +152,7 @@ func (p AppPaths) GetRegistryFile(fileName string) string {
 }
 
 // DefaultLogFileName is the default name for log files
-const DefaultLogFileName = "crules.log"
+const DefaultLogFileName = "cursor++.log"
 
 // GetLogFile returns the path to a log file
 func (p AppPaths) GetLogFile(logName string) string {

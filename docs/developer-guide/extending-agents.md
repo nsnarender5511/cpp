@@ -1,168 +1,492 @@
-# Extending the Agent System
+---
+title: Extending Agents
+description: Guidelines for creating and extending agents
+applies_to: cursor++ v0.1.0+
+---
 
-> 🛠️ This guide explains how to create custom agents and extend the agent system in crules.
+# Extending Agents
 
-## Overview
+This guide explains how to create new agents or extend existing ones in the cursor++ system.
 
-The Agent System in crules is designed to be extensible. You can create your own specialized agents by defining them in Markdown (`.mdc`) files and placing them in the `.cursor/rules` directory.
+## Agent System Overview
+
+The agent system in cursor++ is designed to be modular and extensible. An agent is a specialized component that performs a specific task or provides a specific capability within the application.
+
+## Creating a New Agent
+
+To create a new agent, follow these steps:
+
+1. Create a new directory for your agent in the appropriate location:
+   ```
+   internal/agent/youragent/
+   ```
+
+2. Create the main agent implementation file:
+   ```
+   internal/agent/youragent/youragent.go
+   ```
+
+3. Implement the Agent interface:
+   ```go
+   package youragent
+
+   type YourAgent struct {
+       // Agent state and dependencies
+   }
+
+   func NewYourAgent() *YourAgent {
+       return &YourAgent{
+           // Initialize state
+       }
+   }
+
+   // Implement Agent interface methods
+   func (a *YourAgent) Name() string {
+       return "youragent"
+   }
+
+   func (a *YourAgent) Description() string {
+       return "Description of what your agent does"
+   }
+
+   func (a *YourAgent) Execute(ctx context.Context, input string) (string, error) {
+       // Implementation of the agent logic
+   }
+   ```
+
+4. Register your agent in the agent registry:
+   ```go
+   // In internal/agent/registry.go
+   import "github.com/nsnarender5511/cursor++/internal/agent/youragent"
+
+   func init() {
+       RegisterAgent(youragent.NewYourAgent())
+   }
+   ```
 
 ## Agent Definition Files
 
-Agents are defined in `.mdc` files (Markdown with custom annotations). Each file contains:
+Agents in cursor++ are defined using Markdown files with the `.mdc` extension. These files contain both the agent's metadata (name, description, role, capabilities) and the full agent definition (instructions, examples, etc.).
 
-1. Metadata about the agent (name, description, capabilities)
-2. The agent's full definition and instructions
+### File Structure
 
-### Basic Structure
-
-A minimal agent definition file looks like this:
+Each agent definition file (`*.mdc`) follows this structure:
 
 ```markdown
 # Agent Name
 
-## 🎯 Role:
-Brief description of what this agent does and its purpose.
+## 🎯 Role: 
+One-line description of the agent's primary role
 
-### ✅ Capability One:
-- Detailed point about this capability
-- Another point about this capability
+## 📝 Description:
+A more detailed description of what the agent does, its purpose, and when to use it.
 
-### ✅ Capability Two:
-- Detailed point about this capability
-- Another point about this capability
+## ✅ Capabilities:
+- Capability 1: Description of the first capability
+- Capability 2: Description of the second capability
+- Capability 3: Description of the third capability
+
+## 🔍 Examples:
+Examples of how to use this agent effectively.
+
+## 📋 Instructions:
+Detailed instructions for the agent, defining its behavior, constraints, and operation.
+
+## 🧠 Knowledge:
+Specific domain knowledge that the agent needs to perform its role effectively.
 ```
 
 ### Required Sections
 
-For proper parsing and display in the crules tool, your agent definition should include:
+The following sections are required in every agent definition file:
 
-1. **Title (H1)**: The agent's name, typically with an emoji
-2. **Role (H2)**: A section titled "🎯 Role:" that describes the agent's purpose
-3. **Capabilities (H3)**: Sections titled "✅ [Capability Name]:" that list the agent's capabilities
+- **Title** (`# Agent Name`): The name of the agent
+- **Role** (`## 🎯 Role:`): A one-line description of the agent's primary role
+- **Description** (`## 📝 Description:`): A more detailed description of the agent
+- **Capabilities** (`## ✅ Capabilities:`): A list of the agent's key capabilities
 
-### Format Guidelines
+### Optional Sections
 
-- Use emojis to make your agent visually distinctive
-- Structure your agent definition with clear headings
-- Use bullet points for lists of capabilities or responsibilities
-- Keep the first paragraph of the description concise (it will be shown in truncated views)
+These sections are optional but recommended:
 
-## How crules Discovers Agents
+- **Examples** (`## 🔍 Examples:`): Examples of how to use the agent
+- **Instructions** (`## 📋 Instructions:`): Detailed instructions for the agent
+- **Knowledge** (`## 🧠 Knowledge:`): Domain-specific knowledge for the agent
 
-When you run agent-related commands, crules:
+## Agent Metadata
 
-1. Scans the `.cursor/rules` directory for `.mdc` files
-2. Parses each file to extract agent metadata
-3. Creates an in-memory registry of available agents
-4. Uses this registry for listing, selecting, and loading agents
+### Name and Title
 
-The agent ID is derived from the filename (without the `.mdc` extension).
+The agent's name is defined by the level-1 heading (`#`) at the beginning of the file. This name is displayed in the agent selection UI and when listing agents.
 
-## Integration with the System
-
-### Agent Registry
-
-The `agent.Registry` type manages the collection of available agents:
-
-```go
-// from internal/agent/registry.go
-type Registry struct {
-    agents   map[string]*AgentDefinition
-    rulesDir string
-    config   *utils.Config
-}
+Examples:
+```markdown
+# Technical Wizard Agent
 ```
-
-### Agent Definition
-
-Agent metadata is stored in the `AgentDefinition` struct:
-
-```go
-// from internal/agent/types.go
-type AgentDefinition struct {
-    ID             string   `json:"id"`
-    Name           string   `json:"name"`
-    Description    string   `json:"description"`
-    Capabilities   []string `json:"capabilities"`
-    Version        string   `json:"version"`
-    DefinitionPath string   `json:"-"` // Path to the .mdc file
-    Content        string   `json:"-"` // The actual content of the agent definition
-}
-```
-
-### Agent Loading
-
-When an agent is selected, it's loaded by the `agent.Loader`:
-
-```go
-// from internal/agent/loader.go
-type Loader struct {
-    registry *Registry
-    config   *utils.Config
-}
-```
-
-## Creating Your Own Agent
-
-To create your own custom agent:
-
-1. Create a new `.mdc` file in the `.cursor/rules` directory
-2. Name the file to match your agent's ID (e.g., `my-custom-agent.mdc`)
-3. Structure the file using the format guidelines above
-4. Add detailed instructions for your agent's specific purpose
-
-### Example Custom Agent
-
-Here's an example of a custom agent for SQL query optimization:
 
 ```markdown
-# 🔍 SQL Optimizer Agent
-
-## 🎯 Role:
-You are a specialized **SQL Optimizer Agent**, an expert in database query optimization. Your primary purpose is to analyze SQL queries, identify performance bottlenecks, and suggest optimizations to improve query efficiency.
-
-### ✅ Query Analysis:
-- Examine SQL queries to understand their purpose and structure
-- Identify inefficient query patterns and potential bottlenecks
-- Analyze table structures and join conditions
-
-### ✅ Optimization Recommendations:
-- Suggest index improvements for better query performance
-- Recommend query restructuring for better execution plans
-- Provide alternative query approaches with performance benefits
-
-### ✅ Performance Explanation:
-- Explain the performance implications of different SQL constructs
-- Clarify how database optimizers handle specific query patterns
-- Describe execution plans in understandable terms
+# 🧙‍♂️ Technical Wizard Agent
 ```
 
-## Testing Your Custom Agent
+### Role
 
-After creating your agent definition file:
+The role should be a concise one-line description that clearly states the agent's primary function.
 
-1. Run `crules agent list` to verify your agent appears in the list
-2. Run `crules agent info <your-agent-id>` to check that metadata is parsed correctly
-3. Use `crules agent select` to interactively select and test your agent
+Example:
+```markdown
+## 🎯 Role:
+Provides high-level technical guidance and coordinates other specialized agents
+```
 
-## Advanced Customization
+### Description
 
-For more advanced customization of the agent system, you may need to modify the core code:
+The description should provide more detail about what the agent does, when to use it, and its primary value.
 
-- `internal/agent/types.go`: Define new agent-related types
-- `internal/agent/registry.go`: Customize agent discovery and registration
-- `internal/agent/loader.go`: Modify how agents are loaded and initialized
+Example:
+```markdown
+## 📝 Description:
+The Technical Wizard agent helps with architecture decisions, design patterns, 
+and clean code principles. It acts as a coordinator that can suggest when to use 
+other specialized agents for specific tasks. Use this agent when you need 
+high-level guidance on approaching complex technical problems.
+```
+
+### Capabilities
+
+Capabilities should be specific skills or functions that the agent can perform. Each capability should be preceded by a level-3 heading (`###`) with a checkmark emoji.
+
+Example:
+```markdown
+## ✅ Capabilities:
+
+### ✅ In-Depth Technical Exploration and Analysis
+Conducts thorough investigation of technical concepts, frameworks, and approaches, 
+providing comprehensive analysis of options and trade-offs.
+
+### ✅ Expert Architectural Guidance
+Offers expert guidance on system architecture, component organization, and 
+implementation approaches based on industry best practices.
+
+### ✅ Design Patterns Discussion
+Explains and recommends appropriate design patterns for specific technical challenges, 
+with context-specific implementation guidance.
+```
+
+## Creating a Basic Agent
+
+Here's a step-by-step guide to creating a simple agent:
+
+1. Create a new file in the `~/.cursor/rules/` directory (or your configured main location) with the `.mdc` extension:
+
+```bash
+touch ~/.cursor/rules/hello-agent.mdc
+```
+
+2. Add the required sections to your agent definition:
+
+```markdown
+# 👋 Hello Agent
+
+## 🎯 Role:
+Provides friendly greetings and introductions
+
+## 📝 Description:
+This simple agent demonstrates the basic structure of an agent definition. 
+It responds to greetings and introduces itself to the user.
+
+## ✅ Capabilities:
+
+### ✅ Friendly Greetings
+Responds to user greetings with appropriate and friendly responses.
+
+### ✅ Self-Introduction
+Can introduce itself and explain its capabilities when asked.
+
+## 🔍 Examples:
+- "Hello! I'm the Hello Agent. How can I help you today?"
+- "Nice to meet you! I'm a simple example agent that shows how agents work."
+
+## 📋 Instructions:
+When interacting with the user:
+1. Respond to greetings with a friendly greeting of your own
+2. If asked about your capabilities, explain that you're a simple example agent
+3. Keep responses concise and friendly
+4. If asked to do something beyond your capabilities, politely explain your limitations
+```
+
+3. Save the file and make it available to cursor++ by running:
+
+```bash
+cursor++ merge
+```
+
+4. Verify that your agent is recognized:
+
+```bash
+cursor++ agent
+```
+
+You should see your new agent in the list of available agents.
+
+## Advanced Agent Creation
+
+### Agent Class System
+
+Complex agents can be organized into classes based on their role:
+
+- **Planning Agents**: Focus on planning and design (architecture, features, fixes)
+- **Implementation Agents**: Focus on code implementation and execution
+- **Support Agents**: Focus on ancillary tasks (documentation, review, git operations)
+
+You can add a class hint to your agent using a comment at the top of the file:
+
+```markdown
+<!-- Agent Class: Planning -->
+# Feature Planner Agent
+```
+
+### Agent Relationships
+
+You can define relationships between agents to create workflows. This is done using the `## 🔄 Related Agents:` section:
+
+```markdown
+## 🔄 Related Agents:
+- @feature-planner.mdc: For detailed feature planning
+- @implementer.mdc: For implementing the plans
+- @runner.mdc: For testing the implementation
+```
+
+### Agent Versioning
+
+Include a version number to track changes to your agent:
+
+```markdown
+## 📌 Version: 1.2.0
+```
+
+Use semantic versioning (MAJOR.MINOR.PATCH) where:
+- MAJOR: Breaking changes
+- MINOR: New capabilities added in a backward-compatible manner
+- PATCH: Backward-compatible bug fixes
+
+### Agent Metadata Table
+
+You can include a metadata table at the top of your file for machine readability:
+
+```markdown
+---
+name: Technical Wizard Agent
+version: 1.0.0
+author: Your Name
+created: 2023-03-29
+updated: 2023-03-30
+class: Planning
+related: [feature-planner, implementer, code-reviewer]
+---
+
+# 🧙‍♂️ Technical Wizard Agent
+```
 
 ## Best Practices
 
-1. **Keep agent definitions focused**: Create specialized agents with clear purposes
-2. **Use descriptive names**: Make agent purposes clear from their names
-3. **Structure definitions consistently**: Follow the format guidelines for better user experience
-4. **Document capabilities clearly**: Explicitly state what the agent can and cannot do
-5. **Use example formatting**: Include example formats for expected inputs/outputs
+### Naming Conventions
+
+- Use descriptive names that clearly indicate the agent's function
+- Follow a consistent naming pattern for related agents
+- Consider adding emojis to names for visual recognition
+- Use `-` (hyphen) instead of spaces in filenames
+
+### Content Structure
+
+- Keep the agent's role and description concise
+- Organize capabilities from most important to least important
+- Use markdown formatting to improve readability:
+  - `**bold**` for emphasis
+  - `*italic*` for terminology
+  - `` `code` `` for code snippets
+  - Bullet lists for options or items
+  - Numbered lists for steps or sequences
+
+### Performance Optimization
+
+- Only include necessary information in the agent definition
+- Break very large agents into multiple specialized agents
+- For long knowledge sections, consider using references instead of embedding all content
+
+### Testing Your Agents
+
+After creating an agent, test it thoroughly:
+
+1. Select it using `cursor++ agent select`
+2. Verify that it appears correctly in `cursor++ agent info`
+3. Test it with various inputs to ensure it behaves as expected
+4. Make adjustments as needed and retest
+
+## Example Agents
+
+### Planning Agent Example
+
+```markdown
+# 📝 Feature Planner Agent
+
+## 🎯 Role:
+Plans the implementation of new features with detailed breakdown of tasks and requirements
+
+## 📝 Description:
+The Feature Planner agent helps break down feature requirements into 
+implementable components, creates detailed implementation plans, and 
+provides guidance on how to approach new feature development. Use this 
+agent when you need to plan the implementation of a new feature or enhancement.
+
+## ✅ Capabilities:
+
+### ✅ Requirement Analysis
+Analyzes feature requirements and identifies key components and dependencies.
+
+### ✅ Task Breakdown
+Breaks down complex features into manageable, implementable tasks.
+
+### ✅ Implementation Planning
+Creates detailed step-by-step plans for feature implementation.
+
+## 🔍 Examples:
+"Here's a high-level plan for implementing the user authentication feature:
+1. Set up the database schema for user accounts
+2. Create the authentication API endpoints
+3. Implement the frontend login/registration forms
+4. Add session management
+5. Implement authorization middleware
+..."
+
+## 🔄 Related Agents:
+- @wizard.mdc: For high-level technical guidance
+- @implementer.mdc: For implementing the planned features
+- @runner.mdc: For testing the implementation
+```
+
+### Implementation Agent Example
+
+```markdown
+# ⚙️ Implementer Agent
+
+## 🎯 Role:
+Translates detailed plans into working code following established patterns and standards
+
+## 📝 Description:
+The Implementer agent is focused on writing clean, efficient code to implement 
+plans created by planning agents. It follows established coding standards and 
+patterns, and is skilled at translating high-level plans into working implementations.
+
+## ✅ Capabilities:
+
+### ✅ Code Implementation
+Translates detailed plans into working code that follows best practices.
+
+### ✅ Pattern Application
+Applies appropriate design patterns to solve implementation challenges.
+
+### ✅ Code Integration
+Ensures new code integrates well with existing codebase.
+
+## 🔄 Related Agents:
+- @feature-planner.mdc: For planning what to implement
+- @fix-planner.mdc: For planning bug fixes
+- @runner.mdc: For testing implementations
+- @code-reviewer.mdc: For reviewing the implementation
+```
+
+## Deploying Agents to Teams
+
+### Sharing Agents with Your Team
+
+To share agents with your team:
+
+1. Create your agent definitions in your main rules location
+2. Test them thoroughly
+3. Share them with your team through:
+   - Version control (GitHub, GitLab, etc.)
+   - Direct file sharing
+   - Importing from a URL
+
+### Setting Up a Team Agent Repository
+
+For larger teams, consider setting up a dedicated repository for agent definitions:
+
+1. Create a git repository for your team's agents
+2. Organize agents by type/function in directories
+3. Include README files explaining the available agents
+4. Use git tags for versioning
+
+Team members can initialize cursor++ with this repository:
+
+```bash
+# During first-time setup
+cursor++ init
+
+# When prompted, choose to fetch from git repository
+# Enter your team's repository URL
+```
+
+## Advanced Techniques
+
+### Dynamic Agent Generation
+
+You can generate agent definitions programmatically based on templates:
+
+```bash
+#!/bin/bash
+# Simple agent generator script
+
+NAME="$1"
+FILENAME="$(echo "$NAME" | tr ' ' '-' | tr '[:upper:]' '[:lower:]').mdc"
+ROLE="$2"
+
+cat > "$FILENAME" << EOF
+# $NAME
+
+## 🎯 Role:
+$ROLE
+
+## 📝 Description:
+[Add a detailed description here]
+
+## ✅ Capabilities:
+
+### ✅ Capability 1
+[Describe this capability]
+
+### ✅ Capability 2
+[Describe this capability]
+EOF
+
+echo "Agent created: $FILENAME"
+```
+
+### Conditional Sections
+
+You can include conditional sections that only apply in certain contexts:
+
+```markdown
+## 🔄 Context-Specific Behavior:
+
+### When working with Frontend code:
+- Use React best practices
+- Follow component-based architecture
+
+### When working with Backend code:
+- Ensure proper error handling
+- Use appropriate data validation
+```
 
 ## See Also
 
-- [Agent System Overview](../user-guide/agents.md)
-- [Code Structure](./code-structure.md)
-- [Architecture](./architecture.md) 
+- [Agent System](../user-guide/agents.md) for information on using agents
+- [Code Structure](./code-structure.md) for details on the codebase organization
+- [API Reference](../api-reference/agent-api.md) for the Agent API reference
+
+## Navigation
+
+- Previous: [Architecture](./architecture.md)
+- Next: [Contributing](./contributing.md)
+- Up: [Developer Guide](../README.md#developer-guide)
+- Home: [Documentation Home](../README.md) 

@@ -1,164 +1,149 @@
 package ui
 
 import (
+	"bufio"
+	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 
-	"crules/internal/agent"
+	"cursor++/internal/agent"
 )
 
-// AgentSelector provides an interactive terminal-based UI for agent selection
+// AgentSelector is a CLI for selecting agents
 type AgentSelector struct {
 	agents []*agent.AgentDefinition
 }
 
-// NewAgentSelector creates a new agent selector
+// NewAgentSelector creates a new selector
 func NewAgentSelector(agents []*agent.AgentDefinition) *AgentSelector {
 	return &AgentSelector{
 		agents: agents,
 	}
 }
 
-// Run displays the interactive selection menu and returns the selected agent
+// Run starts the selector CLI and returns the selected agent or error
 func (s *AgentSelector) Run() (*agent.AgentDefinition, error) {
 	if len(s.agents) == 0 {
-		Error("No agents available for selection")
 		return nil, fmt.Errorf("no agents available")
 	}
 
-	Header("Select an Agent:")
+	// Display agents with numbers
+	fmt.Println()
+	Header("Select an Agent")
+	fmt.Println()
 
-	// Display all agents with numbers
-	for i, agent := range s.agents {
-		// Display the agent name
-		Plain("  %d. %s", i+1, agent.Name)
-
-		// Display a truncated description if available
-		if agent.Description != "" {
-			// Get first sentence or truncate to 80 chars
-			shortDesc := truncateDescription(agent.Description, 80)
-			Plain("     %s", shortDesc)
-		}
-		Plain("")
+	// Group agents by category for better organization
+	categories := make(map[string][]*agent.AgentDefinition)
+	for _, a := range s.agents {
+		category := detectAgentCategory(a)
+		categories[category] = append(categories[category], a)
 	}
 
-	// Get user selection
-	selection := 0
-	maxAttempts := 3
-	attempts := 0
+	// Create a map of index to agent for selection
+	indexToAgent := make(map[int]*agent.AgentDefinition)
+	index := 1
 
-	for attempts < maxAttempts {
-		Prompt("Enter agent number (1-%d): ", len(s.agents))
-
-		var input int
-		_, err := fmt.Scanln(&input)
-
-		if err != nil {
-			Warning("Invalid input. Please enter a number.")
-			attempts++
+	// Display agents by category
+	for category, agents := range categories {
+		// Skip empty categories
+		if len(agents) == 0 {
 			continue
 		}
 
-		if input < 1 || input > len(s.agents) {
-			Warning("Invalid selection. Please enter a number between 1 and %d.", len(s.agents))
-			attempts++
-			continue
+		// Print category header
+		fmt.Println()
+		Header(category)
+
+		// Display agents in this category
+		for _, agent := range agents {
+			// Store the agent at this index
+			indexToAgent[index] = agent
+
+			// Format name with optional version
+			nameStr := agent.Name
+			if agent.Version != "" && agent.Version != "1.0" {
+				nameStr = fmt.Sprintf("%s (%s)", agent.Name, agent.Version)
+			}
+
+			// Print agent with index
+			fmt.Printf(" %2d. %-20s %s\n", index, agent.ID, nameStr)
+
+			// Add description if available
+			if agent.Description != "" {
+				// Use the truncateText function from agent_display.go
+				shortDesc := truncateText(agent.Description, 70)
+				fmt.Printf("     %s\n", shortDesc)
+			}
+
+			index++
 		}
-
-		selection = input - 1 // Convert to 0-based index
-		break
 	}
 
-	if attempts == maxAttempts {
-		Error("Maximum number of attempts reached. Exiting.")
-		return nil, fmt.Errorf("maximum number of attempts reached")
+	// Prompt for selection
+	fmt.Println()
+	Prompt("Enter agent number (1-%d): ", index-1)
+
+	// Read user input
+	reader := bufio.NewReader(os.Stdin)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return nil, fmt.Errorf("error reading input: %v", err)
 	}
 
-	selectedAgent := s.agents[selection]
+	// Trim whitespace
+	input = strings.TrimSpace(input)
+
+	// Parse as number
+	selectedIndex, err := strconv.Atoi(input)
+	if err != nil {
+		return nil, fmt.Errorf("invalid selection, please enter a number")
+	}
+
+	// Validate selection
+	if selectedIndex < 1 || selectedIndex >= index {
+		return nil, fmt.Errorf("invalid selection: %d is out of range", selectedIndex)
+	}
+
+	// Get selected agent
+	selectedAgent := indexToAgent[selectedIndex]
+	if selectedAgent == nil {
+		return nil, fmt.Errorf("internal error: agent not found at index %d", selectedIndex)
+	}
+
+	fmt.Println()
 	Success("Selected agent: %s", selectedAgent.Name)
-
-	// Show agent details
-	Header("Agent Details:")
-	Plain("  ID: %s", selectedAgent.ID)
-	Plain("  Name: %s", selectedAgent.Name)
-	Plain("  Version: %s", selectedAgent.Version)
-	Plain("  Description:")
-
-	// Display full description with proper line wrapping
-	if selectedAgent.Description != "" {
-		// Split description into paragraphs and display with indentation
-		paragraphs := strings.Split(selectedAgent.Description, "\n\n")
-		for _, paragraph := range paragraphs {
-			// Wrap long paragraphs to fit terminal (assuming 80 columns)
-			wrappedText := wrapText(paragraph, 70, "    ")
-			Plain("%s", wrappedText)
-			Plain("") // Empty line between paragraphs
-		}
-	} else {
-		Plain("    No description available.")
-	}
-
-	if len(selectedAgent.Capabilities) > 0 {
-		Plain("\n  Capabilities:")
-		for _, capability := range selectedAgent.Capabilities {
-			Plain("    - %s", capability)
-		}
-	}
 
 	return selectedAgent, nil
 }
 
-// truncateDescription returns a shortened version of the description
-func truncateDescription(description string, maxLength int) string {
-	// Find first sentence
-	endIdx := strings.Index(description, ".")
-	if endIdx > 0 && endIdx < maxLength {
-		return description[:endIdx+1]
+// RunWithContext starts the selector CLI with context awareness and returns the selected agent or error
+func (s *AgentSelector) RunWithContext(ctx context.Context) (*agent.AgentDefinition, error) {
+	if len(s.agents) == 0 {
+		return nil, fmt.Errorf("no agents available")
 	}
 
-	// Or truncate to maxLength
-	if len(description) > maxLength {
-		return description[:maxLength] + "..."
+	// Create a channel for user input
+	resultCh := make(chan struct {
+		agent *agent.AgentDefinition
+		err   error
+	}, 1)
+
+	// Run the selector in a goroutine
+	go func() {
+		agentDef, err := s.Run()
+		resultCh <- struct {
+			agent *agent.AgentDefinition
+			err   error
+		}{agentDef, err}
+	}()
+
+	// Wait for either context cancellation or selection completion
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("agent selection canceled: %w", ctx.Err())
+	case result := <-resultCh:
+		return result.agent, result.err
 	}
-
-	return description
-}
-
-// wrapText wraps text to fit within the specified width with given prefix
-func wrapText(text string, width int, prefix string) string {
-	if text == "" {
-		return prefix
-	}
-
-	words := strings.Fields(text)
-	if len(words) == 0 {
-		return prefix
-	}
-
-	var result strings.Builder
-	result.WriteString(prefix)
-
-	lineLength := len(prefix)
-	for i, word := range words {
-		wordLength := len(word)
-
-		if i > 0 {
-			// Check if adding this word would exceed the width
-			if lineLength+wordLength+1 > width {
-				// Start a new line
-				result.WriteString("\n")
-				result.WriteString(prefix)
-				lineLength = len(prefix)
-			} else {
-				// Add a space before the word
-				result.WriteString(" ")
-				lineLength++
-			}
-		}
-
-		result.WriteString(word)
-		lineLength += wordLength
-	}
-
-	return result.String()
 }

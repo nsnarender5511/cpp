@@ -1,8 +1,15 @@
 # Release Process
 
-This document describes the process for creating a new release of crules.
+This document describes the process for creating a new release of cursor++.
 
 ## Prerequisites
+
+Ensure you have:
+
+1. Go 1.19 or higher installed
+2. GoReleaser installed
+3. GitHub CLI (gh) installed
+4. Write access to the cursor++ repository
 
 1. [GoReleaser](https://goreleaser.com/install/) installed locally
 2. Git access to the repository with push permissions

@@ -1,31 +1,40 @@
+---
+version: v0.1.0
+last_updated: 2023-03-29
+applies_to: cursor++ v0.1.0+
+---
+
 # Code Structure
 
-> 📁 This guide explains the organization of the codebase and the purpose of each component.
+> 📚 This document provides an overview of how the codebase is organized, to help developers understand and navigate the project.
 
 ## Directory Structure
 
-The crules codebase is organized into the following main directories:
+The cursor++ codebase is organized into the following main directories:
 
 ```
-crules/
-├── cmd/            # Command-line interface entry points
-├── internal/       # Internal packages
-│   ├── agent/      # Agent system implementation
-│   ├── cli/        # CLI command implementations
-│   ├── config/     # Configuration management
-│   ├── projects/   # Project management
-│   └── utils/      # Utility functions and helpers
-├── docs/           # Documentation
-└── assets/         # Static assets
+cursor++/
+├── .github/         # GitHub workflows and templates
+├── cmd/             # Command-line interface entry points
+├── docs/            # Documentation
+├── internal/        # Internal packages
+│   ├── agent/       # Agent system implementation
+│   ├── constants/   # Common constants
+│   ├── core/        # Core logic and functionality
+│   ├── git/         # Git integration utilities
+│   ├── ui/          # User interface utilities
+│   ├── utils/       # Utility functions
+│   └── version/     # Version information
+└── LICENSE          # License file
 ```
 
 ## Key Components
 
-### Command Line Interface (cmd/)
+### Command Line Interface
 
-The `cmd/` directory contains the entry points for the command-line interface:
+- `cmd/main.go`: The main entry point for the cursor++ CLI tool, implementing all commands and their functionality
 
-- `cmd/crules/main.go`: The main entry point for the crules CLI tool
+The main file implements the command-line interface using a simple flag-based approach, with commands as the first argument.
 
 ### Internal Packages (internal/)
 
@@ -36,42 +45,79 @@ The agent system is implemented in the `internal/agent/` package:
 - `registry.go`: Manages the collection of available agents
 - `loader.go`: Handles loading agents from their definition files
 - `types.go`: Defines the data structures for agent metadata
-- `parser.go`: Parses agent definition files (`.mdc`) to extract metadata
-- `selection.go`: Implements the interactive agent selection UI
+- `context.go`: Manages agent execution context and environment
 
-#### CLI Commands (internal/cli/)
+#### Core Functionality (internal/core/)
 
-The `internal/cli/` package implements the command handlers:
+The `internal/core/` package implements the core functionality:
 
-- `root.go`: Defines the root command and global options
-- `init.go`: Implements the `init` command
-- `merge.go`: Implements the `merge` command
-- `sync.go`: Implements the `sync` command
-- `list.go`: Implements the `list` command
-- `clean.go`: Implements the `clean` command
-- `agent.go`: Implements the agent-related commands
+- Handles rule synchronization
+- Manages project configuration
+- Implements command business logic
 
-#### Configuration (internal/config/)
+#### Git Integration (internal/git/)
 
-The `internal/config/` package handles configuration management:
+The `internal/git/` package provides Git integration:
 
-- `config.go`: Defines the configuration data structures
-- `loader.go`: Loads configuration from files
+- Handles Git operations
+- Manages version control for rules
 
-#### Project Management (internal/projects/)
+#### UI Components (internal/ui/)
 
-The `internal/projects/` package manages project registration:
+The `internal/ui/` package implements the user interface:
 
-- `registry.go`: Handles project registration and tracking
-- `sync.go`: Synchronizes rules between projects
+- Terminal UI components
+- Interactive selection interfaces
+- Display formatting
 
 #### Utilities (internal/utils/)
 
 The `internal/utils/` package provides common utility functions:
 
-- `fs.go`: File system operations
-- `ui.go`: User interface helpers
-- `terminal.go`: Terminal interaction utilities
+- File system operations
+- Configuration handling
+- Logging and error handling
+
+#### Version Information (internal/version/)
+
+The `internal/version/` package manages version information:
+
+- Provides version details
+- Handles version checking and comparison
+
+### Core Components
+
+#### Registry (`internal/core/registry.go`)
+
+The Registry manages the list of projects and their associated rules. Key features:
+
+- Project management (add, remove, list)
+- Thread-safe operations with mutex protection
+- Project count and validation functionality
+
+This component acts as the central database for the cursor++ system.
+
+#### Utils (`internal/utils/`)
+
+Utility functions for file operations, configuration, and other common tasks:
+
+- `config.go`: Configuration management
+- `dirutils.go`: Directory utilities, including path validation, file counting, and recursive operations
+- `logger.go`: Logging with color support
+
+The `dirutils.go` file includes several useful utilities for directory operations:
+- `DirExists`: Checks if a directory exists
+- `CountFiles`: Counts files in a directory (non-recursive)
+- `CountFilesByExt`: Counts files with a specific extension
+- `CountFilesRecursive`: Recursively counts all files in a directory
+- `EnsureDirExists`: Creates a directory if it doesn't exist
+
+#### Agent System (`internal/agent/`)
+
+Manages interaction with the agent system:
+
+- `registry.go`: Handles agent discovery and metadata extraction
+- `GetRulesDir`: Detects and returns the rules directory, checking multiple possible locations for better reliability
 
 ## Key Data Structures
 
@@ -144,16 +190,16 @@ type Location struct {
 
 The codebase is designed with several extension points:
 
-1. **New Commands**: Add new subcommands by creating a new file in `internal/cli/`
-2. **Agent Capabilities**: Extend the agent system by modifying the parser or adding new agent types
-3. **UI Components**: Add new UI components in `internal/utils/ui.go`
+1. **New Commands**: Add new commands by extending the command implementation in `cmd/main.go`
+2. **Agent Capabilities**: Extend the agent system by modifying the agent registry in `internal/agent/registry.go`
+3. **UI Components**: Add new UI components in `internal/ui/` package
 
 ## Development Workflow
 
-When working on crules, the typical workflow is:
+When working on cursor++, the typical workflow is:
 
 1. Make code changes
-2. Build with `go build ./cmd/crules`
+2. Build with `go build ./cmd/cursor++`
 3. Run tests with `go test ./...`
 4. Test manually with the built binary
 
@@ -162,3 +208,10 @@ When working on crules, the typical workflow is:
 - [Architecture](./architecture.md)
 - [Extending Agents](./extending-agents.md)
 - [Contributing Guidelines](./contributing.md)
+
+## Navigation
+
+- Previous: [Building](./building.md)
+- Next: [Architecture](./architecture.md)
+- Up: [Developer Guide](../README.md#developer-guide)
+- Home: [Documentation Home](../README.md)

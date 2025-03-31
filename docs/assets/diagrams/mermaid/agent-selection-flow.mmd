@@ -1,0 +1,49 @@
+flowchart TD
+    %% Define the main flow
+    Start([🚀 Start]):::start --> Command["💻 cursor++ agent select"]:::command
+    Command --> LoadConfig["⚙️ Load Configuration"]:::process
+    LoadConfig --> ScanRules["🔍 Scan for Rule Files"]:::process
+    ScanRules --> ExtractMeta["📋 Extract Agent Metadata"]:::process
+    ExtractMeta --> BuildMenu["🖥️ Build Selection Menu"]:::process
+    BuildMenu --> DisplayUI["👁️ Display Terminal UI"]:::ui
+    
+    %% User interaction
+    DisplayUI --> UserSelect{"🤔 User Selection"}:::decision
+    UserSelect -->|"Choose Agent"| ValidAgent["✅ Valid Agent Selected"]:::valid
+    UserSelect -->|"Cancel"| NoSelection["❌ No Selection Made"]:::invalid
+    
+    %% Process selection
+    ValidAgent --> SaveConfig["💾 Save Selected Agent to Config"]:::process
+    SaveConfig --> LoadAgent["📂 Load Agent Definition"]:::process
+    LoadAgent --> Complete([🎉 Complete]):::end
+    
+    %% Handle no selection
+    NoSelection --> ExitNoChange["🚫 Exit Without Changes"]:::process
+    ExitNoChange --> Exit([🚪 Exit]):::end
+    
+    %% Error handling branch
+    ScanRules -->|"No Rules Found"| NoRules["⚠️ No Rules Found"]:::error
+    NoRules --> CreatePrompt["❓ Create Rules?"]:::decision
+    CreatePrompt -->|"Yes"| InitRules["📝 Initialize Rules"]:::process
+    CreatePrompt -->|"No"| Exit
+    InitRules --> Command
+    
+    %% Styles
+    classDef start fill:#4CAF50,stroke:#45a049,stroke-width:2px,color:white,font-weight:bold
+    classDef end fill:#607D8B,stroke:#546E7A,stroke-width:2px,color:white,font-weight:bold
+    classDef command fill:#2196F3,stroke:#1E88E5,stroke-width:2px,color:white
+    classDef process fill:#9C27B0,stroke:#8E24AA,stroke-width:2px,color:white
+    classDef decision fill:#FF9800,stroke:#F57C00,stroke-width:2px,color:white
+    classDef valid fill:#4CAF50,stroke:#45a049,stroke-width:2px,color:white
+    classDef invalid fill:#F44336,stroke:#E53935,stroke-width:2px,color:white
+    classDef error fill:#F44336,stroke:#E53935,stroke-width:2px,color:white
+    classDef ui fill:#00BCD4,stroke:#00ACC1,stroke-width:2px,color:white
+    
+    %% Add tooltips for better accessibility
+    linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 stroke-width:2px,fill:none,stroke:#9E9E9E
+    
+    %% Add a title
+    subgraph "🤖 Agent Selection Process"
+    Start
+    end
+    style "🤖 Agent Selection Process" fill:#ECEFF1,stroke:#CFD8DC,stroke-width:2px,color:#263238,font-weight:bold 

@@ -12,8 +12,8 @@ builds:
       - amd64
       - arm64
     ldflags:
-      - -s -w -X crules/internal/version.Version={{.Version}}
-    binary: crules
+      - -s -w -X cursor++/internal/version.Version={{.Version}}
+    binary: cursor++
     main: ./cmd
 
 archives:
@@ -26,7 +26,7 @@ archives:
 release:
   github:
     owner: nsnarender5511
-    name: crules
+    name: cursor++
   draft: false
   prerelease: auto
   mode: replace  # Replaces existing releases
@@ -38,23 +38,23 @@ brews:
   - repository:
       owner: nsnarender5511
       name: homebrew-tap
-    homepage: https://github.com/nsnarender5511/crules
+    homepage: https://github.com/nsnarender5511/cursor++
     description: "A tool for managing and synchronizing Cursor rules across multiple projects"
     license: MIT
     test: |
-      system "#{bin}/crules --version"
+      system "#{bin}/cursor++ --version"
 
 scoops:
   - repository:
       owner: nsnarender5511
       name: scoop-bucket
-    homepage: https://github.com/nsnarender5511/crules
+    homepage: https://github.com/nsnarender5511/cursor++
     description: "A tool for managing and synchronizing Cursor rules across multiple projects"
     license: MIT
 
 nfpms:
   - vendor: nsnarender5511
-    homepage: https://github.com/nsnarender5511/crules
+    homepage: https://github.com/nsnarender5511/cursor++
     maintainer: nsnarender5511
     description: "A tool for managing and synchronizing Cursor rules across multiple projects"
     license: MIT
