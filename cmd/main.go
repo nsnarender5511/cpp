@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -11,13 +12,11 @@ import (
 	"strings"
 
 	"cursor++/internal/agent"
+	"cursor++/internal/constants"
 	"cursor++/internal/core"
 	"cursor++/internal/ui"
 	"cursor++/internal/utils"
 	"cursor++/internal/version"
-
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 // Exit codes
@@ -57,41 +56,37 @@ func getTerminalWidth() int {
 }
 
 func main() {
-	// Parse debug/verbose flags
-	debugFlag := false
-	verboseFlag := false
-	multiAgentFlag := false
-	verboseErrorsFlag := false
+	// Setup command-line flags using the standard flag package
+	debugFlag := flag.Bool("debug", false, "Show debug messages on console")
+	verboseFlag := flag.Bool("verbose", false, "Show informational messages on console")
+	multiAgentFlag := flag.Bool("multi-agent", false, "Enable multi-agent mode for this session")
+	verboseErrorsFlag := flag.Bool("verbose-errors", false, "Display detailed error messages on failure")
+	versionFlag := flag.Bool("version", false, "Show version information")
 
-	// Process each argument to find flags
-	args := make([]string, 0, len(os.Args))
-	for _, arg := range os.Args {
-		if arg == "--debug" {
-			debugFlag = true
-			verboseFlag = true // Debug implies verbose
-			continue
-		} else if arg == "--verbose" {
-			verboseFlag = true
-			continue
-		} else if arg == "--multi-agent" {
-			multiAgentFlag = true
-			continue
-		} else if arg == "--verbose-errors" {
-			verboseErrorsFlag = true
-			continue
-		}
-		// Keep non-flag arguments
-		args = append(args, arg)
+	// Add a short version flag
+	versionShortFlag := flag.Bool("v", false, "Show version information (short flag)")
+
+	// Custom usage function to match our existing help format
+	flag.Usage = func() {
+		printUsage()
 	}
 
-	// Replace os.Args with filtered args
-	os.Args = args
+	// Parse the flags
+	flag.Parse()
+
+	// Debug implies verbose
+	if *debugFlag {
+		*verboseFlag = true
+	}
 
 	// Check for version flag
-	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
+	if *versionFlag || *versionShortFlag {
 		fmt.Printf("cursor++ version %s\n", version.GetVersion())
 		os.Exit(ExitSuccess)
 	}
+
+	// Get remaining arguments after flag parsing
+	args := flag.Args()
 
 	// Get app paths and initialize logger
 	appName := os.Getenv("APP_NAME")
@@ -99,14 +94,14 @@ func main() {
 	utils.InitLogger(appPaths)
 
 	// Configure console output
-	utils.SetDebugConsole(debugFlag)
-	utils.SetVerbose(verboseFlag)
-	utils.SetVerboseErrors(verboseErrorsFlag)
+	utils.SetDebugConsole(*debugFlag)
+	utils.SetVerbose(*verboseFlag)
+	utils.SetVerboseErrors(*verboseErrorsFlag)
 
 	utils.Info("Starting cursor++")
 
 	// Print usage if no arguments
-	if len(os.Args) < 2 {
+	if len(args) < 1 {
 		utils.Debug("No command provided, showing usage")
 		printUsage()
 		os.Exit(ExitUsageError)
@@ -125,7 +120,7 @@ func main() {
 	}
 
 	// Set multi-agent mode if flag is provided
-	if multiAgentFlag {
+	if *multiAgentFlag {
 		utils.Info("Multi-agent mode explicitly enabled via flag")
 		// Update the config to enable multi-agent mode
 		config := utils.LoadConfig()
@@ -140,14 +135,14 @@ func main() {
 	}
 
 	// Handle commands
-	command := os.Args[1]
+	command := args[0]
 	utils.Info("Executing command | command=" + command)
 
 	switch command {
 	case "init":
 		handleInit(manager)
 	case "agent":
-		handleAgent(manager, appPaths, verboseFlag)
+		handleAgent(manager, appPaths, *verboseFlag, args[1:])
 	default:
 		utils.Warn("Unknown command received | command=" + command)
 		ui.Warning("Unknown command: %s", command)
@@ -235,7 +230,9 @@ func handleInit(manager *core.SyncManager) {
 				// Display the agents in a compatible format
 				if agentCount <= 5 {
 					// Show compact list for small number of agents
-					displayCompactAgentList(agents)
+					options := ui.DefaultAgentDisplayOptions()
+					options.CompactMode = true
+					ui.DisplayAgentListEnhanced(agents, options)
 				} else {
 					// Show summary for large number of agents
 					ui.Plain("Use %s to see all available agents", ui.SuccessStyle.Sprint("cursor++ agent list"))
@@ -264,7 +261,7 @@ func handleInit(manager *core.SyncManager) {
 	utils.Info("Init command completed successfully")
 }
 
-func handleAgent(manager *core.SyncManager, appPaths utils.AppPaths, verbose bool) {
+func handleAgent(manager *core.SyncManager, appPaths utils.AppPaths, verbose bool, args []string) {
 	utils.Debug("Handling agent command")
 
 	// Get config for agent operations
@@ -287,13 +284,13 @@ func handleAgent(manager *core.SyncManager, appPaths utils.AppPaths, verbose boo
 	}
 
 	// Check if there are no arguments after "agent"
-	if len(os.Args) < 3 {
+	if len(args) < 1 {
 		displayAgentList(registry)
 		return
 	}
 
 	// Handle sub-commands
-	subCommand := os.Args[2]
+	subCommand := args[0]
 	utils.Info("Executing agent sub-command | sub_command=" + subCommand)
 
 	switch subCommand {
@@ -302,11 +299,11 @@ func handleAgent(manager *core.SyncManager, appPaths utils.AppPaths, verbose boo
 	case "select":
 		handleAgentSelect(registry, config, appPaths)
 	case "info":
-		if len(os.Args) < 4 {
+		if len(args) < 2 {
 			ui.Error("Missing agent ID. Usage: cursor++ agent info <agent-id>")
 			os.Exit(ExitUsageError)
 		}
-		handleAgentInfo(registry, os.Args[3], verbose)
+		handleAgentInfo(registry, args[1], verbose)
 	default:
 		ui.Warning("Unknown agent sub-command: %s", subCommand)
 		printAgentUsage()
@@ -323,7 +320,7 @@ func displayAgentList(registry *agent.Registry) {
 	count := len(agents)
 
 	if count == 0 {
-		ui.Info("No agents available.")
+		ui.Warning("No agents found.")
 		utils.Info("Agent list completed - no agents found")
 		return
 	}
@@ -348,161 +345,24 @@ func displayAgentList(registry *agent.Registry) {
 	utils.Info("Agent list completed successfully | agent_count=" + fmt.Sprintf("%d", count))
 }
 
-// displayCompactAgentList renders agents as a simple vertical list for narrow terminals
-func displayCompactAgentList(agents []*agent.AgentDefinition) {
-	// Get last selected agent from config
-	config := utils.LoadConfig()
-	lastSelectedAgent := config.LastSelectedAgent
-
-	for i, agent := range agents {
-		// Clean up the name if available
-		name := cleanAgentName(agent.Name)
-
-		// Display a star for last selected agent
-		selected := ""
-		if agent.ID == lastSelectedAgent {
-			selected = ui.WarnStyle.Sprint(" ★")
-		}
-
-		// Display agent number and name
-		ui.Plain("%s %s%s",
-			ui.SuccessStyle.Sprintf("%d.", i+1),
-			ui.InfoStyle.Sprint(name),
-			selected)
-
-		// Display reference on the next line with indentation
-		ui.Plain("   %s", fmt.Sprintf("@%s.mdc", agent.ID))
-
-		// Add a separator line between agents (except after the last one)
-		if i < len(agents)-1 {
-			ui.Plain("   ─────────────────")
-		}
-	}
-}
-
-// displayAgentTable renders agent list as a formatted table
-func displayAgentTable(agents []*agent.AgentDefinition, termWidth int) {
-	// Get last selected agent from config
-	config := utils.LoadConfig()
-	lastSelectedAgent := config.LastSelectedAgent
-
-	// Create a new table writer
-	t := table.NewWriter()
-	// Don't use SetOutputMirror since we'll be manually printing the output
-
-	// Start with a light style
-	customStyle := table.StyleLight
-
-	// Enable row separation
-	customStyle.Options.SeparateRows = true
-
-	// Setup colors - no alternating row colors
-	customStyle.Color.Header = text.Colors{text.Bold}
-	customStyle.Color.Row = text.Colors{}
-	customStyle.Color.RowAlternate = nil
-
-	// Apply the style
-	t.SetStyle(customStyle)
-
-	// Choose appropriate columns based on width
-	if termWidth < 80 {
-		// For narrow terminals, show minimal info
-		headers := table.Row{
-			ui.HeaderStyle.Sprint("No."),
-			ui.HeaderStyle.Sprint("Name"),
-			ui.HeaderStyle.Sprint("Reference"),
-			ui.HeaderStyle.Sprint(""),
-		}
-		t.AppendHeader(headers)
-
-		for i, agent := range agents {
-			// Clean up the name by removing redundant words
-			name := cleanAgentName(agent.Name)
-
-			// Truncate name if needed
-			if len(name) > 25 {
-				name = name[:22] + "..."
-			}
-
-			// Add a star for last selected agent
-			selected := ""
-			if agent.ID == lastSelectedAgent {
-				selected = ui.WarnStyle.Sprint("★")
-			}
-
-			t.AppendRow(table.Row{
-				ui.SuccessStyle.Sprintf("%d", i+1),
-				ui.InfoStyle.Sprint(name),
-				fmt.Sprintf("@%s.mdc", agent.ID),
-				selected,
-			})
-		}
-	} else {
-		// For wide terminals, show more details
-		headers := table.Row{
-			ui.HeaderStyle.Sprint("No."),
-			ui.HeaderStyle.Sprint("Name"),
-			ui.HeaderStyle.Sprint("Reference ID"),
-			ui.HeaderStyle.Sprint("Version"),
-			ui.HeaderStyle.Sprint(""),
-		}
-		t.AppendHeader(headers)
-
-		for i, agent := range agents {
-			// Clean up the name by removing redundant words
-			name := cleanAgentName(agent.Name)
-
-			// Add a star for last selected agent
-			selected := ""
-			if agent.ID == lastSelectedAgent {
-				selected = ui.WarnStyle.Sprint("★")
-			}
-
-			t.AppendRow(table.Row{
-				ui.SuccessStyle.Sprintf("%d", i+1),
-				ui.InfoStyle.Sprint(name),
-				fmt.Sprintf("@%s.mdc", agent.ID),
-				ui.WarnStyle.Sprint(agent.Version),
-				selected,
-			})
-		}
+// cleanAgentName removes redundant words from agent names
+func cleanAgentName(name string) string {
+	// Remove common suffixes like "Agent", "Agent Prompt", etc.
+	suffixes := []string{
+		" Agent Prompt",
+		" Agent",
+		" Prompt",
 	}
 
-	// Custom render to stdout
-	tableString := t.Render()
-
-	// Replace the first separator line with a double line separator
-	lines := strings.Split(tableString, "\n")
-
-	for i, line := range lines {
-		// Find the first separator line (should be after the header)
-		if i > 0 && strings.Contains(line, "├") {
-			// Replace with double line characters
-			line = strings.ReplaceAll(line, "├", "╞")
-			line = strings.ReplaceAll(line, "┤", "╡")
-			line = strings.ReplaceAll(line, "┼", "╪")
-			line = strings.ReplaceAll(line, "─", "═")
-			lines[i] = line
+	result := name
+	for _, suffix := range suffixes {
+		if strings.HasSuffix(result, suffix) {
+			result = strings.TrimSuffix(result, suffix)
 			break
 		}
 	}
 
-	// Print the modified table
-	fmt.Println(strings.Join(lines, "\n"))
-}
-
-// cleanAgentName removes redundant words from agent names
-func cleanAgentName(name string) string {
-	// Remove common redundant words
-	name = strings.ReplaceAll(name, "Agent Prompt", "")
-	name = strings.ReplaceAll(name, "Prompt", "")
-	name = strings.ReplaceAll(name, "Agent", "")
-
-	// Trim spaces and handle multiple spaces
-	name = strings.TrimSpace(name)
-	name = strings.Join(strings.Fields(name), " ")
-
-	return name
+	return result
 }
 
 // displayAgentContent displays agent content with proper formatting
@@ -514,13 +374,13 @@ func displayAgentContent(agentDef *agent.AgentDefinition, paginated bool) error 
 	if content == "" {
 		// Validate path for security
 		if !validatePath(agentDef.DefinitionPath) {
-			return fmt.Errorf("invalid agent definition path")
+			return fmt.Errorf(constants.ErrInvalidAgentDefPath)
 		}
 
 		contentBytes, err := os.ReadFile(agentDef.DefinitionPath)
 		if err != nil {
-			utils.Error("Failed to load agent content: " + err.Error())
-			return fmt.Errorf("failed to load agent content: %w", err)
+			utils.Errorf(constants.ErrFailedLoadAgentContent, err)
+			return fmt.Errorf(constants.ErrFailedLoadAgentContent, err)
 		}
 		content = string(contentBytes)
 	}
@@ -612,16 +472,13 @@ func calculatePageSize() int {
 // validatePath checks if a file path is safe to access
 // Returns false for paths containing directory traversal patterns or absolute paths
 func validatePath(path string) bool {
-	// Check for directory traversal attempts
-	if strings.Contains(path, "..") {
-		utils.Error("Security warning: path contains directory traversal pattern: " + path)
-		return false
-	}
+	// Clean the path first to normalize it
+	cleanPath := filepath.Clean(path)
 
 	// Get current directory
 	currentDir, err := os.Getwd()
 	if err != nil {
-		utils.Error("Failed to get current directory: " + err.Error())
+		utils.Errorf(constants.ErrFailedGetCurrentDir, err)
 		return false
 	}
 
@@ -632,20 +489,21 @@ func validatePath(path string) bool {
 	localAgentsDir := filepath.Join(currentDir, config.RulesDirName, config.AgentsDirName)
 	absAgentsDir, err := filepath.Abs(localAgentsDir)
 	if err != nil {
-		utils.Error("Failed to get absolute path for local agents directory: " + err.Error())
+		utils.Errorf(constants.ErrFailedGetAgentsDirPath, err)
 		return false
 	}
 
 	// Get absolute path of file
-	absPath, err := filepath.Abs(path)
+	absPath, err := filepath.Abs(cleanPath)
 	if err != nil {
-		utils.Error("Failed to get absolute path: " + err.Error())
+		utils.Errorf(constants.ErrFailedGetAbsPath, err)
 		return false
 	}
 
-	// Check if file is within agents directory
-	if !strings.HasPrefix(absPath, absAgentsDir) {
-		utils.Error("Security warning: path is outside agents directory: " + path)
+	// Use filepath.Rel to check if path is inside the agents directory
+	relPath, err := filepath.Rel(absAgentsDir, absPath)
+	if err != nil || strings.HasPrefix(relPath, "..") || filepath.IsAbs(relPath) {
+		utils.Errorf(constants.ErrPathSecurityViolation, path)
 		utils.Debug("Expected prefix: " + absAgentsDir)
 		utils.Debug("Actual path: " + absPath)
 		return false
@@ -695,34 +553,21 @@ func handleAgentSelect(registry *agent.Registry, config *utils.Config, appPaths 
 		cancel()
 	}()
 
-	// Create selector and run it in a separate goroutine with context awareness
-	selectorDone := make(chan struct{})
-	var selectedAgent *agent.AgentDefinition
-	var selectErr error
+	// Create selector and run it with context awareness
+	selector := ui.NewAgentSelector(agents)
+	selectedAgent, selectErr := selector.RunWithContext(ctx)
 
-	go func() {
-		selector := ui.NewAgentSelector(agents)
-		selectedAgent, selectErr = selector.Run()
-		close(selectorDone)
-	}()
-
-	// Wait for either selector completion or context cancellation
-	select {
-	case <-selectorDone:
-		if selectErr != nil {
-			handleCommandError("Agent select", selectErr, ExitAgentError)
-		}
-	case <-ctx.Done():
-		ui.Error("Agent selection was canceled")
-		os.Exit(ExitAgentError)
+	// Check for errors or cancellation
+	if selectErr != nil {
+		handleCommandError("Agent select", selectErr, ExitAgentError)
 	}
 
-	// Create loader and load the selected agent
+	// Create loader and load the selected agent with context awareness
 	loader := agent.NewLoader(registry, config)
 
-	// Load the agent
+	// Load the agent with context
 	agentCtx := agent.NewAgentContext()
-	loadedAgent, err := loader.LoadAgentWithContext(selectedAgent.ID, agentCtx)
+	loadedAgent, err := loader.LoadAgentWithContextCancellation(ctx, selectedAgent.ID, agentCtx)
 	if err != nil {
 		handleCommandError("Agent load", err, ExitAgentError)
 	}

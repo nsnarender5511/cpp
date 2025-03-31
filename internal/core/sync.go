@@ -198,8 +198,9 @@ func (sm *SyncManager) createAgentRegistryWithAnimation(animator *ui.TerminalAni
 
 	// Add a generic initialization step
 	animator.AddItem("init", "Preparing agent system...")
+	animator.UpdateStatus("init", "success")
 
-	// Create registry with a progress callback
+	// Create a new registry
 	registry, err := agent.NewRegistry(sm.config, agentDir)
 	if err != nil {
 		animator.UpdateStatus("init", "error")
@@ -207,42 +208,13 @@ func (sm *SyncManager) createAgentRegistryWithAnimation(animator *ui.TerminalAni
 		return nil, err
 	}
 
-	animator.UpdateStatus("init", "success")
-
-	// Set up progress tracking
-	registry.SetProgressCallback(func(event string, message string) {
-		switch event {
-		case "scan_start":
-			animator.AddItem("scan", "Scanning for agent definitions...")
-		case "scan_error":
-			animator.UpdateStatus("scan", "error")
-		case "file_found":
-			// Don't add an item for each file to avoid cluttering the display
-		case "processing_file":
-			// Use the message (agent ID) as the item ID
-			animator.AddItem(message, "Loading agent: "+message)
-		case "process_success":
-			animator.UpdateStatus(message, "success")
-		case "process_error":
-			animator.UpdateStatus(message, "error")
-		case "scan_complete":
-			animator.UpdateStatus("scan", "success")
-			// Final step - show loading complete
-			animator.AddItem("complete", "Agent initialization complete")
-			animator.UpdateStatus("complete", "success")
-
-			// Stop animation with success message
-			numAgents := len(registry.ListAgents())
-			animator.StopAnimation(fmt.Sprintf("Successfully loaded %d agents", numAgents))
-		}
-	})
-
 	// Trigger a rescan to show the animation
 	// This is safe because NewRegistry already did the initial scan
-	err = registry.ScanAgentsWithAnimation()
-	if err != nil {
-		return nil, err
-	}
+	agents := registry.ListAgents()
+	count := len(agents)
+
+	// Update animation with results
+	animator.StopAnimation(fmt.Sprintf("Successfully initialized %d agents", count))
 
 	return registry, nil
 }
@@ -250,177 +222,78 @@ func (sm *SyncManager) createAgentRegistryWithAnimation(animator *ui.TerminalAni
 // offerMainLocationOptions presents options for an empty or non-existent main location
 // Returns true if operation should continue, false if cancelled
 func (sm *SyncManager) offerMainLocationOptions() bool {
-	options := []string{
-		"Create empty directory structure",
-		"Fetch from git repository",
-		"Cancel operation",
-	}
+	ui.Header("Main rules location is empty or does not exist")
+	ui.Plain("Options:")
+	ui.Plain("  1. Create empty rules directory")
+	ui.Plain("  2. Clone from git repository")
+	ui.Plain("  3. Cancel operation")
 
-	choice := ui.PromptOptions("Choose an option:", options)
+	ui.Prompt("Select an option: ")
+	var choice string
+	fmt.Scanln(&choice)
 
 	switch choice {
-	case 0: // Create empty directory
-		ui.Info("Creating empty directory structure...")
-
-		// Clean up existing directory if it exists
-		if utils.DirExists(sm.mainPath) {
-			utils.Debug("Existing directory found | path=" + sm.mainPath)
-			ui.Warning("Directory already exists: %s", sm.mainPath)
-
-			if !ui.PromptYesNo("Remove existing directory and create empty structure?") {
-				ui.Info("Operation cancelled by user")
-				return false
-			}
-
-			utils.Debug("Removing existing directory | path=" + sm.mainPath)
-			if err := os.RemoveAll(sm.mainPath); err != nil {
-				utils.Error("Failed to remove existing directory | path=" + sm.mainPath + ", error=" + err.Error())
-				ui.Error("Failed to remove existing directory: %v", err)
-				return false
-			}
-		}
-
+	case "1":
+		// Create empty directory
+		utils.Debug("Creating empty rules directory | path=" + sm.mainPath)
 		if err := os.MkdirAll(sm.mainPath, sm.config.DirPermission); err != nil {
-			utils.Error("Failed to create main directory | path=" + sm.mainPath + ", error=" + err.Error())
-			ui.Error("Failed to create main directory: %v", err)
+			utils.Error("Failed to create rules directory | path=" + sm.mainPath + ", error=" + err.Error())
+			ui.Error("Failed to create rules directory: %v", err)
 			return false
 		}
-		ui.Success("Created empty directory structure at %s", sm.mainPath)
+
+		// Create agents directory
+		agentsDir := filepath.Join(sm.mainPath, sm.config.AgentsDirName)
+		if err := os.MkdirAll(agentsDir, sm.config.DirPermission); err != nil {
+			utils.Error("Failed to create agents directory | path=" + agentsDir + ", error=" + err.Error())
+			ui.Error("Failed to create agents directory: %v", err)
+			return false
+		}
+
+		ui.Success("Created empty rules directory at %s", sm.mainPath)
 		return true
 
-	case 1: // Fetch from git repository
-		// Default repository URL
-		defaultGitRepo := "git@github.com:nsnarender5511/AgenticSystem.git"
-		gitURL := ui.PromptInputWithDefault("Enter git repository URL:", defaultGitRepo, ui.ValidateURL)
+	case "2":
+		// Clone from git repository
+		ui.Prompt("Enter git repository URL: ")
+		var repoURL string
+		fmt.Scanln(&repoURL)
 
-		// Clean up existing directory if it exists
-		if utils.DirExists(sm.mainPath) {
-			utils.Debug("Existing directory found | path=" + sm.mainPath)
-			ui.Warning("Directory already exists: %s", sm.mainPath)
-
-			if !ui.PromptYesNo("Remove existing directory before cloning?") {
-				ui.Info("Operation cancelled by user")
-				return false
-			}
-
-			ui.Info("Removing existing directory before cloning...")
-			utils.Debug("Removing existing directory | path=" + sm.mainPath)
-			if err := os.RemoveAll(sm.mainPath); err != nil {
-				utils.Error("Failed to remove existing directory | path=" + sm.mainPath + ", error=" + err.Error())
-				ui.Error("Failed to remove existing directory: %v", err)
-				return false
-			}
-		}
-
-		// Verify if the repository exists
-		ui.Info("Verifying git repository...")
-		if !git.IsValidRepo(gitURL) {
-			ui.Error("Invalid git repository URL or repository not accessible")
+		if repoURL == "" {
+			ui.Error("Repository URL cannot be empty")
 			return false
 		}
 
-		// Clone the repository
-		ui.Info("Cloning git repository to %s...", sm.mainPath)
-		if err := git.Clone(gitURL, sm.mainPath); err != nil {
-			git.CleanupOnFailure(sm.mainPath)
+		ui.Info("Cloning repository %s to %s...", repoURL, sm.mainPath)
+
+		// Ensure the parent directory exists
+		if err := os.MkdirAll(filepath.Dir(sm.mainPath), sm.config.DirPermission); err != nil {
+			utils.Error("Failed to create parent directory | path=" + filepath.Dir(sm.mainPath) + ", error=" + err.Error())
+			ui.Error("Failed to create parent directory: %v", err)
+			return false
+		}
+
+		if err := git.Clone(repoURL, sm.mainPath); err != nil {
+			utils.Error("Failed to clone repository | repo=" + repoURL + ", path=" + sm.mainPath + ", error=" + err.Error())
 			ui.Error("Failed to clone repository: %v", err)
 			return false
 		}
-		ui.Success("Repository cloned successfully")
+
+		ui.Success("Successfully cloned repository to %s", sm.mainPath)
 		return true
 
-	default: // Cancel
+	case "3":
+		// Cancel operation
+		ui.Info("Operation cancelled by user")
+		return false
+
+	default:
+		ui.Error("Invalid choice")
 		return false
 	}
 }
 
-// Merge copies current rules to main and syncs to all locations
-func (sm *SyncManager) Merge() error {
-	currentDir, err := os.Getwd()
-	if err != nil {
-		utils.Error("Cannot get current directory | error=" + err.Error())
-		return fmt.Errorf("cannot get current directory: %v", err)
-	}
-
-	sourcePath := filepath.Join(currentDir, sm.config.RulesDirName)
-	utils.Debug("Checking for rules in current directory | path=" + sourcePath)
-	if !utils.DirExists(sourcePath) {
-		utils.Error("Rules not found in current directory | path=" + sourcePath)
-		return fmt.Errorf("%s not found in current directory", sm.config.RulesDirName)
-	}
-
-	// Copy to main
-	utils.Debug("Copying rules to main location | source=" + sourcePath + ", target=" + sm.mainPath)
-	if err := utils.CopyDir(sourcePath, sm.mainPath); err != nil {
-		utils.Error("Failed to copy to main | source=" + sourcePath + ", target=" + sm.mainPath + ", error=" + err.Error())
-		return fmt.Errorf("failed to copy to main: %v", err)
-	}
-	utils.Info("Rules merged to main location | source=" + sourcePath)
-
-	// Sync to all registered projects
-	utils.Debug("Starting sync to all registered projects")
-	return sm.syncToAll()
-}
-
-// Sync forces sync from main to current
-func (sm *SyncManager) Sync() error {
-	currentDir, err := os.Getwd()
-	if err != nil {
-		utils.Error("Cannot get current directory | error=" + err.Error())
-		return fmt.Errorf("cannot get current directory: %v", err)
-	}
-
-	targetPath := filepath.Join(currentDir, sm.config.RulesDirName)
-	utils.Debug("Syncing rules from main location | source=" + sm.mainPath + ", target=" + targetPath)
-
-	if err := utils.CopyDir(sm.mainPath, targetPath); err != nil {
-		utils.Error("Failed to sync rules | source=" + sm.mainPath + ", target=" + targetPath + ", error=" + err.Error())
-		return err
-	}
-
-	utils.Info("Rules synced successfully | target=" + targetPath)
-	return nil
-}
-
-// syncToAll syncs main rules to all registered projects
-func (sm *SyncManager) syncToAll() error {
-	projects := sm.registry.GetProjects()
-	utils.Debug("Syncing to all projects | count=" + fmt.Sprintf("%d", len(projects)))
-
-	succeeded := 0
-	failed := 0
-
-	for _, project := range projects {
-		// Check if project directory exists
-		if !utils.DirExists(project) {
-			utils.Warn("Project directory does not exist | project=" + project)
-			fmt.Printf("Warning: skipping non-existent project: %s\n", project)
-			failed++
-			continue
-		}
-
-		targetPath := filepath.Join(project, sm.config.RulesDirName)
-		utils.Debug("Syncing to project | project=" + project + ", target=" + targetPath)
-
-		if err := utils.CopyDir(sm.mainPath, targetPath); err != nil {
-			utils.Warn("Failed to sync to project | project=" + project + ", error=" + err.Error())
-			fmt.Printf("Warning: failed to sync to %s: %v\n", project, err)
-			failed++
-		} else {
-			succeeded++
-		}
-	}
-
-	utils.Info("Sync to all projects completed | successful=" + fmt.Sprintf("%d", succeeded) + ", failed=" + fmt.Sprintf("%d", failed))
-	return nil
-}
-
-// GetRegistry returns the registry instance
+// GetRegistry returns the registry
 func (sm *SyncManager) GetRegistry() *Registry {
 	return sm.registry
-}
-
-// Clean removes non-existent projects from registry
-func (sm *SyncManager) Clean() (int, error) {
-	return sm.registry.CleanProjects()
 }

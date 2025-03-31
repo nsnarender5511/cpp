@@ -2,6 +2,7 @@ package ui
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -115,4 +116,34 @@ func (s *AgentSelector) Run() (*agent.AgentDefinition, error) {
 	Success("Selected agent: %s", selectedAgent.Name)
 
 	return selectedAgent, nil
+}
+
+// RunWithContext starts the selector CLI with context awareness and returns the selected agent or error
+func (s *AgentSelector) RunWithContext(ctx context.Context) (*agent.AgentDefinition, error) {
+	if len(s.agents) == 0 {
+		return nil, fmt.Errorf("no agents available")
+	}
+
+	// Create a channel for user input
+	resultCh := make(chan struct {
+		agent *agent.AgentDefinition
+		err   error
+	}, 1)
+
+	// Run the selector in a goroutine
+	go func() {
+		agentDef, err := s.Run()
+		resultCh <- struct {
+			agent *agent.AgentDefinition
+			err   error
+		}{agentDef, err}
+	}()
+
+	// Wait for either context cancellation or selection completion
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("agent selection canceled: %w", ctx.Err())
+	case result := <-resultCh:
+		return result.agent, result.err
+	}
 }

@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -77,9 +78,22 @@ func (l *Loader) LoadAgent(id string) (*Agent, error) {
 }
 
 // LoadAgentWithContext loads an agent and initializes it with the provided context
-func (l *Loader) LoadAgentWithContext(id string, context *AgentContext) (*Agent, error) {
+func (l *Loader) LoadAgentWithContext(id string, agentCtx *AgentContext) (*Agent, error) {
+	return l.LoadAgentWithContextCancellation(context.Background(), id, agentCtx)
+}
+
+// LoadAgentWithContextCancellation loads an agent with both context awareness and cancellation support
+func (l *Loader) LoadAgentWithContextCancellation(ctx context.Context, id string, agentCtx *AgentContext) (*Agent, error) {
 	utils.Debug("Loading agent with context | id=" + id)
 	l.reportProgress("load_context_start", id)
+
+	// Check for context cancellation
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("agent loading canceled: %w", ctx.Err())
+	default:
+		// Continue if not canceled
+	}
 
 	// Get agent definition from registry
 	definition, err := l.registry.GetAgent(id)
@@ -87,6 +101,14 @@ func (l *Loader) LoadAgentWithContext(id string, context *AgentContext) (*Agent,
 		utils.Error("Failed to get agent | error=" + err.Error())
 		l.reportProgress("load_error", "Failed to get agent "+id+": "+err.Error())
 		return nil, fmt.Errorf("failed to get agent: %w", err)
+	}
+
+	// Check for context cancellation again
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("agent loading canceled: %w", ctx.Err())
+	default:
+		// Continue if not canceled
 	}
 
 	// Read agent definition content if not already loaded
@@ -106,7 +128,7 @@ func (l *Loader) LoadAgentWithContext(id string, context *AgentContext) (*Agent,
 	// Initialize agent with definition and provided context
 	agent := &Agent{
 		Definition: definition,
-		Context:    context,
+		Context:    agentCtx,
 	}
 
 	utils.Info("Agent loaded successfully with context | id=" + id + ", name=" + definition.Name)
