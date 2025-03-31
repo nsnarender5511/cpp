@@ -4,7 +4,7 @@ package constants
 const (
 	// General errors
 	ErrFailedOperation = "Operation failed: %s"
-	ErrCommandFailed   = "Command failed: %w"
+	ErrCommandFailed   = "Command failed: %v"
 
 	// Path and security errors
 	ErrMainLocationMissing    = "Main rules location does not exist: %s"
@@ -14,7 +14,7 @@ const (
 	ErrInvalidAgentDefPath    = "Invalid agent definition path"
 
 	// File operation errors
-	ErrFailedLoadAgentContent = "Failed to load agent content: %w"
+	ErrFailedLoadAgentContent = "Failed to load agent content: %v"
 	ErrFailedGetCurrentDir    = "Cannot get current directory: %v"
 
 	// Agent related messages
