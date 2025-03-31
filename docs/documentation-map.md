@@ -1,13 +1,13 @@
 ---
-version: v0.1.0
-last_updated: 2023-03-29
-applies_to: crules v0.1.0+
+version: v1.0.0
+last_updated: 2023-03-31
+applies_to: cursor++ v1.0.0+
 ---
 
 # Documentation Map
 
 ## Overview
-This map provides a visual guide to the crules documentation structure to help you find relevant information quickly.
+This map provides a visual guide to the cursor++ documentation structure to help you find relevant information quickly.
 
 ## Documentation Structure
 ```mermaid
@@ -47,9 +47,9 @@ graph TD
 
 | Documentation | Path | Description |
 |---------------|------|-------------|
-| User Guide | [docs/user-guide/](./user-guide/) | Instructions for using crules |
-| &nbsp;&nbsp;Installation | [docs/user-guide/installation.md](./user-guide/installation.md) | How to install crules |
-| &nbsp;&nbsp;Configuration | [docs/user-guide/configuration.md](./user-guide/configuration.md) | How to configure crules |
+| User Guide | [docs/user-guide/](./user-guide/) | Instructions for using cursor++ |
+| &nbsp;&nbsp;Installation | [docs/user-guide/installation.md](./user-guide/installation.md) | How to install cursor++ |
+| &nbsp;&nbsp;Configuration | [docs/user-guide/configuration.md](./user-guide/configuration.md) | How to configure cursor++ |
 | &nbsp;&nbsp;Commands | [docs/user-guide/commands.md](./user-guide/commands.md) | Reference for all commands |
 | &nbsp;&nbsp;Agent System | [docs/user-guide/agents.md](./user-guide/agents.md) | Guide to the Agent System |
 | &nbsp;&nbsp;Troubleshooting | [docs/user-guide/troubleshooting.md](./user-guide/troubleshooting.md) | Solutions to common issues |
@@ -70,6 +70,38 @@ graph TD
 | &nbsp;&nbsp;Git API | [docs/api-reference/git-api.md](./api-reference/git-api.md) | Git integration API |
 | &nbsp;&nbsp;Version API | [docs/api-reference/version-api.md](./api-reference/version-api.md) | Version info API |
 
+## Available Agents
+
+cursor++ includes a rich ecosystem of specialized agents to assist with various aspects of the development workflow:
+
+### Planning Agents
+| Agent | File | Purpose |
+|-------|------|---------|
+| Technical Wizard | [wizard.mdc](/rules/wizard.mdc) | High-level technical guidance and coordination |
+| Feature Planner | [feature-planner.mdc](/rules/feature-planner.mdc) | Planning feature implementations |
+| Fix Planner | [fix-planner.mdc](/rules/fix-planner.mdc) | Analyzing bugs and planning fixes |
+| Architecture Planner | [architecture-planner.mdc](/rules/architecture-planner.mdc) | Designing system architecture |
+| Scraper Planner | [scraper-planner.mdc](/rules/scraper-planner.mdc) | Planning data scraping implementations |
+| Git Actions Planner | [git-actions-planner.mdc](/rules/git-actions-planner.mdc) | Designing GitHub Actions workflows |
+| Refactoring Guru | [refactoring-guru.mdc](/rules/refactoring-guru.mdc) | Planning and guiding code refactoring |
+
+### Implementation Agents
+| Agent | File | Purpose |
+|-------|------|---------|
+| Implementer | [implementer.mdc](/rules/implementer.mdc) | Converting plans into working code |
+| Runner | [runner.mdc](/rules/runner.mdc) | Testing and verifying implementations |
+
+### Support Agents
+| Agent | File | Purpose |
+|-------|------|---------|
+| Code Reviewer | [code-reviewer.mdc](/rules/code-reviewer.mdc) | Reviewing code for quality and issues |
+| Git Committer | [git-committer.mdc](/rules/git-committer.mdc) | Creating structured commit messages |
+| Quick Answer | [quick-answer-agent.mdc](/rules/quick-answer-agent.mdc) | Providing concise, direct answers |
+| Document Syncer | [document-syncer.mdc](/.cursor/rules/doc-syncer.mdc) | Synchronizing documentation with code |
+| Documentation Agent | [documentation-agent.mdc](/rules/documentation-agent.mdc) | Creating and improving documentation |
+| Document Reviewer | [document-reviewer-agent.mdc](/rules/document-reviewer-agent.mdc) | Reviewing documentation quality |
+| Agent Selector | [agent-selector.mdc](/rules/agent-selector.mdc) | Selecting appropriate agents for tasks |
+
 ## How to Use This Documentation
 
 1. **New Users**: Start with the [Installation](./user-guide/installation.md) and [Getting Started](./user-guide/getting-started.md) guides.
@@ -80,4 +112,4 @@ graph TD
 
 ## Version Information
 
-This documentation applies to crules v0.1.0 and later. For documentation on previous versions, please refer to the appropriate release tags in the repository. 
+This documentation applies to cursor++ v1.0.0 and later. For documentation on previous versions, please refer to the appropriate release tags in the repository. 

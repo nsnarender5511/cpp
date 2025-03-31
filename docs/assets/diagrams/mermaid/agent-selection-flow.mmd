@@ -1,6 +1,6 @@
 flowchart TD
     %% Define the main flow
-    Start([🚀 Start]):::start --> Command["💻 crules agent select"]:::command
+    Start([🚀 Start]):::start --> Command["💻 cursor++ agent select"]:::command
     Command --> LoadConfig["⚙️ Load Configuration"]:::process
     LoadConfig --> ScanRules["🔍 Scan for Rule Files"]:::process
     ScanRules --> ExtractMeta["📋 Extract Agent Metadata"]:::process

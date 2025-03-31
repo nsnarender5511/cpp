@@ -1,29 +1,26 @@
 # Core API Reference
 
-> 📘 This document provides detailed API reference for the core components of crules.
+> 📘 This document provides detailed API reference for the core components of cursor++.
 
 ## Overview
 
-The Core API contains the fundamental components that power the crules system, including:
+The Core API contains the fundamental components that power the cursor++ system, including:
 
-- **SyncManager**: Handles synchronization between main and project locations
+- **SyncManager**: Handles initialization of agent rules directory
 - **Registry**: Manages project registration and tracking
 - **Parser**: Processes agent definition files
 - **Storage**: Handles file operations and rule storage
 
 ## SyncManager
 
-The `SyncManager` is the central component that coordinates rule synchronization between the main location and project locations.
+The `SyncManager` is the central component that handles initialization of agent rules, setting up the main location for agent definitions.
 
 ### Types
 
 ```go
-// SyncManager handles all sync operations
+// SyncManager handles initialization operations
 type SyncManager struct {
-    mainPath string
-    registry *Registry
-    config   *utils.Config
-    appPaths utils.AppPaths
+    // internal fields
 }
 ```
 
@@ -35,19 +32,12 @@ type SyncManager struct {
 func NewSyncManager() (*SyncManager, error)
 ```
 
-Creates a new sync manager instance.
-
-**Returns:**
+**Returns**:
 - `*SyncManager`: A pointer to the new SyncManager instance
-- `error`: An error if initialization fails
+- `error`: An error if the operation fails
 
-**Example:**
-```go
-manager, err := core.NewSyncManager()
-if err != nil {
-    log.Fatalf("Failed to initialize sync manager: %v", err)
-}
-```
+**Description**:
+Creates a new SyncManager instance to handle agent rule initialization.
 
 #### Init
 
@@ -55,103 +45,33 @@ if err != nil {
 func (sm *SyncManager) Init() error
 ```
 
-Initializes the current directory with rules from the main location.
+**Returns**:
+- `error`: An error if the initialization fails
 
-**Returns:**
-- `error`: An error if initialization fails
-
-**Example:**
-```go
-err := manager.Init()
-if err != nil {
-    log.Fatalf("Failed to initialize rules: %v", err)
-}
-```
-
-#### Sync
-
-```go
-func (sm *SyncManager) Sync() error
-```
-
-Synchronizes rules from the main location to the current directory.
-
-**Returns:**
-- `error`: An error if synchronization fails
-
-**Example:**
-```go
-err := manager.Sync()
-if err != nil {
-    log.Fatalf("Failed to sync rules: %v", err)
-}
-```
-
-#### Merge
-
-```go
-func (sm *SyncManager) Merge() error
-```
-
-Merges rules from the current directory to the main location and syncs to all registered projects.
-
-**Returns:**
-- `error`: An error if merging fails
-
-**Example:**
-```go
-err := manager.Merge()
-if err != nil {
-    log.Fatalf("Failed to merge rules: %v", err)
-}
-```
-
-#### Clean
-
-```go
-func (sm *SyncManager) Clean() (int, error)
-```
-
-Removes non-existent projects from the registry.
-
-**Returns:**
-- `int`: The number of projects removed
-- `error`: An error if cleaning fails
-
-**Example:**
-```go
-removed, err := manager.Clean()
-if err != nil {
-    log.Fatalf("Failed to clean registry: %v", err)
-}
-fmt.Printf("Removed %d non-existent projects\n", removed)
-```
+**Description**:
+Initializes the agent rules system by setting up the main location for agent rule storage. This method will guide the user through creating or selecting a main location for agent rules.
 
 #### GetRegistry
 
 ```go
-func (sm *SyncManager) GetRegistry() *Registry
+func (sm *SyncManager) GetRegistry() (*agent.Registry, error)
 ```
 
-Returns the registry associated with this sync manager.
+**Returns**:
+- `*agent.Registry`: A pointer to the agent registry
+- `error`: An error if the operation fails
 
-**Returns:**
-- `*Registry`: A pointer to the registry
-
-**Example:**
-```go
-registry := manager.GetRegistry()
-projects := registry.GetProjects()
-```
+**Description**:
+Returns the agent registry associated with the SyncManager, which can be used to access and manage agent definitions.
 
 ## Registry
 
-The `Registry` keeps track of all projects using crules.
+The `Registry` keeps track of all projects using cursor++.
 
 ### Types
 
 ```go
-// Registry keeps track of all projects using crules
+// Registry keeps track of all projects using cursor++
 type Registry struct {
     Projects []string `json:"projects"`
     path     string   // path to registry file
@@ -216,8 +136,11 @@ func (r *Registry) GetProjects() []string
 
 Returns all registered projects.
 
-**Returns:**
+**Returns**:
 - `[]string`: A slice of project paths
+
+**Description**:
+Returns a list of all registered project paths.
 
 **Example:**
 ```go
@@ -247,6 +170,21 @@ if err != nil {
 }
 fmt.Printf("Removed %d non-existent projects\n", removed)
 ```
+
+#### IsRegistered
+
+```go
+func (r *Registry) IsRegistered(path string) bool
+```
+
+**Parameters**:
+- `path`: The path to check
+
+**Returns**:
+- `bool`: True if the path is registered, false otherwise
+
+**Description**:
+Checks if a path is registered in the registry.
 
 ## Parser
 
@@ -349,36 +287,6 @@ if err != nil {
 }
 ```
 
-## Import System
-
-The Import system handles importing rules from external sources.
-
-### Functions
-
-#### ImportRules
-
-```go
-func ImportRules(sourceURL string, force bool, webMode bool) error
-```
-
-Handles the end-to-end process of importing rules from a URL.
-
-**Parameters:**
-- `sourceURL`: The URL to import rules from
-- `force`: Whether to force overwrite existing rules
-- `webMode`: Whether to use web mode parsing
-
-**Returns:**
-- `error`: An error if importing fails
-
-**Example:**
-```go
-err := core.ImportRules("https://example.com/rules", false, true)
-if err != nil {
-    log.Fatalf("Failed to import rules: %v", err)
-}
-```
-
 ## Utility Interfaces
 
 ### DomainRegistry
@@ -409,7 +317,7 @@ The Core API functions return errors that should be handled by the caller. Commo
 
 **Example (Error Handling):**
 ```go
-err := manager.Sync()
+err := manager.Init()
 if err != nil {
     if strings.Contains(err.Error(), "permission denied") {
         // Handle permission error
@@ -419,7 +327,7 @@ if err != nil {
         log.Fatalf("File not found: %v", err)
     } else {
         // Handle other errors
-        log.Fatalf("Error syncing: %v", err)
+        log.Fatalf("Error initializing: %v", err)
     }
 }
 ```

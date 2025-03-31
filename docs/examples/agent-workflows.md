@@ -1,335 +1,191 @@
-# Agent Workflows
+# Documentation Workflows
 
-> 📋 This guide provides practical examples of using the agent system in real-world scenarios.
+> 📋 This guide provides practical examples of using the Document Syncer agent in real-world scenarios.
 
 ## Overview
 
-Agent workflows in crules are designed to help you tackle complex development tasks by combining specialized agents. Each agent has unique capabilities, and when used together in a workflow, they create a powerful development experience.
+The Document Syncer agent in cursor++ is designed to help you maintain consistent documentation across your codebase. This guide shows practical workflows for common documentation tasks.
 
-## Common Workflows
+## Current Documentation Workflows
 
-### Feature Development Workflow
+### Documentation Synchronization Workflow
 
-The following workflow demonstrates how to use agents for developing a new feature:
-
-```mermaid
-sequenceDiagram
-    participant User as 👤 User
-    participant Wizard as 🧙 Technical Wizard
-    participant Planner as 💡 Feature Planner
-    participant Implementer as ⚙️ Implementer
-    participant Runner as 🏃 Runner
-    participant Docs as 📚 Documentation
-
-    User->>Wizard: Discuss feature idea
-    Note over Wizard: Helps refine approach
-    Wizard->>Planner: Hand off feature requirements
-    Planner->>Implementer: Provide detailed implementation plan
-    Implementer->>Runner: Implement code based on plan
-    Runner->>User: Verify implementation
-    User->>Docs: Request documentation
-    Docs->>User: Deliver comprehensive docs
-
-    style User fill:#ff9966,stroke:#ff6600
-    style Wizard fill:#ff66b2,stroke:#cc0066
-    style Planner fill:#9966ff,stroke:#6600cc
-    style Implementer fill:#66b3ff,stroke:#0066cc
-    style Runner fill:#66b3ff,stroke:#0066cc
-    style Docs fill:#66cc99,stroke:#009966
-```
-
-#### Step-by-Step Procedure
-
-1. Start with the **Technical Wizard** to discuss the feature at a high level:
-   ```
-   @wizard.mdc I need to implement a new feature that allows users to export their data in CSV format
-   ```
-
-2. Once you have a clear direction, consult the **Feature Planner**:
-   ```
-   @feature-planner.mdc Plan the implementation of the CSV export feature. The wizard suggested using a dedicated ExportService.
-   ```
-
-3. Take the plan to the **Implementer** for coding:
-   ```
-   @implementer.mdc Implement the CSV export feature based on this plan: [paste plan here]
-   ```
-
-4. Verify the implementation with the **Runner**:
-   ```
-   @runner.mdc Run tests for the new CSV export feature
-   ```
-
-5. Document the feature with the **Documentation Agent**:
-   ```
-   @documentation-agent.mdc Create user documentation for the new CSV export feature
-   ```
-
-### Bug Fix Workflow
-
-For fixing bugs, follow this streamlined workflow:
+The following workflow demonstrates how to use the Document Syncer agent to maintain consistency between code and documentation:
 
 ```mermaid
 sequenceDiagram
     participant User as 👤 User
-    participant Fix as 🔧 Fix Planner
-    participant Implementer as ⚙️ Implementer
-    participant Runner as 🏃 Runner
-    participant Reviewer as 🔍 Code Reviewer
-    participant Committer as 📝 Git Committer
-
-    User->>Fix: Report bug
-    Note over Fix: Analyzes root cause
-    Fix->>Implementer: Provide fix strategy
-    Implementer->>Runner: Implement solution
-    Runner->>Reviewer: Verify fix
-    Reviewer->>Committer: Approve changes
-    Committer->>User: Create commit message
+    participant DocSyncer as 🔄 Document Syncer
+    
+    User->>DocSyncer: Request consistency check
+    Note over DocSyncer: Analyzes code and docs
+    DocSyncer->>User: Report inconsistencies
+    User->>DocSyncer: Request doc updates
+    DocSyncer->>User: Propose changes
+    User->>DocSyncer: Approve changes
+    DocSyncer->>User: Apply approved changes
 
     style User fill:#ff9966,stroke:#ff6600
-    style Fix fill:#9966ff,stroke:#6600cc
-    style Implementer fill:#66b3ff,stroke:#0066cc
-    style Runner fill:#66b3ff,stroke:#0066cc
-    style Reviewer fill:#66cc99,stroke:#009966
-    style Committer fill:#66cc99,stroke:#009966
+    style DocSyncer fill:#66cc99,stroke:#009966
 ```
 
 #### Step-by-Step Procedure
 
-1. Start with the **Fix Planner** to analyze the bug:
+1. Start with a consistency check:
    ```
-   @fix-planner.mdc Users report that the sorting function in the data table is not working correctly for date fields
-   ```
-
-2. Implement the fix with the **Implementer**:
-   ```
-   @implementer.mdc Fix the date sorting issue based on the analysis: [paste analysis here]
+   @doc-syncer.mdc Check for inconsistencies between our code and documentation
    ```
 
-3. Verify the fix with the **Runner**:
+2. Review the report and request updates:
    ```
-   @runner.mdc Test the date sorting functionality
-   ```
-
-4. Review the code with the **Code Reviewer**:
-   ```
-   @code-reviewer.mdc Review my fix for the date sorting issue
+   @doc-syncer.mdc Update the documentation to match our current code implementation
    ```
 
-5. Commit the changes with the **Git Committer**:
+3. Review proposed changes before approval:
    ```
-   @git-committer.mdc Create a commit message for fixing the date sorting issue
+   @doc-syncer.mdc Go ahead and implement the changes we discussed
    ```
 
-## Advanced Workflows
+### Documentation Migration Workflow
 
-### Refactoring Workflow
+For migrating documentation between formats or systems:
 
-For complex refactoring tasks:
+```mermaid
+sequenceDiagram
+    participant User as 👤 User
+    participant DocSyncer as 🔄 Document Syncer
+    
+    User->>DocSyncer: Request migration plan
+    Note over DocSyncer: Analyzes current docs
+    DocSyncer->>User: Propose migration strategy
+    User->>DocSyncer: Approve strategy
+    DocSyncer->>User: Execute migration
+    DocSyncer->>User: Verify cross-references
+
+    style User fill:#ff9966,stroke:#ff6600
+    style DocSyncer fill:#66cc99,stroke:#009966
+```
+
+#### Step-by-Step Procedure
+
+1. Start with planning the migration:
+   ```
+   @doc-syncer.mdc I need to migrate our Markdown documentation to a new format. Create a migration plan.
+   ```
+
+2. Review and approve the migration plan:
+   ```
+   @doc-syncer.mdc The migration plan looks good. Please proceed with the migration.
+   ```
+
+3. Verify the migration results:
+   ```
+   @doc-syncer.mdc Check that all documentation links and cross-references are working after the migration
+   ```
+
+## Specific Documentation Tasks
+
+### Task 1: Updating API Documentation
+
+When your API implementation changes, you need to update the documentation:
 
 ```mermaid
 flowchart TD
-    User((👤 User)) --> RefactorGuru(♻️ Refactoring Guru)
-    RefactorGuru --> Wizard(🧙 Technical Wizard)
-    Wizard --> Implementer(⚙️ Implementer)
-    Implementer --> Runner(🏃 Runner)
-    Runner --> Reviewer(🔍 Code Reviewer)
+    User((👤 User)) --> DocSyncer(🔄 Document Syncer)
+    DocSyncer --> Analysis[Analyze API Changes]
+    Analysis --> UpdateDocs[Update API Documentation]
+    UpdateDocs --> VerifyConsistency[Verify Documentation Consistency]
     
     style User fill:#ff9966,stroke:#ff6600,stroke-width:2px
-    style RefactorGuru fill:#9966ff,stroke:#6600cc,stroke-width:2px
-    style Wizard fill:#ff66b2,stroke:#cc0066,stroke-width:2px
-    style Implementer fill:#66b3ff,stroke:#0066cc,stroke-width:2px
-    style Runner fill:#66b3ff,stroke:#0066cc,stroke-width:2px
-    style Reviewer fill:#66cc99,stroke:#009966,stroke-width:2px
+    style DocSyncer fill:#66cc99,stroke:#009966,stroke-width:2px
+    style Analysis fill:#f5f5f5,stroke:#cccccc,stroke-width:1px
+    style UpdateDocs fill:#f5f5f5,stroke:#cccccc,stroke-width:1px
+    style VerifyConsistency fill:#f5f5f5,stroke:#cccccc,stroke-width:1px
 ```
 
-### Architecture Planning Workflow
+#### Example Conversation
 
-For designing system architecture:
+```
+User: @doc-syncer.mdc We've updated our API endpoints in the code, but our API documentation is now out of date.
+
+Document Syncer: I'll help you synchronize your API documentation with the current implementation. First, I'll analyze the changes between your code and documentation.
+
+[Agent analyzes code and documentation]
+
+Document Syncer: I've identified several inconsistencies in your API documentation:
+1. The '/users' endpoint now accepts 'email' as a query parameter, but this isn't documented
+2. The response format for '/products' has changed to include a 'category' field
+3. A new endpoint '/orders/status' exists in the code but isn't documented
+
+Would you like me to update the API documentation to address these issues?
+
+User: Yes, please update the documentation.
+
+Document Syncer: Here's my proposed update to the API documentation:
+[Detailed changes to API documentation]
+
+Should I apply these changes?
+
+User: The changes look good. Please apply them.
+
+Document Syncer: I've updated your API documentation to match the current implementation. All endpoints and parameters are now correctly documented.
+```
+
+### Task 2: Synchronizing README Files
+
+When your project evolves, you need to keep README files up-to-date:
 
 ```mermaid
 flowchart TD
-    User((👤 User)) --> Wizard(🧙 Technical Wizard)
-    Wizard --> ArchPlanner(🏗️ Architecture Planner)
-    ArchPlanner --> DocAgent(📚 Documentation Agent)
-    ArchPlanner --> FeaturePlanner(💡 Feature Planner)
+    User((👤 User)) --> DocSyncer(🔄 Document Syncer)
+    DocSyncer --> CheckReadme[Check README Against Code]
+    CheckReadme --> UpdateReadme[Update README Content]
+    UpdateReadme --> VerifyLinks[Verify Links and Examples]
     
     style User fill:#ff9966,stroke:#ff6600,stroke-width:2px
-    style Wizard fill:#ff66b2,stroke:#cc0066,stroke-width:2px
-    style ArchPlanner fill:#9966ff,stroke:#6600cc,stroke-width:2px
-    style DocAgent fill:#66cc99,stroke:#009966,stroke-width:2px
-    style FeaturePlanner fill:#9966ff,stroke:#6600cc,stroke-width:2px
+    style DocSyncer fill:#66cc99,stroke:#009966,stroke-width:2px
+    style CheckReadme fill:#f5f5f5,stroke:#cccccc,stroke-width:1px
+    style UpdateReadme fill:#f5f5f5,stroke:#cccccc,stroke-width:1px
+    style VerifyLinks fill:#f5f5f5,stroke:#cccccc,stroke-width:1px
 ```
 
-## Real-World Examples
+#### Example Conversation
 
-### Example 1: Adding a New API Endpoint
+```
+User: @doc-syncer.mdc Our main README.md file mentions commands and features that have changed. Please update it.
 
-<details>
-  <summary>📑 Click to view the complete workflow</summary>
+Document Syncer: I'll help you update your README.md file to reflect the current state of your project. First, I'll analyze the inconsistencies.
 
-  #### Technical Wizard Conversation
-  ```
-  User: I need to add a new API endpoint to our Express.js application that will handle user profile updates
-  
-  Wizard: For implementing a new API endpoint for user profile updates, I'd suggest the following approach:
-  
-  1. Determine what user profile fields will be updatable
-  2. Define input validation for the endpoint
-  3. Implement proper authentication and authorization
-  4. Create the route handler in the Express application
-  5. Update the user data in the database
-  6. Add error handling and response formatting
-  7. Write tests for the endpoint
-  
-  Would you like to proceed with this approach? I can help coordinate with other agents for implementation.
-  ```
+[Agent analyzes code and README]
 
-  #### Feature Planner Conversation
-  ```
-  User: Plan how to implement the user profile update endpoint as discussed with the wizard
-  
-  Feature Planner: # User Profile Update Endpoint Implementation Plan
-  
-  ## Requirements
-  - Add a PATCH `/api/users/:userId/profile` endpoint
-  - Allow updating name, email, avatar, and preferences
-  - Require authentication
-  - Validate input data
-  - Return updated user profile on success
-  
-  ## Implementation Steps
-  1. Add route definition in `routes/users.js`
-  2. Create middleware for input validation
-  3. Implement authorization check
-  4. Create controller function in `controllers/users.js`
-  5. Add database update logic in `models/User.js`
-  6. Implement error handling
-  7. Add unit and integration tests
-  
-  ## Detailed Specifications
-  [Detailed specifications follow...]
-  ```
+Document Syncer: I've found several areas in the README.md that need updating:
+1. The command syntax has changed from 'cursor++ agent list' to 'cursor++ agent'
+2. It references agents that aren't implemented in the current version
+3. The installation instructions are referencing an outdated version
 
-  #### Implementer Conversation
-  ```
-  User: Implement the user profile update endpoint based on the planner's specifications
-  
-  Implementer: I'll implement the user profile update endpoint according to the plan.
-  
-  First, let's add the route in routes/users.js:
-  [Code implementation details follow...]
-  ```
-</details>
+Here's my proposed update to the README:
+[Detailed changes to README.md]
 
-### Example 2: Fixing a Performance Issue
+Would you like me to apply these changes?
 
-<details>
-  <summary>📑 Click to view the complete workflow</summary>
+User: Yes, that looks correct. Please update the README.
 
-  #### Fix Planner Conversation
-  ```
-  User: Our application is experiencing slow load times on the dashboard page, especially when there are many data points
-  
-  Fix Planner: # Performance Issue Analysis
-  
-  ## Problem Description
-  The dashboard page is loading slowly when displaying large datasets.
-  
-  ## Root Cause Analysis
-  1. Inefficient data fetching - all data is being loaded at once
-  2. No pagination implemented for large datasets
-  3. Frontend rendering all data points simultaneously
-  4. No caching mechanism in place
-  
-  ## Fix Strategy
-  [Detailed fix strategy follows...]
-  ```
-
-  #### Implementer and Runner Conversations
-  [Additional implementation and testing conversations...]
-</details>
-
-## Custom Workflow Creation
-
-You can create your own custom workflows by chaining agents together in a way that best suits your development process.
-
-### Workflow Design Tips
-
-1. **Start High-Level**: Begin with the Technical Wizard or specialized planning agents
-2. **Chain Specialized Agents**: Pass outputs between agents in a logical sequence
-3. **Verify Results**: Always include verification steps with the Runner or Code Reviewer
-4. **Document as You Go**: Involve the Documentation Agent throughout the process
-5. **Use Feedback Loops**: Return to previous agents when needed for refinement
-
-### Example Custom Workflow
-
-```mermaid
-flowchart TD
-    Start([Start]) --> Wizard(🧙 Technical Wizard)
-    Wizard --> Decision{Complex Task?}
-    Decision -->|Yes| ArchPlanner(🏗️ Architecture Planner)
-    Decision -->|No| FeaturePlanner(💡 Feature Planner)
-    
-    ArchPlanner --> FeaturePlanner
-    FeaturePlanner --> Implementer(⚙️ Implementer)
-    Implementer --> Runner(🏃 Runner)
-    Runner --> Decision2{Issues Found?}
-    
-    Decision2 -->|Yes| FixPlanner(🔧 Fix Planner)
-    Decision2 -->|No| CodeReviewer(🔍 Code Reviewer)
-    
-    FixPlanner --> Implementer
-    CodeReviewer --> Decision3{Needs Refactoring?}
-    
-    Decision3 -->|Yes| RefactorGuru(♻️ Refactoring Guru)
-    Decision3 -->|No| DocAgent(📚 Documentation Agent)
-    
-    RefactorGuru --> Implementer
-    DocAgent --> GitCommitter(📝 Git Committer)
-    GitCommitter --> End([End])
-    
-    style Start fill:#f96,stroke:#f60
-    style End fill:#f96,stroke:#f60
-    style Wizard fill:#ff66b2,stroke:#cc0066
-    style ArchPlanner fill:#9966ff,stroke:#6600cc
-    style FeaturePlanner fill:#9966ff,stroke:#6600cc
-    style Implementer fill:#66b3ff,stroke:#0066cc
-    style Runner fill:#66b3ff,stroke:#0066cc
-    style FixPlanner fill:#9966ff,stroke:#6600cc
-    style CodeReviewer fill:#66cc99,stroke:#009966
-    style RefactorGuru fill:#9966ff,stroke:#6600cc
-    style DocAgent fill:#66cc99,stroke:#009966
-    style GitCommitter fill:#66cc99,stroke:#009966
-    style Decision fill:#ffcc99,stroke:#ff9933
-    style Decision2 fill:#ffcc99,stroke:#ff9933
-    style Decision3 fill:#ffcc99,stroke:#ff9933
+Document Syncer: I've updated your README.md file to accurately reflect the current state of your project. All commands, features, and installation instructions are now up-to-date.
 ```
 
-## Performance Tips
+## Future Agent Extensions
 
-- **Provide Context**: Give each agent the necessary context from previous steps
-- **Be Specific**: Clearly describe the task for each agent
-- **Share Relevant Code**: Include relevant code snippets or file references
-- **Set Constraints**: Specify any limitations or requirements
-- **Review and Iterate**: Review each agent's output before proceeding
+In future releases, cursor++ will expand its agent ecosystem to include:
 
-## Interactive Examples
+- **Documentation Agent**: Create new documentation from code
+- **Document Reviewer Agent**: Review documentation for quality and completeness
+- **Architecture Documenter Agent**: Create and maintain architecture documentation
 
-We've prepared some interactive examples to help you learn how to use agent workflows effectively:
-
-<details>
-  <summary>📺 View Feature Development Workflow Demo</summary>
-  <img src="../assets/gifs/workflows/feature-development-workflow.gif" alt="Feature Development Workflow" width="600">
-</details>
-
-<details>
-  <summary>📺 View Bug Fix Workflow Demo</summary>
-  <img src="../assets/gifs/workflows/bug-fixing-workflow.gif" alt="Bug Fix Workflow" width="600">
-</details>
+Until these agents are available, the Document Syncer agent can help with many documentation tasks by focusing on synchronization between existing documentation and code.
 
 ## Navigation
 
-- Previous: [Advanced Usage](./advanced-usage.md)
-- Up: [Examples](./README.md)
+- Previous: [Basic Usage](./basic-usage.md)
+- Next: [Advanced Usage](./advanced-usage.md)
+- Up: [Examples](../README.md#examples)
 - Home: [Documentation Home](../README.md) 

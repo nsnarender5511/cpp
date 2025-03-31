@@ -1,27 +1,175 @@
 ---
-version: v0.1.0
+version: v1.0.0
 last_updated: 2023-03-29
-applies_to: crules v0.1.0+
+applies_to: cursor++ v1.0.0+
 ---
 
 # API Reference
 
-> 📘 Comprehensive API documentation for the crules project.
+> 🧩 This section provides documentation for the internal APIs of cursor++ that can be used by developers extending the tool.
 
 ## Overview
 
-This API reference provides detailed information about the internal APIs of crules. It covers the following components:
+The cursor++ tool is built with extensibility in mind, featuring a modular architecture with well-defined APIs between components. This documentation covers the public interfaces that can be used when:
 
-- [Core API](./core-api.md): Core functionality for rule management and synchronization
-- [Agent API](./agent-api.md): Agent system for managing AI agent definitions
-- [UI API](./ui-api.md): User interface components and terminal interactions
+1. Extending cursor++ with new functionality
+2. Developing plugins or integrations
+3. Understanding how the internals work
+
+## API Stability
+
+The API stability follows semantic versioning principles:
+
+- **Stable APIs**: Functions and types marked with `// Stable` comments are guaranteed not to change in ways that break existing code within the same major version. These are safe to use in extensions.
+
+- **Internal APIs**: Functions and types marked with `// Internal` may change between minor versions. Use these with caution and be prepared to update your code when upgrading cursor++.
+
+- **Experimental APIs**: Functions and types marked with `// Experimental` are still under development and may change significantly or be removed in any version. These are not recommended for use in production extensions.
+
+## Core Modules
+
+cursor++ is organized into the following core modules, each with its own API:
+
+| Module | Package | Description | Stability |
+|--------|---------|-------------|-----------|
+| [Agent System](./agent-api.md) | `cursor++/internal/agent` | Agent discovery, loading, and management | Stable |
+| [Core](./core-api.md) | `cursor++/internal/core` | Core functionality for rule management | Stable |
+| [UI](./ui-api.md) | `cursor++/internal/ui` | Terminal UI components | Stable |
+| [Utils](./utils-api.md) | `cursor++/internal/utils` | Utility functions and helpers | Stable |
+| [Git](./git-api.md) | `cursor++/internal/git` | Git repository operations | Stable |
+| [Version](./version-api.md) | `cursor++/internal/version` | Version management | Stable |
+
+## Getting Started with the API
+
+If you're developing extensions or integrations with cursor++, start by understanding the core concepts and how the different modules interact. The following diagram shows the high-level relationships between the main API components:
+
+```mermaid
+graph TD
+    Agent[Agent System]:::agent --> Core[Core System]:::core
+    Core --> Utils[Utilities]:::util
+    Core --> Git[Git Integration]:::git
+    Agent --> UI[User Interface]:::ui
+    Core --> UI
+    Utils --> UI
+    
+    classDef agent fill:#9966ff,stroke:#6600cc,stroke-width:2px,color:white
+    classDef core fill:#ff66b2,stroke:#cc0066,stroke-width:2px,color:white
+    classDef ui fill:#66b3ff,stroke:#0066cc,stroke-width:2px,color:white
+    classDef util fill:#66cc99,stroke:#009966,stroke-width:2px,color:white
+    classDef git fill:#ffcc99,stroke:#ff9933,stroke-width:2px,color:white
+```
+
+*Figure 1: High-level API relationships*
+
+## Common Patterns
+
+When working with the cursor++ API, you'll encounter several common patterns:
+
+### Error Handling
+
+All functions that can fail return errors alongside their results:
+
+```go
+result, err := function()
+if err != nil {
+    // Handle error
+}
+```
+
+### Context Propagation
+
+Many APIs accept a context as their first parameter for cancellation and value propagation:
+
+```go
+ctx := context.Background()
+result, err := function(ctx, param1, param2)
+```
+
+### Builder Pattern
+
+Complex objects often use the builder pattern for construction:
+
+```go
+builder := NewBuilder().
+    WithOption1("value").
+    WithOption2(123)
+    
+instance, err := builder.Build()
+```
+
+## Extension Points
+
+cursor++ provides several extension points for adding new functionality:
+
+1. **Custom Agents**: Create new agent definitions in `.mdc` files
+2. **Hooks**: Register functions to be called at specific points in the execution flow
+3. **UI Components**: Create custom UI components for specialized displays
+4. **Command Extensions**: Add new subcommands or flags to the CLI
+
+## API Documentation Navigation
+
+- [Agent API](./agent-api.md): Agent discovery, loading, and management
+- [Core API](./core-api.md): Core functionality for rule management
+- [UI API](./ui-api.md): Terminal UI components
 - [Utils API](./utils-api.md): Utility functions and helpers
-- [Git API](./git-api.md): Git integration utilities
-- [Version API](./version-api.md): Version information and management
+- [Git API](./git-api.md): Git repository operations
+- [Version API](./version-api.md): Version management
+
+## Example: Using the Agent API
+
+Here's a quick example of using the Agent API to load and use an agent:
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+    
+    "cursor++/internal/agent"
+)
+
+func main() {
+    // Create a context
+    ctx := context.Background()
+    
+    // Initialize the agent registry
+    registry, err := agent.NewRegistry()
+    if err != nil {
+        log.Fatalf("Failed to create agent registry: %v", err)
+    }
+    
+    // Load agents from the default location
+    agents, err := registry.LoadAgents(ctx)
+    if err != nil {
+        log.Fatalf("Failed to load agents: %v", err)
+    }
+    
+    // Find a specific agent by ID
+    wizard, exists := registry.GetAgentByID("wizard")
+    if !exists {
+        log.Fatalf("Wizard agent not found")
+    }
+    
+    // Print agent details
+    fmt.Printf("Agent: %s (v%s)\n", wizard.Name, wizard.Version)
+    fmt.Printf("Description: %s\n", wizard.Description)
+}
+```
+
+## Notes for API Users
+
+When using the cursor++ API:
+
+1. Always check for breaking changes when upgrading to a new version
+2. Follow best practices for error handling and context propagation
+3. Consider backwards compatibility if you're building extensions that others will use
+4. Contribute improvements and bug fixes back to the main project
 
 ## API Structure
 
-The APIs are organized according to the internal package structure of the crules codebase:
+The APIs are organized according to the internal package structure of the cursor++ codebase:
 
 ```
 internal/
@@ -48,12 +196,11 @@ Each API corresponds to a specific internal package and provides the functionali
 
 ## Core API
 
-The [Core API](./core-api.md) provides the central functionality of crules, including:
+The [Core API](./core-api.md) provides the central functionality of cursor++, including:
 
-- `SyncManager`: Synchronizes rules between projects and main location
-- `Registry`: Manages registered projects
-- `Parser`: Parses rule files from various sources
-- `Storage`: Stores rules to the filesystem
+- **SyncManager**: Handles agent rules initialization
+- **Registry**: Manages project registration and rule tracking
+- **UI Components**: Terminal-based user interface elements
 
 ## Agent API
 
@@ -186,17 +333,17 @@ graph TD
 
 ## Type Reference
 
-The following are key types defined across the crules system:
+The following are key types defined across the cursor++ system:
 
 | Type | Package | Description |
 |------|---------|-------------|
-| `SyncManager` | `core` | Manages rule synchronization between projects |
-| `Registry` | `core` | Manages project registration |
+| `Agent` | `agent` | Represents an AI agent with specific capabilities |
+| `Registry` | `agent` | Manages agent loading and selection |
+| `SyncManager` | `core` | Handles initialization of agent rules directory |
+| `Config` | `utils` | Configuration settings for the application |
+| `UI` | `ui` | Terminal-based user interface components |
 | `Rule` | `core` | Represents a rule definition |
 | `AgentDefinition` | `agent` | Represents an agent definition |
-| `Agent` | `agent` | Runtime representation of an agent |
-| `Config` | `utils` | Application configuration |
-| `Colors` | `ui` | ANSI color codes for terminal styling |
 | `Selector` | `ui` | Interactive list selector |
 | `RepositoryInfo` | `git` | Information about a Git repository |
 | `Version` | `version` | Semantic version representation |
@@ -218,7 +365,7 @@ Some of the most commonly used functions:
 
 ## Error Handling
 
-The crules system uses a consistent error handling approach:
+The cursor++ system uses a consistent error handling approach:
 
 1. Functions return explicit error values
 2. Errors are wrapped with additional context
@@ -240,7 +387,7 @@ if err != nil {
 
 ## Best Practices
 
-When working with the crules API:
+When working with the cursor++ API:
 
 1. Always check error returns
 2. Use the UI components for consistent user experience
@@ -250,7 +397,7 @@ When working with the crules API:
 
 ## Contributing
 
-If you're contributing to the crules codebase, please follow these guidelines:
+If you're contributing to the cursor++ codebase, please follow these guidelines:
 
 1. Maintain backward compatibility when modifying public APIs
 2. Add comprehensive tests for new functionality

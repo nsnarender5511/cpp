@@ -1,20 +1,15 @@
 # Command Reference
 
-> 📋 This guide provides a comprehensive reference for all commands available in the crules tool.
+> 📋 This guide provides a comprehensive reference for all commands available in the cursor++ tool.
 
 ## Command Overview
 
-Crules provides several commands to manage your rules and interact with agents:
+cursor++ provides the following commands to manage your agents:
 
 | Command | Description |
 |---------|-------------|
-| `init` | Initialize current directory with rules from main location |
-| `merge` | Merge current rules to main location and sync to all locations |
-| `sync` | Force sync from main location to current directory |
-| `list` | Display all registered projects |
-| `clean` | Remove non-existent projects from registry |
-| `agent` | Interactively select and use agents |
-| `import` | Import agent rules from a URL |
+| `init` | Initialize current directory with cursor++ agents |
+| `agent` | Interactively select and use agents for cursor++ IDE |
 
 ## Global Options
 
@@ -24,46 +19,51 @@ These options can be used with any command:
 |--------|-------------|
 | `--verbose` | Show informational messages on console |
 | `--debug` | Show debug messages on console (implies verbose) |
+| `--multi-agent` | Enable multi-agent mode for this session |
+| `--verbose-errors` | Display detailed error messages on failure |
 | `--version`, `-v` | Show version information |
 
 ```bash
 # Show version information
-crules --version
+cursor++ --version
 
 # Enable verbose output
-crules --verbose list
+cursor++ --verbose agent 
 
 # Enable debug output
-crules --debug sync
+cursor++ --debug init
+
+# Enable multi-agent mode
+cursor++ --multi-agent init
 ```
 
 ## Command Details
 
 ### `init` Command
 
-Initializes the current directory with rules from the main location.
+Initializes the current directory with cursor++ agents.
 
 ```bash
-crules init
+cursor++ init
 ```
 
 **Behavior:**
-- Copies rules from main location to current directory
-- Registers the current project in the crules registry
+- Creates the agent rules directory in the current project
+- Guides you through setting up the main agent rules location if it doesn't exist
 - Creates the `.cursor/rules` directory if it doesn't exist
-- Updates `.gitignore` to exclude the `.cursor/` directory
-- If main location doesn't exist, guides you through setup options
+- Updates `.gitignore` to exclude the `.cursor/` directory if needed
+- Displays available agents after initialization
 
 **First-time Setup Options:**
 1. Create an empty directory structure
-2. Fetch rules from a git repository
+2. Fetch agents from a git repository
 3. Cancel operation
 
 **Example Output:**
 ```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
+✨ cursor++ - Cursor IDE Enhancement Tool v1.0.0 ✨
 
-⚠️ Warning: Main rules location does not exist: /Users/username/.cursor/rules
+⚠️ Warning: Main agents location does not exist: /Users/username/.cursor/rules
 
 Choose an option:
 1. Create empty directory structure
@@ -72,97 +72,14 @@ Choose an option:
 
 > 2
 
-Enter git repository URL: [git@github.com:nsnarender5511/AgenticSystem.git]
+Enter git repository URL: [git@github.com:cursor-ai/cursor-plus-plus.git]
 
-✓ Successfully initialized rules in /path/to/project/.cursor/rules
-```
+✓ Successfully initialized agents in /path/to/project/.cursor/rules
 
-### `merge` Command
-
-Merges rules from the current directory to the main location and syncs to all registered projects.
-
-```bash
-crules merge
-```
-
-**Behavior:**
-- Copies rules from current directory to main location
-- Synchronizes the changes to all registered projects
-- Ensures all projects have the latest versions of your rules
-
-**Example Output:**
-```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
-
-Merging rules to main location...
-Syncing changes to 3 registered projects...
-
-✓ Successfully merged rules to main location
-```
-
-### `sync` Command
-
-Forces a sync from the main location to the current directory.
-
-```bash
-crules sync
-```
-
-**Behavior:**
-- Copies rules from main location to current directory
-- Overwrites any local changes
-
-**Example Output:**
-```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
-
-Syncing rules from main location...
-
-✓ Successfully synced rules from main location
-```
-
-### `list` Command
-
-Displays all registered projects.
-
-```bash
-crules list
-```
-
-**Behavior:**
-- Lists all projects registered in the crules registry
-- Indicates if a project no longer exists
-
-**Example Output:**
-```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
-
-Registered projects (3):
-  1. /Users/username/projects/project1
-  2. /Users/username/projects/project2
-  3. /Users/username/old-project (not found)
-
-⚠️ 1 project(s) could not be found. Run 'crules clean' to remove them.
-```
-
-### `clean` Command
-
-Removes non-existent projects from the registry.
-
-```bash
-crules clean
-```
-
-**Behavior:**
-- Checks all registered projects for existence
-- Removes non-existent projects from the registry
-- Updates the registry file
-
-**Example Output:**
-```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
-
-✓ Successfully removed 1 non-existent project(s) from registry.
+Next Steps:
+1. Use cursor++ agent to see available agents
+2. Start using agents by referencing them with @agent-name.mdc in your chat
+3. For more information about an agent, use cursor++ agent info <agent-id>
 ```
 
 ### `agent` Command
@@ -172,7 +89,7 @@ The `agent` command provides access to the Agent System, allowing you to view, s
 #### Basic Usage
 
 ```bash
-crules agent
+cursor++ agent
 ```
 
 Without additional arguments, this lists all available agents.
@@ -181,29 +98,24 @@ Without additional arguments, this lists all available agents.
 
 | Subcommand | Description |
 |------------|-------------|
-| `list` | Display all available agents (default behavior) |
+| (no subcommand) | Display all available agents (default behavior) |
 | `info <id>` | Show detailed information about a specific agent |
 | `select` | Interactively select and load an agent |
 
-#### `agent list` Subcommand
-
-Lists all available agents.
+#### Listing All Agents
 
 ```bash
-crules agent list
+cursor++ agent
 ```
 
 **Example Output:**
 ```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
+✨ cursor++ - Cursor IDE Enhancement Tool v1.0.0 ✨
 
 +-----+---------------------+--------------------+----------+
 | No. | Agent Name          | Reference ID       | Version  |
 +-----+---------------------+--------------------+----------+
-| 1   | Feature Planner     | @feature-planner.mdc | 1.0    |
-| 2   | Fix Planner         | @fix-planner.mdc     | 1.0    |
-| 3   | Runner              | @runner.mdc          | 1.0    |
-| 4   | Technical Wizard    | @wizard.mdc          | 1.0    |
+| 1   | Document Syncer     | @doc-syncer.mdc    | 1.0      |
 +-----+---------------------+--------------------+----------+
 ```
 
@@ -212,34 +124,34 @@ crules agent list
 Shows detailed information about a specific agent.
 
 ```bash
-crules agent info <id>
+cursor++ agent info <id>
 ```
 
 The `<id>` can be:
-- A string ID (e.g., `wizard`)
+- A string ID (e.g., `doc-syncer`)
 - A numeric index from the list (e.g., `1`)
 
 **Example Output:**
 ```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
+✨ cursor++ - Cursor IDE Enhancement Tool v1.0.0 ✨
 
 Agent details:
-  ID:          wizard
-  Name:        🧙‍♂️ Technical Wizard Agent
+  ID:          doc-syncer
+  Name:        🔄 Document Syncer Agent
   Version:     1.0
 
 Description:
-  The Technical Wizard Agent provides high-level technical guidance 
-  and coordinates other agents. It helps with architecture decisions, 
-  design patterns, and clean code principles.
+  The Document Syncer Agent specializes in maintaining synchronization 
+  between documentation in a codebase and its associated documentation system. 
+  It ensures documentation stays updated and consistent.
 
 Capabilities:
-  - In-Depth Technical Exploration and Analysis
-  - Expert Architectural Guidance
-  - Design Patterns Discussion
-  - Clean Code Advisory
+  - Context Detection and Analysis
+  - Codebase-to-Docs Synchronization
+  - Website Support File Synchronization
+  - Conflict Resolution
 
-File: /Users/username/.cursor/rules/wizard.mdc
+File: /Users/username/.cursor/rules/doc-syncer.mdc
 ```
 
 #### `agent select` Subcommand
@@ -247,7 +159,7 @@ File: /Users/username/.cursor/rules/wizard.mdc
 Interactively selects and loads an agent.
 
 ```bash
-crules agent select
+cursor++ agent select
 ```
 
 **Behavior:**
@@ -257,67 +169,26 @@ crules agent select
 
 **Example Output:**
 ```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
+✨ cursor++ - Cursor IDE Enhancement Tool v1.0.0 ✨
 
 Select an agent:
-> 1. 🧙‍♂️ Technical Wizard Agent
-  2. ✨ Feature Planner Agent
-  3. 🔍 Fix Planner Agent
-  4. 🛠️ Implementer Agent
+> 1. 🔄 Document Syncer Agent
 
 [Use arrow keys to navigate, Enter to select]
 ```
 
-### `import` Command
-
-Imports agent rules from a URL.
-
-```bash
-crules import <url>
-```
-
-**Parameters:**
-- `<url>`: The URL to import rules from (required)
-
-**Behavior:**
-- Fetches content from the specified URL
-- Parses the content to extract rules
-- Stores the rules in your main location
-- Optionally stores them in your current project if it has a rules directory
-
-**Example Output:**
-```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
-
-Fetching rules from https://cursor.directory/example-agent...
-Parsing rules...
-
-Found 1 rule to import:
-  1. Example Agent - An example agent for crules
-
-Do you want to import this rule? [y/N] y
-
-Storing rules to main location...
-
-✓ Successfully imported 1 rule
-```
-
 ## Exit Codes
 
-The crules tool uses the following exit codes:
+The cursor++ tool uses the following exit codes:
 
 | Code | Meaning |
 |------|---------|
 | 0 | Success |
 | 1 | Usage error |
 | 10 | Init error |
-| 11 | Merge error |
-| 12 | Sync error |
-| 13 | List error |
-| 14 | Clean error |
 | 15 | Agent error |
-| 16 | Import error |
 | 20 | Setup error |
+| 25 | Config error |
 
 ## Command Workflow Examples
 
@@ -331,43 +202,39 @@ cd my-project
 # Initialize git repository
 git init
 
-# Initialize rules
-crules init
+# Initialize agents
+cursor++ init
 
 # Select an agent to work with
-crules agent select
+cursor++ agent select
 ```
 
-### Sharing Rules with Team
+### Viewing and Using Agents
 
 ```bash
-# Make changes to rules
-# ...
+# List available agents
+cursor++ agent
 
-# Merge changes to main location and sync to all projects
-crules merge
+# Get detailed information about an agent
+cursor++ agent info doc-syncer
 
-# In another project, get the latest rules
-cd ../another-project
-crules sync
+# Select a specific agent
+cursor++ agent select
 ```
 
-### Cleaning Up Projects
+## Using Agents in Cursor Chat
 
-```bash
-# List all registered projects
-crules list
+The most common way to use agents is directly in the Cursor chat interface:
 
-# Remove non-existent projects
-crules clean
-
-# Verify cleanup
-crules list
 ```
+@doc-syncer.mdc I need help synchronizing documentation between my codebase and website
+```
+
+This approach allows you to immediately invoke the agent's capabilities without using command-line tools.
 
 ## See Also
 
-- [Configuration](./configuration.md) for details on configuring crules
+- [Configuration](./configuration.md) for details on configuring cursor++
 - [Agent System](./agents.md) for information on working with agents
 - [Examples](../examples/) for usage examples and workflows
 

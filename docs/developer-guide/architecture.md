@@ -1,16 +1,16 @@
 ---
-version: v0.1.0
+version: v1.0.0
 last_updated: 2023-03-29
-applies_to: crules v0.1.0+
+applies_to: cursor++ v1.0.0+
 ---
 
 # Architecture
 
-> 🏗️ This document describes the high-level architecture of the crules tool and how its components interact.
+> 🏗️ This document describes the high-level architecture of the cursor++ tool and how its components interact.
 
 ## Overview
 
-The crules tool is designed with a modular architecture that separates concerns between different components. The architecture follows these key principles:
+The cursor++ tool is designed with a modular architecture that separates concerns between different components. The architecture follows these key principles:
 
 1. **Command-driven interface**: Core functionality is exposed through a hierarchical command structure
 2. **Separation of concerns**: Each component has a specific responsibility
@@ -20,9 +20,9 @@ The crules tool is designed with a modular architecture that separates concerns 
 ## System Architecture
 
 ![Architecture Overview](../assets/images/diagrams/architecture-overview.png)
-*Figure 1: High-level architecture of the crules system*
+*Figure 1: High-level architecture of the cursor++ system*
 
-The system is organized into several interconnected components that work together to provide the functionality of crules. The interactive diagram below represents the high-level architecture with color-coded components:
+The system is organized into several interconnected components that work together to provide the functionality of cursor++. The interactive diagram below represents the high-level architecture with color-coded components:
 
 ```mermaid
 graph TD
@@ -30,8 +30,6 @@ graph TD
     
     subgraph Core["🔧 Core System"]
         CLI --> Init[Initialize]:::command
-        CLI --> Sync[Synchronize]:::command
-        CLI --> Merge[Merge]:::command
         CLI --> Config[Configure]:::command
         CLI --> AgentCmd[Agent Commands]:::command
         
@@ -39,16 +37,13 @@ graph TD
         AgentCmd --> AgentSelect[Select Agent]:::agentOp
         AgentCmd --> AgentInfo[Agent Info]:::agentOp
         
-        Init --> Registry[(Project Registry)]:::registry
-        Sync --> Registry
-        Merge --> Registry
+        Init --> AgentRegistry[(Agent Registry)]:::registry
         
-        Registry --> FileOps[File Operations]:::fileOp
+        AgentRegistry --> FileOps[File Operations]:::fileOp
     end
     
     subgraph Storage["💾 Storage"]
-        MainLoc[("📁 Main Rules\nLocation")]:::storage <--> FileOps
-        Projects[("📁 Project\nRules")]:::storage <--> FileOps
+        AgentFiles[("📁 Agent\nDefinitions")]:::storage <--> FileOps
         ConfigFile[("⚙️ Configuration\nFile")]:::storage <--> Config
     end
     
@@ -102,10 +97,9 @@ The core system implements the main functionality of the tool:
 
 | Component | Responsibility | Key Functions |
 |-----------|----------------|---------------|
-| **Project Registry** | Manages project information | Register, list, and validate projects |
-| **Rule Management** | Handles rule files | Parse, validate, and synchronize rules |
+| **Agent Registry** | Manages agent information | Discover, list, and select agents |
 | **Configuration** | Manages user settings | Load, save, and validate configuration |
-| **File Operations** | Handles file system interaction | Copy, compare, and synchronize files |
+| **File Operations** | Handles file system interaction | Read, parse, and validate agent files |
 
 ### Agent System
 
@@ -113,14 +107,14 @@ The core system implements the main functionality of the tool:
 *Figure 4: Agent System architecture*
 
 The Agent System is a specialized component that:
-- Discovers available agents from rule files
+- Discovers available agents from agent definition files
 - Manages agent metadata and capabilities
 - Provides selection and loading of agents
 - Handles agent persistence
 
 The Agent System has the following subcomponents:
 - **Registry**: Manages the collection of available agents
-- **Parser**: Extracts agent information from rule files
+- **Parser**: Extracts agent information from agent definition files
 - **Selector**: Provides an interactive UI for agent selection
 - **Loader**: Loads agent definitions for use
 
@@ -129,10 +123,10 @@ The detailed flow of the agent selection process is illustrated in the diagram b
 ```mermaid
 flowchart TD
     %% Define the main flow
-    Start([🚀 Start]):::start --> Command["💻 crules agent select"]:::command
+    Start([🚀 Start]):::start --> Command["💻 cursor++ agent select"]:::command
     Command --> LoadConfig["⚙️ Load Configuration"]:::process
-    LoadConfig --> ScanRules["🔍 Scan for Rule Files"]:::process
-    ScanRules --> ExtractMeta["📋 Extract Agent Metadata"]:::process
+    LoadConfig --> ScanAgents["🔍 Scan for Agent Files"]:::process
+    ScanAgents --> ExtractMeta["📋 Extract Agent Metadata"]:::process
     ExtractMeta --> BuildMenu["🖥️ Build Selection Menu"]:::process
     BuildMenu --> DisplayUI["👁️ Display Terminal UI"]:::ui
     
@@ -151,11 +145,11 @@ flowchart TD
     ExitNoChange --> Exit([🚪 Exit]):::end
     
     %% Error handling branch
-    ScanRules -->|"No Rules Found"| NoRules["⚠️ No Rules Found"]:::error
-    NoRules --> CreatePrompt["❓ Create Rules?"]:::decision
-    CreatePrompt -->|"Yes"| InitRules["📝 Initialize Rules"]:::process
+    ScanAgents -->|"No Agents Found"| NoAgents["⚠️ No Agents Found"]:::error
+    NoAgents --> CreatePrompt["❓ Initialize Agents?"]:::decision
+    CreatePrompt -->|"Yes"| InitAgents["📝 Initialize Agents"]:::process
     CreatePrompt -->|"No"| Exit
-    InitRules --> Command
+    InitAgents --> Command
     
     %% Styles
     classDef start fill:#4CAF50,stroke:#45a049,stroke-width:2px,color:white,font-weight:bold
@@ -187,22 +181,21 @@ flowchart TD
 
 ### Storage Layer
 
-The storage layer manages the persistence of rules and configuration:
+The storage layer manages the persistence of agents and configuration:
 
 | Storage Location | Purpose | Content |
 |------------------|---------|---------|
-| **Main Rules Location** | Central repository of rules | All rule files (.mdc) |
-| **Project Rules** | Project-specific rules | Local copies of rules |
-| **Configuration File** | User settings | JSON configuration data |
+| **Agent Definitions** | Store agent definitions | Agent definition files (.mdc) |
+| **Configuration File** | User settings | Environment variables configuration data |
 
 ## Data Flow
 
-### Rule Synchronization Flow
+### Agent Initialization Flow
 
-![Synchronization Flow](../assets/images/diagrams/rule-sync-flow.png)
-*Figure 6: Rule synchronization flow between main location and projects*
+![Initialization Flow](../assets/images/diagrams/agent-init-flow.png)
+*Figure 6: Agent initialization flow*
 
-The synchronization process follows a sequential flow as illustrated in this diagram:
+The agent initialization process follows a sequential flow as illustrated in this diagram:
 
 ```mermaid
 sequenceDiagram
@@ -210,78 +203,71 @@ sequenceDiagram
     participant CLI as 🖥️ CLI
     participant Core as 🔧 Core System
     participant MainLoc as 📁 Main Location
-    participant ProjLoc as 📁 Project Location
-
+    
     %% Define styles using note annotations
     note over User: fill:#ff9966,stroke:#ff6600
     note over CLI: fill:#66b3ff,stroke:#0066cc
     note over Core: fill:#cc99ff,stroke:#9933ff
     note over MainLoc: fill:#99ff99,stroke:#33cc33
-    note over ProjLoc: fill:#99ff99,stroke:#33cc33
     
     %% Sequence starts
-    User->>+CLI: 🚀 Execute Sync Command
+    User->>+CLI: 🚀 Execute Init Command
     CLI->>+Core: 📥 Process Command
     
     %% Loading phase
     Core->>Core: 🔍 Load Configuration
     
-    %% Validation phase
-    alt Main Location Not Set
-        Core-->>CLI: ❌ Error: Main Location Not Set
-        CLI-->>User: ❌ Display Error
-    else Main Location Set
-        Core->>+MainLoc: 📂 Scan Files
-        MainLoc-->>-Core: 📋 File List & Metadata
-        Core->>+ProjLoc: 📂 Scan Files
-        ProjLoc-->>-Core: 📋 File List & Metadata
-        
-        %% Comparison phase
-        Core->>Core: 🔍 Compare File Lists
-        
-        %% Synchronization phase
-        loop For Each Updated File
-            Core->>+MainLoc: 📤 Read File
-            MainLoc-->>-Core: 📄 File Content
-            Core->>+ProjLoc: 📥 Write File
-            ProjLoc-->>-Core: ✅ Write Confirmation
-        end
-        
-        %% Completion phase
-        Core-->>-CLI: 📊 Sync Results
-        CLI-->>-User: ✅ Display Success
+    %% Main location setup
+    Core->>User: ❓ Prompt for Main Location
+    
+    alt Clone from Git Repository
+        User->>Core: 🔗 Provide Git URL
+        Core->>+MainLoc: 📦 Clone Repository
+        MainLoc-->>-Core: ✅ Clone Confirmation
+    else Create Empty Directory
+        User->>Core: 📁 Choose Empty Directory
+        Core->>+MainLoc: 🆕 Create Directory Structure
+        MainLoc-->>-Core: ✅ Creation Confirmation
     end
     
+    %% Agent loading
+    Core->>+MainLoc: 📂 Scan Files
+    MainLoc-->>-Core: 📋 Agent File List
+    
+    %% Completion phase
+    Core-->>-CLI: 📊 Init Results
+    CLI-->>-User: ✅ Display Success
+    
     %% Final confirmation
-    Note over User,ProjLoc: 🎉 Synchronization Complete!
+    Note over User,MainLoc: 🎉 Initialization Complete!
 ```
 
-*Figure 7: Sequence diagram showing the synchronization workflow*
+*Figure 7: Sequence diagram showing the initialization workflow*
 
-The synchronization process follows these steps:
+The initialization process follows these steps:
 
 1. **Initialization**:
-   - User invokes `crules sync` command
+   - User invokes `cursor++ init` command
    - System loads configuration
-   - System identifies main and project locations
+   - System prompts user for main location setup options
 
-2. **Comparison**:
-   - System scans both locations
-   - Files are compared based on existence and modification time
-   - System generates a list of files to update
+2. **Main Location Setup**:
+   - User chooses to create an empty directory or clone from Git
+   - System sets up the main location based on user choice
+   - Directory structure is created for agent definitions
 
-3. **Synchronization**:
-   - Files are copied from source to destination
-   - System updates file attributes as needed
-   - System logs the synchronization actions
+3. **Agent Loading**:
+   - System scans the main location for agent definition files
+   - Agents are loaded and validated
+   - System registers the available agents
 
 4. **Reporting**:
-   - System summarizes the changes made
-   - User receives confirmation of synchronization
+   - System summarizes the initialization results
+   - User receives confirmation of successful initialization
 
 <details>
-  <summary>📺 View Synchronization Process</summary>
-  <img src="../assets/gifs/workflows/sync-process.gif" alt="Synchronization process" width="600">
+  <summary>📺 View Initialization Process</summary>
+  <img src="../assets/gifs/workflows/init-process.gif" alt="Initialization process" width="600">
 </details>
 
 ### Agent Selection Flow
@@ -289,7 +275,7 @@ The synchronization process follows these steps:
 The agent selection process follows this flow:
 
 1. **Initialization**:
-   - User invokes `crules agent select` command
+   - User invokes `cursor++ agent select` command
    - System loads agent registry
    - System identifies available agents
 
@@ -311,7 +297,7 @@ The agent selection process follows this flow:
 ### Packaging Structure
 
 ```
-crules/
+cursor++/
 ├── cmd/
 │   └── main.go        # Entry point
 ├── internal/

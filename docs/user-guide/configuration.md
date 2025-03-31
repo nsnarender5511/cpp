@@ -1,80 +1,84 @@
 # Configuration Guide
 
-> ⚙️ This guide explains how to configure crules to match your workflow and preferences.
+> ⚙️ This guide explains how to configure cursor++ to match your workflow and preferences.
 
 ## Configuration Overview
 
-Crules uses a configuration system that allows you to customize its behavior. Configuration settings define:
+cursor++ uses a configuration system that allows you to customize its behavior. Configuration settings define:
 
-- Where your rules are stored
-- How rules are synchronized
+- Where your agent definitions are stored
 - How the agent system behaves
 - Visual and formatting preferences
 
 ## Configuration File
 
-Crules automatically creates a configuration file at:
+cursor++ automatically creates a configuration file at:
 
-- **macOS/Linux**: `~/.config/crules/config.json`
-- **Windows**: `%APPDATA%\crules\config.json`
+- **macOS/Linux**: `~/.config/cursor++/config.env`
+- **Windows**: `%APPDATA%\cursor++\config.env`
 
-This file is created when you first run crules. You can edit it directly or use the command-line interface to modify settings.
+This file is created when you first run cursor++. You can edit it directly or use the command-line interface to modify settings.
 
 ### Example Configuration File
 
-```json
-{
-  "mainLocation": "/Users/username/.cursor/rules",
-  "rulesDirName": ".cursor/rules",
-  "registryFileName": "registry.json",
-  "lastSelectedAgent": "wizard",
-  "dirPermission": 493,
-  "filePermission": 420,
-  "theme": {
-    "useColoredOutput": true,
-    "accentColor": "cyan"
-  }
-}
+```env
+AGENTS_DIR_NAME=agents
+REGISTRY_FILE_NAME=registry.json
+RULES_DIR_NAME=.cursor/rules
+DIR_PERMISSION=755
+FILE_PERMISSION=644
+MULTI_AGENT_ENABLED=true
+LAST_SELECTED_AGENT=wizard
 ```
 
 ## Core Settings
 
-### Main Location
-
-The `mainLocation` setting defines the central location where all your rules are stored. This is the source of truth for rule synchronization.
-
-```json
-"mainLocation": "/Users/username/.cursor/rules"
-```
-
-The main location is typically set during your first run of `crules init`. You can change it manually in the configuration file.
-
 ### Rules Directory Name
 
-The `rulesDirName` setting defines the directory name used to store rules within each project.
+The `RULES_DIR_NAME` setting defines the directory name used to store rules within each project.
 
-```json
-"rulesDirName": ".cursor/rules"
+```env
+RULES_DIR_NAME=.cursor/rules
 ```
 
 By default, this is set to `.cursor/rules`, which creates a hidden directory in your project root. This directory is typically added to `.gitignore`.
 
-### Registry File Name
+### Agents Directory Name
 
-The `registryFileName` setting defines the name of the file used to store the project registry.
+The `AGENTS_DIR_NAME` setting defines the directory name within the rules directory where agent definitions are stored.
 
-```json
-"registryFileName": "registry.json"
+```env
+AGENTS_DIR_NAME=agents
 ```
 
-The registry file keeps track of all projects that use crules.
+This is where the agent definition files (`.mdc`) are stored.
+
+### Registry File Name
+
+The `REGISTRY_FILE_NAME` setting defines the name of the file used to store the agent registry.
+
+```env
+REGISTRY_FILE_NAME=registry.json
+```
+
+The registry file keeps track of available agents and their metadata.
+
+### Multi-Agent Mode
+
+The `MULTI_AGENT_ENABLED` setting controls whether multiple agents can be used simultaneously.
+
+```env
+MULTI_AGENT_ENABLED=true
+```
+
+When enabled, you can reference multiple agents in your conversations.
 
 ### Last Selected Agent
 
-The `lastSelectedAgent` setting stores the ID of the last agent you selected.
+The `LAST_SELECTED_AGENT` setting stores the ID of the last agent you selected.
 
-```json
-"lastSelectedAgent": "wizard"
+```env
+LAST_SELECTED_AGENT=wizard
 ```
 
 This is used to remember your last selection when using the agent system.
@@ -83,78 +87,55 @@ This is used to remember your last selection when using the agent system.
 
 ### Directory Permission
 
-The `dirPermission` setting defines the permission mode used when creating directories.
+The `DIR_PERMISSION` setting defines the permission mode used when creating directories.
 
-```json
-"dirPermission": 493
+```env
+DIR_PERMISSION=755
 ```
 
 This value is equivalent to `0755` in octal notation (read/write/execute for owner, read/execute for group and others).
 
 ### File Permission
 
-The `filePermission` setting defines the permission mode used when creating files.
+The `FILE_PERMISSION` setting defines the permission mode used when creating files.
 
-```json
-"filePermission": 420
+```env
+FILE_PERMISSION=644
 ```
 
 This value is equivalent to `0644` in octal notation (read/write for owner, read for group and others).
 
-## Theme Settings
-
-### Color Output
-
-The `useColoredOutput` setting enables or disables colored terminal output.
-
-```json
-"theme": {
-  "useColoredOutput": true
-}
-```
-
-Set this to `false` if you prefer plain text output without ANSI color codes.
-
-### Accent Color
-
-The `accentColor` setting defines the primary color used for highlighting in the terminal UI.
-
-```json
-"theme": {
-  "accentColor": "cyan"
-}
-```
-
-Available options include:
-- `"cyan"`
-- `"green"`
-- `"blue"`
-- `"red"`
-- `"yellow"`
-- `"magenta"`
-- `"white"`
-
 ## Environment Variables
 
-Crules respects the following environment variables:
+cursor++ respects the following environment variables:
 
 | Variable | Description |
 |----------|-------------|
-| `APP_NAME` | Overrides the application name (`crules` by default) |
+| `APP_NAME` | Overrides the application name (`cursor++` by default) |
 | `COLUMNS` | Defines the terminal width (useful for testing) |
 | `NO_COLOR` | Disables colored output when set to any value |
+| `AGENTS_DIR_NAME` | Overrides the agents directory name |
+| `REGISTRY_FILE_NAME` | Overrides the registry file name |
+| `RULES_DIR_NAME` | Overrides the rules directory name |
+| `DIR_PERMISSION` | Overrides the directory permission mode (in octal) |
+| `FILE_PERMISSION` | Overrides the file permission mode (in octal) |
+| `MULTI_AGENT_ENABLED` | Controls multi-agent mode (`true`, `1`, or `yes` to enable) |
+| `LAST_SELECTED_AGENT` | Sets the last selected agent ID |
 
 Example:
 
 ```bash
 # Override the application name
-export APP_NAME=custom-crules
+export APP_NAME=custom-cursor++
 
 # Set terminal width
 export COLUMNS=120
 
 # Disable colored output
 export NO_COLOR=1
+
+# Enable multi-agent mode
+export MULTI_AGENT_ENABLED=true
 ```
 
 ## Configuration Strategies
@@ -163,136 +144,42 @@ export NO_COLOR=1
 
 The default configuration is stored per user, ensuring each user can have their own settings.
 
-### Project-Specific Overrides
+### Command-Line Flags
 
-You can create a project-specific configuration by placing a `crules.config.json` file in your project root directory. This will override the global settings when working in that project.
+You can override certain configuration options using command-line flags:
 
-Example `crules.config.json`:
-
-```json
-{
-  "rulesDirName": "custom-rules-dir",
-  "theme": {
-    "accentColor": "green"
-  }
-}
+```bash
+# Enable multi-agent mode for the current session
+cursor++ --multi-agent init
 ```
-
-Project-specific configuration only overrides the settings it specifies; all other settings are inherited from the global configuration.
 
 ## Advanced Configuration
 
-### Registry Management
+### Agent Definitions
 
-The project registry is stored in a JSON file at:
+Agent definition files (`.mdc`) are stored in the agents directory within your rules directory. These files define the capabilities and behavior of each agent.
 
-- **macOS/Linux**: `~/.local/share/crules/registry.json`
-- **Windows**: `%APPDATA%\crules\registry.json`
+Example agent definition structure:
 
-This file contains a list of all projects that have been registered with crules. You can manually edit this file to:
-
-- Remove specific projects
-- Change project paths
-- Reset the registry
-
-Example registry.json:
-
-```json
-{
-  "projects": [
-    "/Users/username/projects/project1",
-    "/Users/username/projects/project2",
-    "/Users/username/projects/project3"
-  ]
-}
 ```
+# 🧙‍♂️ Technical Wizard Agent Prompt
 
-### Log Settings
+## 🎯 Role:
+You are a wise **Technical Wizard Agent**, a versatile technical expert...
 
-Logs are stored in:
-
-- **macOS/Linux**: `~/.local/share/crules/logs/`
-- **Windows**: `%APPDATA%\crules\logs\`
-
-You can control log verbosity using the `--verbose` and `--debug` flags.
-
-## Configuration Examples
-
-### Minimal Configuration
-
-A minimal configuration focuses only on the essential settings:
-
-```json
-{
-  "mainLocation": "/Users/username/.cursor/rules",
-  "rulesDirName": ".cursor/rules"
-}
-```
-
-### Development Configuration
-
-A configuration optimized for development:
-
-```json
-{
-  "mainLocation": "/Users/username/development/rule-repository",
-  "rulesDirName": ".cursor/rules",
-  "registryFileName": "dev-registry.json",
-  "theme": {
-    "useColoredOutput": true,
-    "accentColor": "blue"
-  }
-}
-```
-
-### Team Configuration
-
-A configuration optimized for team use:
-
-```json
-{
-  "mainLocation": "/team/shared/rules",
-  "rulesDirName": ".cursor/team-rules",
-  "registryFileName": "team-registry.json",
-  "theme": {
-    "useColoredOutput": true,
-    "accentColor": "green"
-  }
-}
-```
-
-## Troubleshooting Configuration
-
-### Common Issues
-
-- **Rules not syncing**: Check if your `mainLocation` is correct and accessible
-- **Permission errors**: Verify the `dirPermission` and `filePermission` settings
-- **Registry not updating**: Ensure the registry file is writable
-
-### Resetting Configuration
-
-To reset your configuration to default values, delete the configuration file and run any crules command. A new configuration file will be created with default values.
-
-```bash
-# On macOS/Linux
-rm ~/.config/crules/config.json
-
-# On Windows
-del %APPDATA%\crules\config.json
-
-# Run any command to regenerate the config
-crules --version
+## 🛠️ Core Responsibilities:
+...
 ```
 
 ## See Also
 
-- [Command Reference](./commands.md) for details on all available commands
-- [Examples](../examples/) for usage examples and workflows
-- [Developer Guide](../developer-guide/) for information on extending crules
+- [Commands](./commands.md) for details on cursor++ commands
+- [Agent System](./agents.md) for information on working with agents
+- [Building from Source](../developer-guide/building.md) for developer configuration
 
 ## Navigation
 
-- Previous: [Getting Started](./getting-started.md)
+- Previous: [Installation](./installation.md)
 - Next: [Commands](./commands.md)
 - Up: [User Guide](../README.md#user-guide)
 - Home: [Documentation Home](../README.md)

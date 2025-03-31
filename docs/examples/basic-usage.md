@@ -1,10 +1,10 @@
 # Basic Usage Examples
 
-> 🧪 This guide provides practical examples of common crules workflows.
+> 🧪 This guide provides practical examples of common cursor++ workflows.
 
 ## Overview
 
-The examples in this guide demonstrate real-world scenarios and common tasks you'll encounter when using crules. Each example includes:
+The examples in this guide demonstrate real-world scenarios and common tasks you'll encounter when using cursor++. Each example includes:
 
 - A brief description of the task
 - Step-by-step instructions
@@ -13,11 +13,11 @@ The examples in this guide demonstrate real-world scenarios and common tasks you
 
 ## Example 1: Setting Up a New Project
 
-This example shows how to initialize a new project with rules from your main location.
+This example shows how to initialize a new project with agents.
 
 ### Scenario
 
-You're starting a new project and want to set it up with your existing rules.
+You're starting a new project and want to set it up with cursor++ agents.
 
 ### Steps
 
@@ -32,149 +32,35 @@ You're starting a new project and want to set it up with your existing rules.
    git init
    ```
 
-3. Initialize crules:
+3. Initialize cursor++:
    ```bash
-   crules init
+   cursor++ init
    ```
 
-4. Verify initialization:
+4. Verify initialization by checking the agents list:
    ```bash
-   ls -la .cursor/rules
+   cursor++ agent
    ```
 
 ### Expected Output
 
 ```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
+✨ cursor++ - Cursor Agent Manager ✨
 
-Initializing rules in /Users/username/projects/new-project/.cursor/rules...
-Registering project in registry...
-Updating .gitignore...
+Initializing directory with cursor++ agents...
 
-✓ Successfully initialized rules in /Users/username/projects/new-project/.cursor/rules
+✓ Successfully initialized with cursor++ agents
+
+Found 1 available agent in the current directory.
+Run 'cursor++ agent' to see available agents.
 ```
 
 ### Tips
 
-- If you're using version control, make sure `.cursor/` is in your `.gitignore`
-- You can initialize multiple projects and keep them all in sync with your main rules location
+- If you're using version control, make sure to add your preferred agent configuration to the repository
+- You can use `cursor++ agent select` to set a default agent for your project
 
-## Example 2: Syncing Rules across Projects
-
-This example demonstrates how to keep rules in sync between multiple projects.
-
-### Scenario
-
-You have multiple projects and want to ensure they all have the same latest rules.
-
-### Steps
-
-1. Navigate to your project:
-   ```bash
-   cd ~/projects/project-one
-   ```
-
-2. Sync the latest rules from your main location:
-   ```bash
-   crules sync
-   ```
-
-3. Verify that the rules are up to date:
-   ```bash
-   ls -la .cursor/rules
-   ```
-
-### Expected Output
-
-```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
-
-Syncing rules from main location...
-
-✓ Successfully synced rules from main location
-```
-
-### Tips
-
-- Run `crules sync` regularly to ensure your projects have the latest rules
-- You can automate this with a script or git hook
-
-## Example 3: Creating a Custom Agent
-
-This example shows how to create a custom agent for a specific purpose.
-
-### Scenario
-
-You want to create a custom agent that specializes in code review for your team's coding standards.
-
-### Steps
-
-1. Navigate to your main rules location (usually `~/.cursor/rules`):
-   ```bash
-   cd ~/.cursor/rules
-   ```
-
-2. Create a new agent definition file:
-   ```bash
-   touch code-review-agent.mdc
-   ```
-
-3. Edit the file with your preferred editor and add content:
-   ```markdown
-   # 🔍 Code Review Agent
-
-   ## 🎯 Role:
-   Specialized agent for reviewing code according to team standards
-
-   ## 📝 Description:
-   This agent specializes in reviewing code according to our team's coding standards,
-   focusing on readability, maintainability, and performance.
-
-   ## ✅ Capabilities:
-
-   ### ✅ Style Guide Enforcement
-   Ensures code adheres to the team's style guide, including formatting,
-   naming conventions, and documentation standards.
-
-   ### ✅ Performance Review
-   Identifies potential performance issues such as inefficient algorithms,
-   unnecessary computations, and resource leaks.
-
-   ### ✅ Best Practices
-   Recommends industry best practices and design patterns appropriate for
-   the specific context.
-
-   ## 📋 Instructions:
-   When reviewing code, I will:
-   1. Check for adherence to the team's style guide
-   2. Look for potential performance issues
-   3. Suggest improvements based on best practices
-   4. Provide clear explanations for all recommendations
-   ```
-
-4. Make the agent available to all your projects:
-   ```bash
-   crules merge
-   ```
-
-### Expected Output
-
-```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
-
-Merging rules to main location...
-Syncing changes to 3 registered projects...
-
-✓ Successfully merged rules to main location
-```
-
-### Tips
-
-- Test your agent definition before sharing it with your team
-- Use emojis in agent names to make them more distinct and memorable
-- Include detailed instructions to get consistent results
-
-## Example 4: Using the Agent Selection Interface
+## Example 2: Using the Agent Selection Interface
 
 This example demonstrates how to interactively select and use agents.
 
@@ -189,23 +75,34 @@ You want to choose an agent for a specific task from the available agents.
    cd ~/projects/my-project
    ```
 
-2. Open the agent selection interface:
+2. List available agents:
    ```bash
-   crules agent select
+   cursor++ agent
    ```
 
-3. Use arrow keys to navigate to your desired agent and press Enter to select it.
+3. Select an agent:
+   ```bash
+   cursor++ agent select
+   ```
+
+4. Use arrow keys to navigate to your desired agent and press Enter to select it.
 
 ### Expected Output
 
+For `cursor++ agent`:
 ```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
+✨ cursor++ - Cursor Agent Manager ✨
+
+Available agents:
+1. 🔄 Document Syncer Agent
+```
+
+For `cursor++ agent select`:
+```
+✨ cursor++ - Cursor Agent Manager ✨
 
 Select an agent:
-> 1. 🧙‍♂️ Technical Wizard Agent
-  2. 🔍 Code Review Agent
-  3. 📝 Feature Planner Agent
-  4. 🛠️ Fix Planner Agent
+> 1. 🔄 Document Syncer Agent
 
 [Use arrow keys to navigate, Enter to select]
 ```
@@ -213,125 +110,117 @@ Select an agent:
 After selection:
 
 ```
-Selected agent: 🔍 Code Review Agent
+Selected agent: 🔄 Document Syncer Agent
 
 Agent details:
-  ID:          code-review-agent
-  Name:        🔍 Code Review Agent
+  ID:          doc-syncer
+  Name:        🔄 Document Syncer Agent
   Version:     1.0
 
 Description:
-  This agent specializes in reviewing code according to our team's coding standards,
-  focusing on readability, maintainability, and performance.
+  This agent specializes in synchronizing documentation between codebases
+  and documentation systems, ensuring consistency and up-to-date information.
 
 Agent saved as default.
 ```
 
 ### Tips
 
-- Use `crules agent info <id>` to see agent details without selecting it
+- Use `cursor++ agent info <id>` to see agent details without selecting it
 - The last selected agent is remembered for future use
 - Agent selection works with both string IDs and numeric indices
 
-## Example 5: Importing Rules from a URL
+## Example 3: Getting Agent Information
 
-This example shows how to import agent rules from a URL.
+This example shows how to view detailed information about a specific agent.
 
 ### Scenario
 
-You've found a useful agent online and want to import it into your rules collection.
+You want to learn more about an agent's capabilities before selecting it for your task.
 
 ### Steps
 
-1. Import the agent from a URL:
+1. First, list available agents to find the ID or index:
    ```bash
-   crules import https://cursor.directory/example-agent
+   cursor++ agent
    ```
 
-2. Confirm the import when prompted.
-
-3. Verify the agent was imported:
+2. Get detailed information about a specific agent:
    ```bash
-   crules agent
+   cursor++ agent info doc-syncer
+   ```
+   
+   Or by index:
+   ```bash
+   cursor++ agent info 1
    ```
 
 ### Expected Output
 
 ```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
+✨ cursor++ - Cursor Agent Manager ✨
 
-Fetching rules from https://cursor.directory/example-agent...
-Parsing rules...
+Agent details:
+  ID:          doc-syncer
+  Name:        🔄 Document Syncer Agent
+  Version:     1.0
 
-Found 1 rule to import:
-  1. Example Agent - An example agent for crules
+Description:
+  This agent specializes in synchronizing documentation between codebases
+  and documentation systems, ensuring consistency and up-to-date information.
 
-Do you want to import this rule? [y/N] y
-
-Storing rules to main location...
-
-✓ Successfully imported 1 rule
+Capabilities:
+  ✅ Context Detection and Analysis
+  ✅ Codebase-to-Docs Synchronization  
+  ✅ Website Support File Synchronization
+  ✅ Conflict Resolution
+  
+Instructions:
+  When synchronizing documentation, I will:
+  1. Determine execution context (codebase or website)
+  2. Map documentation files to website references
+  3. Detect changes between contexts
+  4. Update documentation while maintaining cross-references
 ```
 
 ### Tips
 
-- You can import multiple agents from different sources
-- Always review imported agents before using them
-- Use caution when importing agents from untrusted sources
+- Use this command to explore the capabilities of the agent
+- Review the agent's instructions to understand how it processes requests
 
-## Example 6: Managing Projects
+## Example 4: Using the Document Syncer Agent in Cursor
 
-This example demonstrates how to manage registered projects.
+This example shows how to use the Document Syncer agent directly in the Cursor chat interface.
 
 ### Scenario
 
-You want to see which projects are registered with crules and clean up any that no longer exist.
+You need to synchronize documentation between your codebase and documentation system.
 
 ### Steps
 
-1. List all registered projects:
-   ```bash
-   crules list
+1. In the Cursor IDE, open your project with documentation files.
+
+2. In the chat interface, reference the agent using the `@` syntax:
+   ```
+   @doc-syncer.mdc I need to check for inconsistencies between our code and documentation
    ```
 
-2. Clean up non-existent projects:
-   ```bash
-   crules clean
-   ```
+3. The agent will analyze your codebase and documentation, then provide a synchronization plan.
 
-3. Verify the cleanup:
-   ```bash
-   crules list
+4. Follow up with specific instructions:
+   ```
+   @doc-syncer.mdc Please update the README.md file to match our current implementation
    ```
 
 ### Expected Output
 
-For `crules list`:
-
-```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
-
-Registered projects (3):
-  1. /Users/username/projects/project1
-  2. /Users/username/projects/project2
-  3. /Users/username/old-project (not found)
-
-⚠️ 1 project(s) could not be found. Run 'crules clean' to remove them.
-```
-
-For `crules clean`:
-
-```
-✨ crules - Cursor Rules Manager v0.1.0 ✨
-
-✓ Successfully removed 1 non-existent project(s) from registry.
-```
+The agent will respond in the chat interface with its analysis and proposed changes. You can review and approve these changes before they're applied to your documentation.
 
 ### Tips
 
-- Run `crules clean` periodically to keep your registry clean
-- Use `crules list` to quickly see all your registered projects
-- When deleting a project, run `crules clean` to remove it from the registry
+- Be specific about which files need synchronization
+- Provide context about the codebase and documentation structure
+- Ask the agent to create a synchronization plan before making changes
 
 ## Navigation
 

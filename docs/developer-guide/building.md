@@ -1,12 +1,12 @@
 # Building from Source
 
-> 🔨 This guide explains how to build crules from source, set up a development environment, and contribute to the project.
+> 🔨 This guide explains how to build cursor++ from source, set up a development environment, and contribute to the project.
 
 ## Prerequisites
 
-Before building crules, ensure you have the following prerequisites installed:
+Before building cursor++, ensure you have the following prerequisites installed:
 
-- **Go** (version 1.19 or later)
+- **Go** (version 1.23 or later)
 - **Git**
 - **Make** (optional, but recommended)
 
@@ -40,15 +40,15 @@ Verify that Go is installed correctly:
 go version
 ```
 
-Ensure you're using Go 1.19 or later.
+Ensure you're using Go 1.23 or later.
 
 ## Getting the Source Code
 
-Clone the crules repository:
+Clone the cursor++ repository:
 
 ```bash
-git clone https://github.com/org/crules.git
-cd crules
+git clone https://github.com/cursor-ai/cursor-plus-plus.git
+cd cursor-plus-plus
 ```
 
 ## Project Structure
@@ -56,9 +56,9 @@ cd crules
 The project follows a standard Go project layout:
 
 ```
-crules/
+cursor++/
 ├── cmd/                 # Command-line application entry points
-│   └── crules/         # Main application
+│   └── main.go         # Main application
 ├── internal/            # Private application code
 │   ├── agent/          # Agent system implementation
 │   ├── core/           # Core functionality
@@ -66,10 +66,9 @@ crules/
 │   ├── ui/             # Terminal UI components
 │   ├── utils/          # Utility functions
 │   └── version/        # Version information
-├── pkg/                 # Libraries that can be used by external applications
 ├── docs/                # Documentation
 ├── test/                # Test data and scripts
-└── scripts/             # Build and maintenance scripts
+└── .github/             # GitHub workflows and templates
 ```
 
 ## Building the Application
@@ -98,20 +97,20 @@ If you don't have Make installed, you can use Go commands directly:
 
 ```bash
 # Build the application
-go build -o crules ./cmd/crules
+go build -o cursor++ ./cmd
 
 # Run tests
 go test ./...
 
 # Install locally
-go install ./cmd/crules
+go install ./cmd
 ```
 
 ## Development Environment Setup
 
 ### Go Modules
 
-crules uses Go modules for dependency management. To initialize modules:
+cursor++ uses Go modules for dependency management. To initialize modules:
 
 ```bash
 # Initialize dependencies (this is usually not needed as go.mod exists)
@@ -159,13 +158,13 @@ Go supports cross-compilation for different platforms:
 
 ```bash
 # Build for macOS
-GOOS=darwin GOARCH=amd64 go build -o crules-darwin-amd64 ./cmd/crules
+GOOS=darwin GOARCH=amd64 go build -o cursor++-darwin-amd64 ./cmd
 
 # Build for Linux
-GOOS=linux GOARCH=amd64 go build -o crules-linux-amd64 ./cmd/crules
+GOOS=linux GOARCH=amd64 go build -o cursor++-linux-amd64 ./cmd
 
 # Build for Windows
-GOOS=windows GOARCH=amd64 go build -o crules-windows-amd64.exe ./cmd/crules
+GOOS=windows GOARCH=amd64 go build -o cursor++-windows-amd64.exe ./cmd
 ```
 
 ### Building Release Binaries
@@ -174,7 +173,19 @@ To build optimized release binaries:
 
 ```bash
 # Optimized build with stripped symbols
-go build -ldflags="-s -w" -o crules ./cmd/crules
+go build -ldflags="-s -w" -o cursor++ ./cmd
+```
+
+### Using GoReleaser
+
+cursor++ uses GoReleaser for automated releases. To create a local build with GoReleaser:
+
+```bash
+# Install GoReleaser
+go install github.com/goreleaser/goreleaser@latest
+
+# Build a snapshot release
+goreleaser build --snapshot --rm-dist
 ```
 
 ## Running and Testing
@@ -185,10 +196,10 @@ After building, you can run the application:
 
 ```bash
 # Run with the built binary
-./crules --version
+./cursor++ --version
 
 # Or use go run
-go run ./cmd/crules --version
+go run ./cmd --version
 ```
 
 ### Running Tests
@@ -200,61 +211,44 @@ Run the test suite:
 go test ./...
 
 # Run tests with coverage
-go test -cover ./...
-
-# Generate coverage report
-go test -coverprofile=coverage.out ./...
+go test ./... -coverprofile=coverage.out
 go tool cover -html=coverage.out
 ```
 
-### Manual Testing
+## Release Process
 
-For manual testing:
+For maintainers, the release process is as follows:
 
-1. Build the application
-2. Create a test directory
-3. Run initialization in the test directory
-4. Test various commands
+1. Ensure all changes for the release are merged to the main branch
+2. Update the version in `internal/version/version.go`
+3. Update the CHANGELOG.md file with release notes
+4. Commit these changes with a message like "release: prepare v1.0.0"
+5. Create and push a new tag:
+   ```bash
+   git tag -a v1.0.0 -m "Release v1.0.0"
+   git push origin v1.0.0
+   ```
+6. The GitHub Action will automatically build and publish the release
 
-```bash
-mkdir -p test/testproject
-cd test/testproject
-../../crules init
-../../crules agent list
-```
+## Troubleshooting
 
-## Debugging
+### Common Build Issues
 
-### Using Delve
+- **Missing dependencies**: Run `go mod tidy` to ensure all dependencies are correctly specified
+- **Go version mismatch**: Ensure you're using Go 1.23 or later
+- **Build failures**: Check your GOPATH and ensure you have write permissions
 
-[Delve](https://github.com/go-delve/delve) is a powerful debugger for Go:
+### Getting Help
 
-```bash
-# Install Delve
-go install github.com/go-delve/delve/cmd/dlv@latest
+If you encounter issues building cursor++, you can:
 
-# Debug the application
-dlv debug ./cmd/crules
-
-# Set a breakpoint
-(dlv) break internal/core/sync.go:100
-
-# Run to breakpoint
-(dlv) continue
-```
-
-### Verbose Logging
-
-Enable verbose and debug logging for troubleshooting:
-
-```bash
-./crules --verbose sync
-./crules --debug agent select
-```
+- Check the [GitHub Issues](https://github.com/cursor-ai/cursor-plus-plus/issues) for known problems
+- Ask for help in the [GitHub Discussions](https://github.com/cursor-ai/cursor-plus-plus/discussions)
+- Review the build logs for specific error messages
 
 ## Dependencies
 
-crules has the following key dependencies:
+cursor++ has the following key dependencies:
 
 | Dependency | Purpose |
 |------------|---------|
@@ -290,7 +284,7 @@ If you encounter permission issues when running or building:
 chmod -R u+w .
 
 # Make sure the binary is executable
-chmod +x crules
+chmod +x cursor++
 ```
 
 ### Module Not Found Errors
@@ -320,9 +314,9 @@ git tag v0.1.0
 git push origin v0.1.0
 
 # Build release binaries
-GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o crules-darwin-amd64 ./cmd/crules
-GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o crules-linux-amd64 ./cmd/crules
-GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o crules-windows-amd64.exe ./cmd/crules
+GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o cursor++-darwin-amd64 ./cmd
+GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o cursor++-linux-amd64 ./cmd
+GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o cursor++-windows-amd64.exe ./cmd
 ```
 
 ## Contributing
