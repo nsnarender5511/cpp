@@ -26,7 +26,7 @@ archives:
 release:
   github:
     owner: nsnarender5511
-    name: cursor++
+    name: crules
   draft: false
   prerelease: auto
   mode: replace  # Replaces existing releases
@@ -38,7 +38,7 @@ brews:
   - repository:
       owner: nsnarender5511
       name: homebrew-tap
-    homepage: https://github.com/nsnarender5511/cpp
+    homepage: https://github.com/nsnarender5511/crules
     description: "A tool for managing and synchronizing Cursor rules across multiple projects"
     license: MIT
     test: |
@@ -48,13 +48,13 @@ scoops:
   - repository:
       owner: nsnarender5511
       name: scoop-bucket
-    homepage: https://github.com/nsnarender5511/cpp
+    homepage: https://github.com/nsnarender5511/crules
     description: "A tool for managing and synchronizing Cursor rules across multiple projects"
     license: MIT
 
 nfpms:
   - vendor: nsnarender5511
-    homepage: https://github.com/nsnarender5511/cpp
+    homepage: https://github.com/nsnarender5511/crules
     maintainer: nsnarender5511
     description: "A tool for managing and synchronizing Cursor rules across multiple projects"
     license: MIT
