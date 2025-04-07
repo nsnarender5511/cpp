@@ -14,7 +14,7 @@ var Version = "1.0.0" // This would be injected at build time
 // PrintBanner displays the application banner
 func PrintBanner() {
 	// Create a new figure with a clearer font
-	fig := figure.NewFigure("cursor++", "big", true)
+	fig := figure.NewFigure("vibe", "big", true)
 
 	// Convert to string and get the banner text
 	bannerText := fig.String()

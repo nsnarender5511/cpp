@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"cursor++/internal/agent"
+	"vibe/internal/agent"
 )
 
 // AgentSelector is a CLI for selecting agents

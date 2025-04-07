@@ -1,4 +1,4 @@
-# cursor++
+# vibe
 
 [![Go](https://github.com/cursor-ai/cursor-plus-plus/workflows/Go/badge.svg)](https://github.com/cursor-ai/cursor-plus-plus/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -7,7 +7,7 @@
 
 ## 📚 Overview
 
-cursor++ is a command-line tool that enhances the Cursor IDE experience by providing a synchronized multi-agent system. It enables multiple specialized AI agents to work together seamlessly, providing:
+vibe is a command-line tool that enhances the Cursor IDE experience by providing a synchronized multi-agent system. It enables multiple specialized AI agents to work together seamlessly, providing:
 
 - 🤖 **Specialized Agents**: Each agent has unique capabilities and expertise
 - 🔄 **Multi-Agent Collaboration**: Agents can share context and work together
@@ -16,11 +16,11 @@ cursor++ is a command-line tool that enhances the Cursor IDE experience by provi
 
 > Advanced rule-based agents for the Cursor editor
 
-cursor++ enhances your Cursor editor experience with customizable rule-based agents.
+vibe enhances your Cursor editor experience with customizable rule-based agents.
 
 ## Features
 
-- Seamless integration with Cursor editor
+- Seamless integration with  editor
 - Customizable agents based on rule sets
 - Extensible architecture for creating your own agents
 - Built-in agents for common development tasks
@@ -41,37 +41,37 @@ cursor++ enhances your Cursor editor experience with customizable rule-based age
 
 1. Clone this repository
 2. Build the binary using `go build`
-3. Move the `cursor++` binary to a location in your PATH.
+3. Move the `vibe` binary to a location in your PATH.
 
-**Note**: These steps will install cursor++ manually on your system.
+**Note**: These steps will install vibe manually on your system.
 
 ### Quick Start Commands
 
 #### Initialize in Current Directory
 ```
-cursor++ init
+vibe init
 ```
 
 #### View Available Agents
 ```
-cursor++ agent
+vibe agent
 ```
 
 #### Select an Agent Interactively
 ```
-cursor++ agent select
+vibe agent select
 ```
 
 #### View Detailed Agent Information
 ```
-cursor++ agent info wizard
+vibe agent info wizard
 ```
 
-**Quick Start Guide**: These commands will help you get started with cursor++ quickly.
+**Quick Start Guide**: These commands will help you get started with vibe quickly.
 
 ## 🤖 Available Agents
 
-cursor++ includes a rich ecosystem of specialized agents:
+vibe includes a rich ecosystem of specialized agents:
 
 | Agent | Icon | Purpose |
 |-------|------|---------|
@@ -118,12 +118,12 @@ cursor++ includes a rich ecosystem of specialized agents:
 
 | Command | Description |
 |---------|-------------|
-| `init` | Initializes the current directory with cursor++ agents |
+| `init` | Initializes the current directory with vibe agents |
 | `agent` | Manages agents (list, select, info) |
 
 ### Configuration File
 
-cursor++ stores its configuration in `~/.config/cursor++/config.json`. This file contains:
+vibe stores its configuration in `~/.config/vibe/config.json`. This file contains:
 
 - Agent preferences
 - System settings
@@ -134,7 +134,7 @@ cursor++ stores its configuration in `~/.config/cursor++/config.json`. This file
 ## 📖 Documentation
 
 - **[Installation](./docs/user-guide/installation.md)**: Detailed installation instructions
-- **[User Guide](./docs/user-guide/)**: Instructions for using cursor++
+- **[User Guide](./docs/user-guide/)**: Instructions for using vibe
 - **[Agent Reference](./docs/user-guide/agents.md)**: Detailed information about available agents
 - **[API Documentation](./docs/api-reference/)**: Reference for programmatic integration
 - **[FAQ](./docs/user-guide/troubleshooting.md)**: Frequently Asked Questions

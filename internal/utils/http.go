@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"cursor++/internal/version"
+	"vibe/internal/version"
 )
 
 // FetchFromURL downloads content from a URL with proper timeout handling
@@ -21,7 +21,7 @@ func FetchFromURL(urlStr string) ([]byte, error) {
 	}
 
 	// Set a reasonable user agent
-	req.Header.Set("User-Agent", "cursor++/"+version.GetVersion())
+	req.Header.Set("User-Agent", "vibe/"+version.GetVersion())
 
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)

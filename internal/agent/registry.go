@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"cursor++/internal/utils"
+	"vibe/internal/utils"
 )
 
 // Registry manages the collection of available agents

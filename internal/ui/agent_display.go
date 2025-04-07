@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"cursor++/internal/agent"
+	"vibe/internal/agent"
 )
 
 // AgentDisplayOptions contains configuration options for displaying agents
@@ -163,8 +163,8 @@ func DisplayAgentListEnhanced(agents []*agent.AgentDefinition, options AgentDisp
 	}
 
 	fmt.Println()
-	Info("To select an agent, use: cursor++ agent select")
-	Info("To get more info about an agent, use: cursor++ agent info <agent_id>")
+	Info("To select an agent, use: vibe agent select")
+	Info("To get more info about an agent, use: vibe agent info <agent_id>")
 	fmt.Println()
 
 	return nil

@@ -1,6 +1,6 @@
 package version
 
-// Version is the current version of cursor++.
+// Version is the current version of vibe.
 // This is overridden during build by ldflags
 var Version = "dev"
 

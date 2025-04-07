@@ -33,7 +33,7 @@ Please read and follow our [Code of Conduct](./code-of-conduct.md). We expect al
    ```
 3. Add the original repository as an upstream remote:
    ```bash
-   git remote add upstream https://github.com/nsnarender5511/cpp.git
+   git remote add upstream https://github.com/nsnarender5511/vibe.git
    ```
 4. Install dependencies:
    ```bash

@@ -8,13 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- New `SourceFolder` option for `cursor++ sync` to allow selecting specific folders from a cloned repository
+- New `SourceFolder` option for `vibe sync` to allow selecting specific folders from a cloned repository
 
 ## [v1.0.0] - 2023-03-29
 
 ### 🎉 Major Changes
 
-- **Complete rebranding from "crules" to "cursor++"** to better align with the Cursor IDE integration
+- **Complete rebranding from "crules" to "vibe"** to better align with the Cursor IDE integration
 - Added GoReleaser for automated releases
 - Improved UI/UX for terminal displays
 - Enhanced agent selection experience

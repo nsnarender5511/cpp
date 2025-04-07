@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"cursor++/internal/git"
-	"cursor++/internal/ui"
-	"cursor++/internal/utils"
+	"vibe/internal/git"
+	"vibe/internal/ui"
+	"vibe/internal/utils"
 )
 
 // AgentInitializer handles agent system initialization

@@ -3,7 +3,7 @@ package core
 import (
 	"bytes"
 	"context"
-	"cursor++/internal/utils"
+	"vibe/internal/utils"
 	"encoding/json"
 	"fmt"
 	"io"

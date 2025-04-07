@@ -7,7 +7,7 @@ import (
 )
 
 // Default application name if not specified
-const DefaultAppName = "cursor++"
+const DefaultAppName = "vibe"
 
 // AppPaths holds all relevant paths for the application
 type AppPaths struct {
@@ -45,20 +45,20 @@ func GetAppPaths(appName string) AppPaths {
 func getWindowsAppPaths(appName string) AppPaths {
 	p := AppPaths{}
 
-	// Configuration: %APPDATA%\cursor++
+	// Configuration: %APPDATA%\vibe
 	p.ConfigDir = filepath.Join(os.Getenv("APPDATA"), appName)
 
-	// Data: %LOCALAPPDATA%\cursor++
+	// Data: %LOCALAPPDATA%\vibe
 	localAppData := os.Getenv("LOCALAPPDATA")
 	if localAppData == "" {
 		localAppData = filepath.Join(os.Getenv("USERPROFILE"), "AppData", "Local")
 	}
 	p.DataDir = filepath.Join(localAppData, appName)
 
-	// Cache: %LOCALAPPDATA%\cursor++\Cache
+	// Cache: %LOCALAPPDATA%\vibe\Cache
 	p.CacheDir = filepath.Join(localAppData, appName, "Cache")
 
-	// Logs: %LOCALAPPDATA%\cursor++\Logs
+	// Logs: %LOCALAPPDATA%\vibe\Logs
 	p.LogDir = filepath.Join(localAppData, appName, "Logs")
 
 	return p
@@ -73,16 +73,16 @@ func getDarwinAppPaths(appName string) AppPaths {
 		home = "."
 	}
 
-	// Configuration: ~/Library/Application Support/cursor++
+	// Configuration: ~/Library/Application Support/vibe
 	p.ConfigDir = filepath.Join(home, "Library", "Application Support", appName)
 
-	// Data: ~/Library/Application Support/cursor++
+	// Data: ~/Library/Application Support/vibe
 	p.DataDir = filepath.Join(home, "Library", "Application Support", appName)
 
-	// Cache: ~/Library/Caches/cursor++
+	// Cache: ~/Library/Caches/vibe
 	p.CacheDir = filepath.Join(home, "Library", "Caches", appName)
 
-	// Logs: ~/Library/Logs/cursor++
+	// Logs: ~/Library/Logs/vibe
 	p.LogDir = filepath.Join(home, "Library", "Logs", appName)
 
 	return p
@@ -118,16 +118,16 @@ func getUnixAppPaths(appName string) AppPaths {
 		xdgStateHome = filepath.Join(home, ".local", "state")
 	}
 
-	// Configuration: ~/.config/cursor++
+	// Configuration: ~/.config/vibe
 	p.ConfigDir = filepath.Join(xdgConfigHome, appName)
 
-	// Data: ~/.local/share/cursor++
+	// Data: ~/.local/share/vibe
 	p.DataDir = filepath.Join(xdgDataHome, appName)
 
-	// Cache: ~/.cache/cursor++
+	// Cache: ~/.cache/vibe
 	p.CacheDir = filepath.Join(xdgCacheHome, appName)
 
-	// Logs: ~/.local/state/cursor++/logs
+	// Logs: ~/.local/state/vibe/logs
 	p.LogDir = filepath.Join(xdgStateHome, appName, "logs")
 
 	return p
@@ -152,7 +152,7 @@ func (p AppPaths) GetRegistryFile(fileName string) string {
 }
 
 // DefaultLogFileName is the default name for log files
-const DefaultLogFileName = "cursor++.log"
+const DefaultLogFileName = "vibe.log"
 
 // GetLogFile returns the path to a log file
 func (p AppPaths) GetLogFile(logName string) string {

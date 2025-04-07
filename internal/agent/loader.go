@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"cursor++/internal/utils"
+	"vibe/internal/utils"
 )
 
 // Loader handles loading and initializing agents

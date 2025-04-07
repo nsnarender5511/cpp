@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"sync"
 
-	"cursor++/internal/utils"
+	"vibe/internal/utils"
 )
 
-// Registry keeps track of all projects using cursor++
+// Registry keeps track of all projects using vibe
 type Registry struct {
 	Projects []string `json:"projects"`
 	path     string   // path to registry file

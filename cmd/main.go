@@ -11,12 +11,12 @@ import (
 	"strconv"
 	"strings"
 
-	"cursor++/internal/agent"
-	"cursor++/internal/constants"
-	"cursor++/internal/core"
-	"cursor++/internal/ui"
-	"cursor++/internal/utils"
-	"cursor++/internal/version"
+	"vibe/internal/agent"
+	"vibe/internal/constants"
+	"vibe/internal/core"
+	"vibe/internal/ui"
+	"vibe/internal/utils"
+	"vibe/internal/version"
 )
 
 // Exit codes
@@ -82,7 +82,7 @@ func main() {
 
 	// Check for version flag
 	if *versionFlag || *versionShortFlag {
-		fmt.Printf("cursor++ version %s\n", version.GetVersion())
+		fmt.Printf("vibe version %s\n", version.GetVersion())
 		os.Exit(ExitSuccess)
 	}
 
@@ -99,7 +99,7 @@ func main() {
 	utils.SetVerbose(*verboseFlag)
 	utils.SetVerboseErrors(*verboseErrorsFlag)
 
-	utils.Info("Starting cursor++")
+	utils.Info("Starting vibe")
 
 	// Print usage if no arguments
 	if len(args) < 1 {
@@ -187,7 +187,7 @@ func handleCommandError(commandName string, err error, exitCode int) {
 }
 
 func printUsage() {
-	ui.Header("Usage: cursor++ [OPTIONS] <command>")
+	ui.Header("Usage: vibe [OPTIONS] <command>")
 
 	ui.Plain("\nOptions:")
 	ui.Plain("  --verbose        Show informational messages on console")
@@ -198,8 +198,8 @@ func printUsage() {
 	ui.Plain("  -v               Show version information")
 
 	ui.Plain("\nCommands:")
-	ui.Plain("  init         Initialize current directory with cursor++ agents")
-	ui.Plain("  agent        Interactively select and use agents for cursor++ IDE")
+	ui.Plain("  init         Initialize current directory with vibe agents")
+	ui.Plain("  agent        Interactively select and use agents for vibe IDE")
 }
 
 func handleInit(manager *core.AgentInitializer) {
@@ -247,7 +247,7 @@ func handleInit(manager *core.AgentInitializer) {
 					ui.DisplayAgentListEnhanced(agents, options)
 				} else {
 					// Show summary for large number of agents
-					ui.Plain("Use %s to see all available agents", ui.SuccessStyle.Sprint("cursor++ agent list"))
+					ui.Plain("Use %s to see all available agents", ui.SuccessStyle.Sprint("vibe agent list"))
 					// Show first few agents as examples
 					for i := 0; i < 3 && i < len(agents); i++ {
 						ui.Plain("• %s (%s)",
@@ -265,9 +265,9 @@ func handleInit(manager *core.AgentInitializer) {
 
 	// Display next steps instructions with formatting
 	ui.Header("Next Steps:")
-	ui.Plain("1. Use %s to see available agents", ui.SuccessStyle.Sprint("cursor++ agent list"))
+	ui.Plain("1. Use %s to see available agents", ui.SuccessStyle.Sprint("vibe agent list"))
 	ui.Plain("2. Start using agents by referencing them with %s in your chat", ui.SuccessStyle.Sprint("@agent-name.mdc"))
-	ui.Plain("3. For more information about an agent, use %s", ui.SuccessStyle.Sprint("cursor++ agent info <agent-id>"))
+	ui.Plain("3. For more information about an agent, use %s", ui.SuccessStyle.Sprint("vibe agent info <agent-id>"))
 
 	fmt.Println()
 	utils.Info("Init command completed successfully")
@@ -355,8 +355,8 @@ func handleAgent(manager *core.AgentInitializer, appPaths utils.AppPaths, verbos
 	// Check if we found a valid directory
 	if chosenDir == "" {
 		ui.Warning("No local agent definitions found in %s or %s", localRulesDir, directRulesDir)
-		ui.Plain("Run %s to initialize the agent system in this directory", ui.SuccessStyle.Sprint("cursor++ init"))
-		ui.Plain("Or use %s to get help", ui.SuccessStyle.Sprint("cursor++ agent --help"))
+		ui.Plain("Run %s to initialize the agent system in this directory", ui.SuccessStyle.Sprint("vibe init"))
+		ui.Plain("Or use %s to get help", ui.SuccessStyle.Sprint("vibe agent --help"))
 		return
 	}
 
@@ -420,7 +420,7 @@ func handleAgent(manager *core.AgentInitializer, appPaths utils.AppPaths, verbos
 		handleAgentSelect(registry, config, appPaths)
 	case "info":
 		if len(filteredArgs) < 2 {
-			ui.Error("Missing agent ID. Usage: cursor++ agent info <agent-id>")
+			ui.Error("Missing agent ID. Usage: vibe agent info <agent-id>")
 			os.Exit(ExitUsageError)
 		}
 		if utils.IsVerbose() {
@@ -465,12 +465,12 @@ func displayAgentList(registry *agent.Registry) {
 
 		// Provide helpful information
 		ui.Plain("\nPossible reasons:")
-		ui.Plain("• This directory has not been initialized with cursor++ agents")
+		ui.Plain("• This directory has not been initialized with vibe agents")
 		ui.Plain("• The agent files (.mdc files) were not properly copied")
 		ui.Plain("• The agent directory structure is incorrect")
 
 		ui.Plain("\nSolutions:")
-		ui.Plain("1. Run %s to initialize this directory", ui.SuccessStyle.Sprint("cursor++ init"))
+		ui.Plain("1. Run %s to initialize this directory", ui.SuccessStyle.Sprint("vibe init"))
 		ui.Plain("2. Check that %s exists", ui.InfoStyle.Sprint(".cursor/rules directory"))
 		ui.Plain("3. Verify that this directory contains %s files", ui.InfoStyle.Sprint(".mdc"))
 
@@ -517,7 +517,7 @@ func displayAgentList(registry *agent.Registry) {
 
 	// Add usage hint after the list
 	ui.Plain("\nTip: Use %s to get detailed information about a specific agent",
-		ui.SuccessStyle.Sprint("cursor++ agent info <agent-id>"))
+		ui.SuccessStyle.Sprint("vibe agent info <agent-id>"))
 	ui.Plain("Reference agents in your editor using @ (example: @wizard.mdc)")
 
 	if utils.IsVerbose() {
@@ -570,7 +570,7 @@ func displayAgentContent(agentDef *agent.AgentDefinition, paginated bool) error 
 	if config.MultiAgentEnabled {
 		content = strings.Replace(content,
 			"# Agent System Integration:",
-			"# Multi-Agent System Integration:\n\n> Note: This agent is configured to work in multi-agent mode with other cursor++ agents.",
+			"# Multi-Agent System Integration:\n\n> Note: This agent is configured to work in multi-agent mode with other vibe agents.",
 			1)
 	}
 
@@ -805,7 +805,7 @@ func handleAgentInfo(registry *agent.Registry, agentParam string, verbose bool) 
 	// Check if there are no agents available
 	if len(agents) == 0 {
 		ui.Error("No agents available in the current directory.")
-		ui.Plain("\nTry running %s first to initialize the agent system.", ui.SuccessStyle.Sprint("cursor++ init"))
+		ui.Plain("\nTry running %s first to initialize the agent system.", ui.SuccessStyle.Sprint("vibe init"))
 		return
 	}
 
@@ -881,7 +881,7 @@ func handleAgentInfo(registry *agent.Registry, agentParam string, verbose bool) 
 }
 
 func printAgentUsage() {
-	ui.Header("Usage: cursor++ agent [OPTIONS] [subcommand]")
+	ui.Header("Usage: vibe agent [OPTIONS] [subcommand]")
 
 	ui.Plain("\nOptions:")
 	ui.Plain("  --verbose        Show additional information")
@@ -895,10 +895,10 @@ func printAgentUsage() {
 	ui.Plain("  help         Show this help message")
 
 	ui.Plain("\nExample usage:")
-	ui.Plain("  cursor++ agent                 # List all available agents")
-	ui.Plain("  cursor++ agent --verbose       # List agents with verbose output")
-	ui.Plain("  cursor++ agent select          # Interactively select an agent")
-	ui.Plain("  cursor++ agent info wizard     # Show info about the wizard agent")
-	ui.Plain("  cursor++ agent info 1 --debug  # Show detailed info with debug output")
+	ui.Plain("  vibe agent                 # List all available agents")
+	ui.Plain("  vibe agent --verbose       # List agents with verbose output")
+	ui.Plain("  vibe agent select          # Interactively select an agent")
+	ui.Plain("  vibe agent info wizard     # Show info about the wizard agent")
+	ui.Plain("  vibe agent info 1 --debug  # Show detailed info with debug output")
 	ui.Plain("\nYou can also reference agents in the chatbox using @ (example: @wizard.mdc)")
 }

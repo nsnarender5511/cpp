@@ -12,7 +12,7 @@ import (
 // Default configuration values - centralized here
 const (
 	// DefaultAgentsDirName is the default directory name for agent rules
-	DefaultAgentsDirName = "cursor++"
+	DefaultAgentsDirName = "vibe"
 
 	// DefaultConfigFileName is the default configuration file name
 	DefaultConfigFileName = "config.json"

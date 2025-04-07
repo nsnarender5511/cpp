@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"cursor++/internal/ui"
-	"cursor++/internal/utils"
+	"vibe/internal/ui"
+	"vibe/internal/utils"
 )
 
 // StoreRules saves parsed rules to the filesystem
