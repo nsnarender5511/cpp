@@ -212,11 +212,43 @@ func handleInit(manager *core.AgentInitializer) {
 		handleCommandError("Init", err, ExitInitError)
 	}
 
+	// Add .cursor to .gitignore and .cursorignore files
+	pattern := ".cursor"
+	cursorignorePattern := ".cursorignore"
+	currentDir, err := os.Getwd()
+	if err == nil {
+		gitignorePath := filepath.Join(currentDir, ".gitignore")
+		cursorignorePath := filepath.Join(currentDir, ".cursorignore")
+
+		// Ensure .cursor is in .gitignore
+		if err := utils.EnsurePathInFile(gitignorePath, pattern); err != nil {
+			utils.Warn("Failed to update .gitignore with .cursor: " + err.Error())
+		} else {
+			utils.Debug("Successfully ensured .cursor is in .gitignore")
+		}
+
+		// Ensure .cursorignore is in .gitignore
+		if err := utils.EnsurePathInFile(gitignorePath, cursorignorePattern); err != nil {
+			utils.Warn("Failed to update .gitignore with .cursorignore: " + err.Error())
+		} else {
+			utils.Debug("Successfully ensured .cursorignore is in .gitignore")
+		}
+
+		// Ensure .cursor is in .cursorignore
+		if err := utils.EnsurePathInFile(cursorignorePath, pattern); err != nil {
+			utils.Warn("Failed to update .cursorignore: " + err.Error())
+		} else {
+			utils.Debug("Successfully ensured .cursor is in .cursorignore")
+		}
+	} else {
+		utils.Warn("Could not get current directory to update ignore files: " + err.Error())
+	}
+
 	// Space after the animation
 	fmt.Println()
 
 	// Get current directory for agent listing
-	currentDir, err := os.Getwd()
+	currentDir, err = os.Getwd()
 	if err != nil {
 		utils.Warn("Could not get current directory for agent listing: " + err.Error())
 	} else {

@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // DirExists checks if directory exists
@@ -176,4 +177,67 @@ func CopyDirSelective(src, dst, sourceFolderName string) error {
 	// Now copy from the source subfolder to destination
 	Debug("Copying from source subfolder | path=" + sourceFolderPath)
 	return CopyDir(sourceFolderPath, dst)
+}
+
+// EnsurePathInFile ensures that a specific pattern is present in a file
+// If the file doesn't exist, it creates it with the pattern
+// If the file exists but doesn't contain the pattern, it appends the pattern
+// If the file already contains the pattern, it does nothing
+func EnsurePathInFile(filePath, pattern string) error {
+	Debug("Ensuring pattern exists in file | path=" + filePath + ", pattern=" + pattern)
+
+	// Check if file exists
+	if !FileExists(filePath) {
+		Debug("File does not exist, creating new file | path=" + filePath)
+		// Create directory if it doesn't exist
+		dir := filepath.Dir(filePath)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			Error("Failed to create directory for file | path=" + dir + ", error=" + err.Error())
+			return fmt.Errorf("failed to create directory for file: %w", err)
+		}
+
+		// Create file with pattern
+		return os.WriteFile(filePath, []byte(pattern+"\n"), 0644)
+	}
+
+	// Read file content
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		Error("Failed to read file | path=" + filePath + ", error=" + err.Error())
+		return fmt.Errorf("failed to read file: %w", err)
+	}
+
+	// Check if pattern already exists (either as exact match or with newline)
+	contentStr := string(content)
+	if strings.Contains(contentStr, pattern) ||
+		strings.Contains(contentStr, pattern+"\n") ||
+		strings.Contains(contentStr, pattern+"\r\n") {
+		Debug("Pattern already exists in file, skipping | path=" + filePath + ", pattern=" + pattern)
+		return nil
+	}
+
+	// Append pattern to file
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		Error("Failed to open file for writing | path=" + filePath + ", error=" + err.Error())
+		return fmt.Errorf("failed to open file for writing: %w", err)
+	}
+	defer file.Close()
+
+	// Add a newline if file doesn't end with one
+	if len(content) > 0 && !strings.HasSuffix(contentStr, "\n") {
+		if _, err := file.WriteString("\n"); err != nil {
+			Error("Failed to write newline to file | path=" + filePath + ", error=" + err.Error())
+			return fmt.Errorf("failed to write newline to file: %w", err)
+		}
+	}
+
+	// Write pattern
+	if _, err := file.WriteString(pattern + "\n"); err != nil {
+		Error("Failed to write pattern to file | path=" + filePath + ", error=" + err.Error())
+		return fmt.Errorf("failed to write pattern to file: %w", err)
+	}
+
+	Debug("Successfully added pattern to file | path=" + filePath + ", pattern=" + pattern)
+	return nil
 }
