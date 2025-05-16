@@ -165,7 +165,7 @@ func CopyDirSelective(src, dst, sourceFolderName string) error {
 	if !DirExists(sourceFolderPath) {
 		errorMsg := fmt.Sprintf("Source folder does not exist: %s", sourceFolderPath)
 		Error(errorMsg)
-		return fmt.Errorf(errorMsg)
+		return fmt.Errorf("%s", errorMsg)
 	}
 
 	// Create destination directory
