@@ -21,7 +21,7 @@ type AgentDisplayOptions struct {
 
 // DefaultAgentDisplayOptions returns default display options
 func DefaultAgentDisplayOptions() AgentDisplayOptions {
-	width := getTerminalWidth()
+	width := GetTerminalWidth()
 	if width <= 0 {
 		width = 80 // Default fallback
 	}
@@ -34,8 +34,8 @@ func DefaultAgentDisplayOptions() AgentDisplayOptions {
 	}
 }
 
-// getTerminalWidth returns the width of the terminal
-func getTerminalWidth() int {
+// GetTerminalWidth returns the width of the terminal
+func GetTerminalWidth() int {
 	// Try using the stty command to get terminal size
 	cmd := exec.Command("stty", "size")
 	cmd.Stdin = os.Stdin
