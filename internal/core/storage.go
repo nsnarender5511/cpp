@@ -102,13 +102,13 @@ func sanitizeFilename(name string) string {
 }
 
 // getExtensionForFormat returns the appropriate file extension for a rule format
-func getExtensionForFormat(format string) string {
-	switch format {
-	case "markdown", "mdx":
-		return ".mdc"
-	case "json":
-		return ".json"
-	default:
-		return ".txt"
-	}
-}
+// func getExtensionForFormat(format string) string {
+// 	switch format {
+// 	case "markdown", "mdx":
+// 		return ".mdc"
+// 	case "json":
+// 		return ".json"
+// 	default:
+// 		return ".txt"
+// 	}
+// }

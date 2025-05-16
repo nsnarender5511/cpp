@@ -3,16 +3,15 @@ package core
 import (
 	"bytes"
 	"context"
-	"vibe/internal/utils"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+	"vibe/internal/utils"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -53,13 +52,13 @@ func ParseRules(content []byte, source string, isWeb bool) ([]ParsedRule, error)
 }
 
 // extractDomain gets the domain from a URL
-func extractDomain(urlStr string) (string, error) {
-	u, err := url.Parse(urlStr)
-	if err != nil {
-		return "", wrapParseError(urlStr, err, 0)
-	}
-	return u.Host, nil
-}
+// func extractDomain(urlStr string) (string, error) {
+// 	u, err := url.Parse(urlStr)
+// 	if err != nil {
+// 		return "", wrapParseError(urlStr, err, 0)
+// 	}
+// 	return u.Host, nil
+// }
 
 // findContent searches for content using multiple selectors
 func findContent(doc *goquery.Document, selectors []string) (string, string, bool) {

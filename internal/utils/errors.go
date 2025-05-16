@@ -42,9 +42,9 @@ func wrapOpError(op, path string, err error, msg string) error {
 }
 
 // wrapValidationError creates a validation error
-func wrapValidationError(field, msg string) error {
-	return &ValidationError{
-		Field:   field,
-		Message: msg,
-	}
-}
+// func wrapValidationError(field, msg string) error {
+// 	return &ValidationError{
+// 		Field:   field,
+// 		Message: msg,
+// 	}
+// }

@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -284,23 +283,27 @@ func (ai *AgentInitializer) handleInitialSetup() bool {
 		}
 	}
 
-	ui.Success("Successfully cloned repository to %s", ai.agentPath)
+	// If setup was successful and definitions are now available
+	ui.Success("Successfully cloned agent definitions from %s", defaultRepoURL)
 	return true
 }
 
-func (ai *AgentInitializer) readUserInput(input *string) error {
-	if _, err := fmt.Scanln(input); err != nil {
-		return wrapOpError("readUserInput", "stdin", err, "failed to read user input")
-	}
-	return nil
-}
+// readUserInput reads user input from the console
+// func (ai *AgentInitializer) readUserInput(input *string) error {
+// 	_, err := fmt.Scanln(input)
+// 	if err != nil {
+// 		return wrapOpError("readUserInput", "console", err, "failed to read input")
+// 	}
+// 	return nil
+// }
 
-func (ai *AgentInitializer) createEmptyDirectory() error {
-	if err := os.MkdirAll(ai.agentPath, ai.config.DirPermission); err != nil {
-		return wrapOpError("createEmptyDirectory", ai.agentPath, err, "failed to create agent directory")
-	}
-	return nil
-}
+// createEmptyDirectory creates an empty agent directory
+// func (ai *AgentInitializer) createEmptyDirectory() error {
+// 	if err := os.MkdirAll(ai.agentPath, ai.config.DirPermission); err != nil {
+// 		return wrapOpError("createEmptyDirectory", ai.agentPath, err, "failed to create agent directory")
+// 	}
+// 	return nil
+// }
 
 func (ai *AgentInitializer) cloneRepository(repoURL string) error {
 	ui.Info("Cloning repository %s to %s...", repoURL, ai.agentPath)

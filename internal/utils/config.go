@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 )
 
@@ -159,48 +158,48 @@ func (cm *ConfigManager) SetConfig(config *Config) {
 }
 
 // validateDirPath checks if a directory path is valid and safe
-func validateDirPath(path string) error {
-	// Check for directory traversal attempts
-	if strings.Contains(path, "..") {
-		Warn("Security warning: path contains directory traversal pattern: " + path)
-		return fmt.Errorf("path contains directory traversal")
-	}
-
-	// Check for absolute paths (which might be acceptable in some cases)
-	if filepath.IsAbs(path) {
-		Debug("Directory path is absolute: " + path)
-		// Consider the context - if absolute paths are not desired, return error
-		return fmt.Errorf("absolute paths are not allowed")
-	}
-
-	// Check for suspicious path elements
-	suspicious := []string{"/tmp", "/dev", "/proc", "/sys", "/var/run"}
-	for _, suspect := range suspicious {
-		if strings.Contains(path, suspect) {
-			Warn("Security warning: path contains suspicious elements: " + path)
-			return fmt.Errorf("path contains suspicious elements")
-		}
-	}
-
-	return nil
-}
+// func validateDirPath(path string) error {
+// 	// Check for directory traversal attempts
+// 	if strings.Contains(path, "..") {
+// 		Warn("Security warning: path contains directory traversal pattern: " + path)
+// 		return fmt.Errorf("path contains directory traversal")
+// 	}
+//
+// 	// Check for absolute paths (which might be acceptable in some cases)
+// 	if filepath.IsAbs(path) {
+// 		Debug("Directory path is absolute: " + path)
+// 		// Consider the context - if absolute paths are not desired, return error
+// 		return fmt.Errorf("absolute paths are not allowed")
+// 	}
+//
+// 	// Check for suspicious path elements
+// 	suspicious := []string{"/tmp", "/dev", "/proc", "/sys", "/var/run"}
+// 	for _, suspect := range suspicious {
+// 		if strings.Contains(path, suspect) {
+// 			Warn("Security warning: path contains suspicious elements: " + path)
+// 			return fmt.Errorf("path contains suspicious elements")
+// 		}
+// 	}
+//
+// 	return nil
+// }
 
 // validateFileName checks if a filename is valid and safe
-func validateFileName(name string) error {
-	// Check for directory traversal attempts
-	if strings.Contains(name, "..") || strings.Contains(name, "/") || strings.Contains(name, "\\") {
-		Warn("Security warning: invalid filename: " + name)
-		return fmt.Errorf("filename contains directory traversal")
-	}
-
-	// Check for empty or overly long filenames
-	if name == "" || len(name) > 255 {
-		Warn("Invalid filename length: " + name)
-		return fmt.Errorf("invalid filename length")
-	}
-
-	return nil
-}
+// func validateFileName(name string) error {
+// 	// Check for directory traversal attempts
+// 	if strings.Contains(name, "..") || strings.Contains(name, "/") || strings.Contains(name, "\\") {
+// 		Warn("Security warning: invalid filename: " + name)
+// 		return fmt.Errorf("filename contains directory traversal")
+// 	}
+//
+// 	// Check for empty or overly long filenames
+// 	if name == "" || len(name) > 255 {
+// 		Warn("Invalid filename length: " + name)
+// 		return fmt.Errorf("invalid filename length")
+// 	}
+//
+// 	return nil
+// }
 
 // SaveConfig saves the configuration to the default location
 func SaveConfig(config *Config) error {

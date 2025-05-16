@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -179,7 +178,7 @@ func displayCompactAgentGroup(agents []*agent.AgentDefinition, options AgentDisp
 		}
 
 		// Use ID as selector index
-		idStr := fmt.Sprintf("%s", a.ID)
+		idStr := a.ID
 
 		// Format name with optional version
 		nameStr := a.Name
@@ -206,7 +205,7 @@ func displayDetailedAgentGroup(agents []*agent.AgentDefinition, options AgentDis
 		}
 
 		// Use ID as selector
-		idStr := fmt.Sprintf("%s", a.ID)
+		idStr := a.ID
 
 		// Format name with optional version
 		nameStr := a.Name
@@ -302,70 +301,70 @@ func DisplayAgentInfoEnhanced(agent *agent.AgentDefinition, verbose bool) error 
 }
 
 // cleanPromptContent removes excessive whitespace from prompt content
-func cleanPromptContent(content string) string {
-	// Remove repeated empty lines
-	re := regexp.MustCompile(`\n{3,}`)
-	content = re.ReplaceAllString(content, "\n\n")
-
-	// Trim leading/trailing whitespace
-	return strings.TrimSpace(content)
-}
-
-// formatFileSize returns a human-readable file size
-func formatFileSize(size int64) string {
-	const unit = 1024
-	if size < unit {
-		return fmt.Sprintf("%d B", size)
-	}
-	div, exp := int64(unit), 0
-	for n := size / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(size)/float64(div), "KMGTPE"[exp])
-}
-
-// createCodeBox creates a formatted code box with the given content
-func createCodeBox(content string, width int, scrolling bool) string {
-	if content == "" {
-		return ""
-	}
-
-	lines := strings.Split(content, "\n")
-	maxContentWidth := width - 6 // Account for box decorations
-
-	// Prepare box decorations based on terminal width
-	topBorder := "┌" + strings.Repeat("─", width-2) + "┐"
-	bottomBorder := "└" + strings.Repeat("─", width-2) + "┘"
-
-	var result strings.Builder
-	result.WriteString(topBorder + "\n")
-
-	// Process each line
-	for _, line := range lines {
-		if len(line) > maxContentWidth {
-			if scrolling {
-				// For scrollable content, wrap the text
-				for len(line) > 0 {
-					if len(line) <= maxContentWidth {
-						result.WriteString("│ " + line + strings.Repeat(" ", maxContentWidth-len(line)) + " │\n")
-						break
-					}
-
-					result.WriteString("│ " + line[:maxContentWidth] + " │\n")
-					line = line[maxContentWidth:]
-				}
-			} else {
-				// For non-scrollable, truncate with ellipsis
-				truncated := line[:maxContentWidth-3] + "..."
-				result.WriteString("│ " + truncated + strings.Repeat(" ", maxContentWidth-len(truncated)) + " │\n")
-			}
-		} else {
-			padding := strings.Repeat(" ", maxContentWidth-len(line))
-			result.WriteString("│ " + line + padding + " │\n")
-		}
-	}
-
-	result.WriteString(bottomBorder)
-	return result.String()
-}
+// func cleanPromptContent(content string) string {
+// 	// Remove repeated empty lines
+// 	re := regexp.MustCompile(`\\n{3,}`)
+// 	content = re.ReplaceAllString(content, "\\n\\n")
+//
+// 	// Trim leading/trailing whitespace
+// 	return strings.TrimSpace(content)
+// }
+//
+// // formatFileSize returns a human-readable file size
+// func formatFileSize(size int64) string {
+// 	const unit = 1024
+// 	if size < unit {
+// 		return fmt.Sprintf("%d B", size)
+// 	}
+// 	div, exp := int64(unit), 0
+// 	for n := size / unit; n >= unit; n /= unit {
+// 		div *= unit
+// 		exp++
+// 	}
+// 	return fmt.Sprintf("%.1f %cB", float64(size)/float64(div), "KMGTPE"[exp])
+// }
+//
+// // createCodeBox creates a formatted code box with the given content
+// func createCodeBox(content string, width int, scrolling bool) string {
+// 	if content == "" {
+// 		return ""
+// 	}
+//
+// 	lines := strings.Split(content, "\\n")
+// 	maxContentWidth := width - 6 // Account for box decorations
+//
+// 	// Prepare box decorations based on terminal width
+// 	topBorder := "┌" + strings.Repeat("─", width-2) + "┐"
+// 	bottomBorder := "└" + strings.Repeat("─", width-2) + "┘"
+//
+// 	var result strings.Builder
+// 	result.WriteString(topBorder + "\\n")
+//
+// 	// Process each line
+// 	for _, line := range lines {
+// 		if len(line) > maxContentWidth {
+// 			if scrolling {
+// 				// For scrollable content, wrap the text
+// 				for len(line) > 0 {
+// 					if len(line) <= maxContentWidth {
+// 						result.WriteString("│ " + line + strings.Repeat(" ", maxContentWidth-len(line)) + " │\\n")
+// 						break
+// 					}
+//
+// 					result.WriteString("│ " + line[:maxContentWidth] + " │\\n")
+// 					line = line[maxContentWidth:]
+// 				}
+// 			} else {
+// 				// For non-scrollable, truncate with ellipsis
+// 				truncated := line[:maxContentWidth-3] + "..."
+// 				result.WriteString("│ " + truncated + strings.Repeat(" ", maxContentWidth-len(truncated)) + " │\\n")
+// 			}
+// 		} else {
+// 			padding := strings.Repeat(" ", maxContentWidth-len(line))
+// 			result.WriteString("│ " + line + padding + " │\\n")
+// 		}
+// 	}
+//
+// 	result.WriteString(bottomBorder)
+// 	return result.String()
+// }
