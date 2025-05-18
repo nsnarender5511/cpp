@@ -5,7 +5,7 @@ import (
 	"vibe/internal/ui"
 )
 
-// PrintUsage displays the main help message for the application.
+
 func PrintUsage() {
 	ui.Header("Usage: vibe [OPTIONS] <command>")
 
@@ -17,9 +17,10 @@ func PrintUsage() {
 	ui.Plain("\nCommands:")
 	ui.Plain("  init         Initialize current directory with vibe agents")
 	ui.Plain("  agent        Interactively select and use agents for vibe IDE")
+	ui.Plain("  clean <path> Remove comments from Go files in the specified path")
 }
 
-// PrintAgentUsage displays the help message for the 'agent' command.
+
 func PrintAgentUsage(registry *agent.Registry) {
 	ui.Header("Usage: vibe agent <subcommand>")
 
