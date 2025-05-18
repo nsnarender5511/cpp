@@ -13,7 +13,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
-// DisplayFileTable displays a list of files in a formatted table
+
 func DisplayFileTable(files []utils.FileInfo) {
 	if len(files) == 0 {
 		Plain("No files found.")
@@ -47,7 +47,7 @@ func DisplayFileTable(files []utils.FileInfo) {
 	Plain("Total: %d items", len(files))
 }
 
-// PromptYesNo asks the user a yes/no question and returns the answer
+
 func PromptYesNo(question string) bool {
 	for {
 		Prompt("%s (y/n): ", question)
@@ -67,7 +67,7 @@ func PromptYesNo(question string) bool {
 	}
 }
 
-// PromptOptions presents a list of options and returns the selected index
+
 func PromptOptions(prompt string, options []string) int {
 	Plain(prompt)
 
@@ -89,12 +89,12 @@ func PromptOptions(prompt string, options []string) int {
 	}
 }
 
-// PromptInput asks for a string input with optional validation
+
 func PromptInput(prompt string, validator func(string) bool) string {
 	return PromptInputWithDefault(prompt, "", validator)
 }
 
-// PromptInputWithDefault asks for a string input with a default value and optional validation
+
 func PromptInputWithDefault(prompt string, defaultValue string, validator func(string) bool) string {
 	reader := bufio.NewReader(os.Stdin)
 
@@ -109,7 +109,7 @@ func PromptInputWithDefault(prompt string, defaultValue string, validator func(s
 		input, _ := reader.ReadString('\n')
 		input = strings.TrimSpace(input)
 
-		// Use default value if input is empty
+		
 		if input == "" && defaultValue != "" {
 			input = defaultValue
 		}
@@ -122,16 +122,16 @@ func PromptInputWithDefault(prompt string, defaultValue string, validator func(s
 	}
 }
 
-// ValidateURL validates if the input looks like a URL
+
 func ValidateURL(input string) bool {
-	// Check for HTTP/HTTPS/Git protocols
+	
 	if strings.HasPrefix(input, "http://") ||
 		strings.HasPrefix(input, "https://") ||
 		strings.HasPrefix(input, "git://") {
 		return true
 	}
 
-	// Check for SSH git format (git@host:path/repo.git)
+	
 	if strings.HasPrefix(input, "git@") && strings.Contains(input, ":") {
 		return true
 	}

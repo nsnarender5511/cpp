@@ -11,7 +11,7 @@ import (
 	"vibe/internal/agent"
 )
 
-// AgentDisplayOptions contains configuration options for displaying agents
+
 type AgentDisplayOptions struct {
 	TermWidth       int
 	GroupByCategory bool
@@ -19,11 +19,11 @@ type AgentDisplayOptions struct {
 	SelectedAgentID string
 }
 
-// DefaultAgentDisplayOptions returns default display options
+
 func DefaultAgentDisplayOptions() AgentDisplayOptions {
 	width := GetTerminalWidth()
 	if width <= 0 {
-		width = 80 // Default fallback
+		width = 80 
 	}
 
 	return AgentDisplayOptions{
@@ -34,9 +34,9 @@ func DefaultAgentDisplayOptions() AgentDisplayOptions {
 	}
 }
 
-// GetTerminalWidth returns the width of the terminal
+
 func GetTerminalWidth() int {
-	// Try using the stty command to get terminal size
+	
 	cmd := exec.Command("stty", "size")
 	cmd.Stdin = os.Stdin
 	out, err := cmd.Output()
@@ -50,15 +50,15 @@ func GetTerminalWidth() int {
 		}
 	}
 
-	// If everything fails, return a default width
+	
 	return 80
 }
 
-// detectAgentCategory attempts to determine the category of an agent
+
 func detectAgentCategory(agent *agent.AgentDefinition) string {
 	id := strings.ToLower(agent.ID)
 
-	// Check ID for category hints
+	
 	if strings.Contains(id, "review") {
 		return "Code Review"
 	} else if strings.Contains(id, "test") {
@@ -79,7 +79,7 @@ func detectAgentCategory(agent *agent.AgentDefinition) string {
 		return "Quick Help"
 	}
 
-	// Check description as backup
+	
 	if agent.Description != "" {
 		descLower := strings.ToLower(agent.Description)
 		if strings.Contains(descLower, "code review") {
@@ -93,11 +93,11 @@ func detectAgentCategory(agent *agent.AgentDefinition) string {
 		}
 	}
 
-	// Default category
+	
 	return "General"
 }
 
-// DisplayAgentListEnhanced displays the list of agents with enhanced formatting
+
 func DisplayAgentListEnhanced(agents []*agent.AgentDefinition, options AgentDisplayOptions) error {
 	if len(agents) == 0 {
 		Warning("No agents found")
@@ -108,39 +108,39 @@ func DisplayAgentListEnhanced(agents []*agent.AgentDefinition, options AgentDisp
 	Header("Available Agents")
 
 	if options.GroupByCategory {
-		// Group agents by category
+		
 		categories := make(map[string][]*agent.AgentDefinition)
 		for _, a := range agents {
 			category := detectAgentCategory(a)
 			categories[category] = append(categories[category], a)
 		}
 
-		// Sort categories
+		
 		categoryNames := make([]string, 0, len(categories))
 		for category := range categories {
 			categoryNames = append(categoryNames, category)
 		}
 		sort.Strings(categoryNames)
 
-		// Print agents by category
+		
 		for _, category := range categoryNames {
 			groupAgents := categories[category]
 
-			// Skip empty categories
+			
 			if len(groupAgents) == 0 {
 				continue
 			}
 
-			// Print category header
+			
 			fmt.Println()
 			Header(category)
 
-			// Sort agents in this category by name
+			
 			sort.Slice(groupAgents, func(i, j int) bool {
 				return groupAgents[i].Name < groupAgents[j].Name
 			})
 
-			// Print agents
+			
 			if options.CompactMode {
 				displayCompactAgentGroup(groupAgents, options)
 			} else {
@@ -148,12 +148,12 @@ func DisplayAgentListEnhanced(agents []*agent.AgentDefinition, options AgentDisp
 			}
 		}
 	} else {
-		// Sort agents by ID
+		
 		sort.Slice(agents, func(i, j int) bool {
 			return agents[i].ID < agents[j].ID
 		})
 
-		// Print all agents without categories
+		
 		if options.CompactMode {
 			displayCompactAgentGroup(agents, options)
 		} else {
@@ -169,7 +169,7 @@ func DisplayAgentListEnhanced(agents []*agent.AgentDefinition, options AgentDisp
 	return nil
 }
 
-// displayCompactAgentGroup displays a group of agents in compact form
+
 func displayCompactAgentGroup(agents []*agent.AgentDefinition, options AgentDisplayOptions) {
 	for i, a := range agents {
 		prefix := "  "
@@ -177,26 +177,26 @@ func displayCompactAgentGroup(agents []*agent.AgentDefinition, options AgentDisp
 			prefix = "• "
 		}
 
-		// Use ID as selector index
+		
 		idStr := a.ID
 
-		// Format name with optional version
+		
 		nameStr := a.Name
 		if a.Version != "" && a.Version != "1.0" {
 			nameStr = fmt.Sprintf("%s (%s)", a.Name, a.Version)
 		}
 
-		// Print in compact format
+		
 		fmt.Printf("%s%-20s %s\n", prefix, idStr, nameStr)
 
-		// Add separator except after last item
+		
 		if i < len(agents)-1 {
 			fmt.Println()
 		}
 	}
 }
 
-// displayDetailedAgentGroup displays a group of agents with detailed information
+
 func displayDetailedAgentGroup(agents []*agent.AgentDefinition, options AgentDisplayOptions) {
 	for i, a := range agents {
 		prefix := "  "
@@ -204,47 +204,47 @@ func displayDetailedAgentGroup(agents []*agent.AgentDefinition, options AgentDis
 			prefix = "• "
 		}
 
-		// Use ID as selector
+		
 		idStr := a.ID
 
-		// Format name with optional version
+		
 		nameStr := a.Name
 		if a.Version != "" && a.Version != "1.0" {
 			nameStr = fmt.Sprintf("%s (%s)", a.Name, a.Version)
 		}
 
-		// Print detailed format
+		
 		fmt.Printf("%s%-20s %s\n", prefix, idStr, nameStr)
 
-		// Print a short description if available
+		
 		if a.Description != "" {
 			shortDesc := truncateText(a.Description, options.TermWidth-30)
 			fmt.Printf("    %s\n", shortDesc)
 		}
 
-		// Print tags if available
+		
 		if len(a.Templates) > 0 {
 			fmt.Printf("    Templates: %s\n", strings.Join(a.Templates, ", "))
 		}
 
-		// Add separator except after last item
+		
 		if i < len(agents)-1 {
 			fmt.Println()
 		}
 	}
 }
 
-// truncateText shortens text to fit within maxWidth characters
+
 func truncateText(text string, maxWidth int) string {
 	if len(text) <= maxWidth {
 		return text
 	}
 
-	// Return truncated string with ellipsis
+	
 	return text[:maxWidth-3] + "..."
 }
 
-// DisplayAgentInfoEnhanced shows detailed information about an agent with enhanced formatting
+
 func DisplayAgentInfoEnhanced(agent *agent.AgentDefinition, verbose bool) error {
 	if agent == nil {
 		return fmt.Errorf("agent is nil")
@@ -254,7 +254,7 @@ func DisplayAgentInfoEnhanced(agent *agent.AgentDefinition, verbose bool) error 
 	Header("Agent Information")
 	fmt.Println()
 
-	// Create info box
+	
 	Plain("  ID:        %s", agent.ID)
 	Plain("  Name:      %s", agent.Name)
 
@@ -269,7 +269,7 @@ func DisplayAgentInfoEnhanced(agent *agent.AgentDefinition, verbose bool) error 
 	Plain("  Updated:   %s", agent.LastUpdated.Format("2006-01-02 15:04:05"))
 	fmt.Println()
 
-	// Display description
+	
 	if agent.Description != "" {
 		Header("Description")
 		fmt.Println()
@@ -277,7 +277,7 @@ func DisplayAgentInfoEnhanced(agent *agent.AgentDefinition, verbose bool) error 
 		fmt.Println()
 	}
 
-	// Display templates
+	
 	if len(agent.Templates) > 0 {
 		Header("Templates")
 		fmt.Println()
@@ -287,7 +287,7 @@ func DisplayAgentInfoEnhanced(agent *agent.AgentDefinition, verbose bool) error 
 		fmt.Println()
 	}
 
-	// Display configuration
+	
 	if len(agent.Config) > 0 && verbose {
 		Header("Configuration")
 		fmt.Println()
@@ -300,71 +300,71 @@ func DisplayAgentInfoEnhanced(agent *agent.AgentDefinition, verbose bool) error 
 	return nil
 }
 
-// cleanPromptContent removes excessive whitespace from prompt content
-// func cleanPromptContent(content string) string {
-// 	// Remove repeated empty lines
-// 	re := regexp.MustCompile(`\\n{3,}`)
-// 	content = re.ReplaceAllString(content, "\\n\\n")
-//
-// 	// Trim leading/trailing whitespace
-// 	return strings.TrimSpace(content)
-// }
-//
-// // formatFileSize returns a human-readable file size
-// func formatFileSize(size int64) string {
-// 	const unit = 1024
-// 	if size < unit {
-// 		return fmt.Sprintf("%d B", size)
-// 	}
-// 	div, exp := int64(unit), 0
-// 	for n := size / unit; n >= unit; n /= unit {
-// 		div *= unit
-// 		exp++
-// 	}
-// 	return fmt.Sprintf("%.1f %cB", float64(size)/float64(div), "KMGTPE"[exp])
-// }
-//
-// // createCodeBox creates a formatted code box with the given content
-// func createCodeBox(content string, width int, scrolling bool) string {
-// 	if content == "" {
-// 		return ""
-// 	}
-//
-// 	lines := strings.Split(content, "\\n")
-// 	maxContentWidth := width - 6 // Account for box decorations
-//
-// 	// Prepare box decorations based on terminal width
-// 	topBorder := "┌" + strings.Repeat("─", width-2) + "┐"
-// 	bottomBorder := "└" + strings.Repeat("─", width-2) + "┘"
-//
-// 	var result strings.Builder
-// 	result.WriteString(topBorder + "\\n")
-//
-// 	// Process each line
-// 	for _, line := range lines {
-// 		if len(line) > maxContentWidth {
-// 			if scrolling {
-// 				// For scrollable content, wrap the text
-// 				for len(line) > 0 {
-// 					if len(line) <= maxContentWidth {
-// 						result.WriteString("│ " + line + strings.Repeat(" ", maxContentWidth-len(line)) + " │\\n")
-// 						break
-// 					}
-//
-// 					result.WriteString("│ " + line[:maxContentWidth] + " │\\n")
-// 					line = line[maxContentWidth:]
-// 				}
-// 			} else {
-// 				// For non-scrollable, truncate with ellipsis
-// 				truncated := line[:maxContentWidth-3] + "..."
-// 				result.WriteString("│ " + truncated + strings.Repeat(" ", maxContentWidth-len(truncated)) + " │\\n")
-// 			}
-// 		} else {
-// 			padding := strings.Repeat(" ", maxContentWidth-len(line))
-// 			result.WriteString("│ " + line + padding + " │\\n")
-// 		}
-// 	}
-//
-// 	result.WriteString(bottomBorder)
-// 	return result.String()
-// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

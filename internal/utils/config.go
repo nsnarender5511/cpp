@@ -7,31 +7,31 @@ import (
 	"sync"
 )
 
-// Default configuration values - centralized here
+
 const (
-	// DefaultAgentsDirName is the default directory name for agent rules
+	
 	DefaultAgentsDirName = "vibe"
 
-	// DefaultConfigFileName is the default configuration file name
+	
 	DefaultConfigFileName = "config.json"
 
-	// DefaultRegistryFileName is the default registry file name
+	
 	DefaultRegistryFileName = "registry.json"
 
-	// DefaultRulesDirName is the default directory name for rules - this is not to be changed ever
+	
 	DefaultRulesDirName = ".cursor/rules"
 
-	// DefaultSourceFolder is the name of the folder to copy from the cloned repo
+	
 	DefaultSourceFolder = "default"
 
-	// DefaultDirPermission is the default permission for directories
+	
 	DefaultDirPermission = 0755
 
-	// DefaultFilePermission is the default permission for files
+	
 	DefaultFilePermission = 0644
 )
 
-// Config represents the application configuration
+
 type Config struct {
 	RulesDirName      string      `json:"rulesDirName"`
 	RegistryFileName  string      `json:"registryFileName"`
@@ -43,22 +43,22 @@ type Config struct {
 	SourceFolder      string      `json:"sourceFolder"`
 }
 
-// ConfigValidator defines a validation function for config values
+
 type ConfigValidator func(value string) error
 
-// ConfigManager manages application configuration
+
 type ConfigManager struct {
 	config     *Config
 	mu         sync.RWMutex
 	validators map[string]ConfigValidator
 }
 
-// ConfigProvider defines an interface for accessing configuration
+
 type ConfigProvider interface {
 	GetConfig() *Config
 }
 
-// NewConfigManager creates a new ConfigManager
+
 func NewConfigManager() *ConfigManager {
 	return &ConfigManager{
 		config: &Config{
@@ -75,19 +75,19 @@ func NewConfigManager() *ConfigManager {
 	}
 }
 
-// RegisterValidator adds a new validator for a config field
+
 func (cm *ConfigManager) RegisterValidator(field string, validator ConfigValidator) {
 	cm.validators[field] = validator
 }
 
-// Load loads the configuration from file
+
 func (cm *ConfigManager) Load() error {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 
 	configPath := filepath.Join(GetAppPaths(DefaultAgentsDirName).ConfigDir, DefaultConfigFileName)
 
-	// If config file doesn't exist, use defaults
+	
 	if !FileExists(configPath) {
 		Debug("Config file not found, using defaults | path=" + configPath)
 		return nil
@@ -106,7 +106,7 @@ func (cm *ConfigManager) Load() error {
 	return nil
 }
 
-// Save saves the configuration to file
+
 func (cm *ConfigManager) Save() error {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
@@ -130,12 +130,12 @@ func (cm *ConfigManager) Save() error {
 	return nil
 }
 
-// GetConfig returns a copy of the current configuration
+
 func (cm *ConfigManager) GetConfig() *Config {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
 
-	// Return a copy to prevent external modification
+	
 	return &Config{
 		RulesDirName:      cm.config.RulesDirName,
 		RegistryFileName:  cm.config.RegistryFileName,
@@ -148,7 +148,7 @@ func (cm *ConfigManager) GetConfig() *Config {
 	}
 }
 
-// SetConfig updates the configuration
+
 func (cm *ConfigManager) SetConfig(config *Config) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()

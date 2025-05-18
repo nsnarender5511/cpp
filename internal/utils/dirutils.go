@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// FileInfo represents information about a file
+
 type FileInfo struct {
 	Path         string
 	RelativePath string
@@ -17,7 +17,7 @@ type FileInfo struct {
 	IsDir        bool
 }
 
-// ListDirectoryContents returns a list of all files in a directory recursively
+
 func ListDirectoryContents(dir string) ([]FileInfo, error) {
 	Debug("Listing directory contents | dir=" + dir)
 	var files []FileInfo
@@ -27,7 +27,7 @@ func ListDirectoryContents(dir string) ([]FileInfo, error) {
 			return err
 		}
 
-		// Skip the root directory itself
+		
 		if path == dir {
 			return nil
 		}
@@ -57,7 +57,7 @@ func ListDirectoryContents(dir string) ([]FileInfo, error) {
 	return files, nil
 }
 
-// HasMDCFiles checks if a directory contains any .mdc files
+
 func HasMDCFiles(dir string) (bool, error) {
 	Debug("Checking for .mdc files | dir=" + dir)
 
@@ -78,7 +78,7 @@ func HasMDCFiles(dir string) (bool, error) {
 	return false, nil
 }
 
-// FormatFileSize returns a human-readable file size
+
 func FormatFileSize(size int64) string {
 	const unit = 1024
 	if size < unit {
@@ -92,7 +92,7 @@ func FormatFileSize(size int64) string {
 	return fmt.Sprintf("%.1f %cB", float64(size)/float64(div), "KMGTPE"[exp])
 }
 
-// CountFiles returns the number of files in a directory (non-recursive)
+
 func CountFiles(dir string) (int, error) {
 	files, err := os.ReadDir(dir)
 	if err != nil {
@@ -108,7 +108,7 @@ func CountFiles(dir string) (int, error) {
 	return count, nil
 }
 
-// CountFilesByExt returns the number of files with a specific extension (non-recursive)
+
 func CountFilesByExt(dir, ext string) (int, error) {
 	files, err := os.ReadDir(dir)
 	if err != nil {
@@ -124,7 +124,7 @@ func CountFilesByExt(dir, ext string) (int, error) {
 	return count, nil
 }
 
-// CountFilesRecursive returns the total number of files in a directory and its subdirectories
+
 func CountFilesRecursive(dir string) int {
 	total := 0
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {

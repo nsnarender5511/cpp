@@ -10,15 +10,15 @@ import (
 	"vibe/internal/utils"
 )
 
-// Registry keeps track of all projects using vibe
+
 type Registry struct {
 	Projects []string `json:"projects"`
-	path     string   // path to registry file
+	path     string   
 	config   *utils.Config
 	mutex    *sync.RWMutex
 }
 
-// LoadRegistry loads or creates the registry
+
 func LoadRegistry(registryPath string, config *utils.Config) (*Registry, error) {
 	utils.Debug("Loading registry | path=" + registryPath)
 
@@ -28,11 +28,11 @@ func LoadRegistry(registryPath string, config *utils.Config) (*Registry, error) 
 		config:   config,
 	}
 
-	// Create new if doesn't exist
+	
 	if _, err := os.Stat(registryPath); os.IsNotExist(err) {
 		utils.Debug("Registry file does not exist, creating new | path=" + registryPath)
 
-		// Ensure directory exists
+		
 		registryDir := filepath.Dir(registryPath)
 		if err := utils.EnsureDirExists(registryDir, config.DirPermission); err != nil {
 			return nil, wrapOpError("LoadRegistry", registryDir, err, "failed to create registry directory")
@@ -41,7 +41,7 @@ func LoadRegistry(registryPath string, config *utils.Config) (*Registry, error) 
 		return registry, registry.save()
 	}
 
-	// Read existing
+	
 	utils.Debug("Reading existing registry | path=" + registryPath)
 	data, err := os.ReadFile(registryPath)
 	if err != nil {
@@ -58,20 +58,20 @@ func LoadRegistry(registryPath string, config *utils.Config) (*Registry, error) 
 	return registry, nil
 }
 
-// AddProject adds a project to registry
+
 func (r *Registry) AddProject(projectPath string) error {
 	utils.Debug("Adding project to registry | project=" + projectPath)
 
-	// Validate project path
+	
 	if !utils.DirExists(projectPath) {
 		return wrapValidationError("projectPath", "directory does not exist")
 	}
 
-	// Check if already registered
+	
 	for _, p := range r.Projects {
 		if p == projectPath {
 			utils.Debug("Project already registered, skipping | project=" + projectPath)
-			return nil // Already registered
+			return nil 
 		}
 	}
 
@@ -80,13 +80,13 @@ func (r *Registry) AddProject(projectPath string) error {
 	return r.save()
 }
 
-// GetProjects returns all registered projects
+
 func (r *Registry) GetProjects() []string {
 	utils.Debug("Getting registered projects | count=" + strconv.Itoa(len(r.Projects)))
 	return r.Projects
 }
 
-// CleanProjects removes projects that no longer exist
+
 func (r *Registry) CleanProjects() (int, error) {
 	utils.Debug("Cleaning registry of non-existent projects")
 
@@ -114,7 +114,7 @@ func (r *Registry) CleanProjects() (int, error) {
 	return removedCount, nil
 }
 
-// save writes registry to disk
+
 func (r *Registry) save() error {
 	utils.Debug("Saving registry | path=" + r.path)
 	data, err := json.MarshalIndent(r, "", "    ")
@@ -130,7 +130,7 @@ func (r *Registry) save() error {
 	return nil
 }
 
-// GetProjectCount returns the number of projects in the registry
+
 func (r *Registry) GetProjectCount() int {
 	if r.mutex != nil {
 		r.mutex.RLock()

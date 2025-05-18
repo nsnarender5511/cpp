@@ -16,7 +16,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-// ParserConfig holds configuration for rule parsers
+
 type ParserConfig struct {
 	HTTPTimeout     time.Duration
 	MaxResponseSize int64
@@ -24,17 +24,17 @@ type ParserConfig struct {
 	MaxRetries      int
 }
 
-// DefaultParserConfig returns default parser configuration
+
 func DefaultParserConfig() ParserConfig {
 	return ParserConfig{
 		HTTPTimeout:     30 * time.Second,
-		MaxResponseSize: 10 * 1024 * 1024, // 10MB
-		MaxFileSize:     10 * 1024 * 1024, // 10MB
+		MaxResponseSize: 10 * 1024 * 1024, 
+		MaxFileSize:     10 * 1024 * 1024, 
 		MaxRetries:      3,
 	}
 }
 
-// ParsedRule represents a parsed agent rule before conversion to CursorRule
+
 type ParsedRule struct {
 	Name        string
 	Description string
@@ -43,7 +43,7 @@ type ParsedRule struct {
 	Source      string
 }
 
-// ParseRules processes content into structured rules
+
 func ParseRules(content []byte, source string, isWeb bool) ([]ParsedRule, error) {
 	if !isWeb {
 		return nil, wrapValidationError("isWeb", "non-web content parsing not implemented")
@@ -51,16 +51,16 @@ func ParseRules(content []byte, source string, isWeb bool) ([]ParsedRule, error)
 	return parseCursorDirectory(content, source)
 }
 
-// extractDomain gets the domain from a URL
-// func extractDomain(urlStr string) (string, error) {
-// 	u, err := url.Parse(urlStr)
-// 	if err != nil {
-// 		return "", wrapParseError(urlStr, err, 0)
-// 	}
-// 	return u.Host, nil
-// }
 
-// findContent searches for content using multiple selectors
+
+
+
+
+
+
+
+
+
 func findContent(doc *goquery.Document, selectors []string) (string, string, bool) {
 	for _, selector := range selectors {
 		if el := doc.Find(selector); el.Length() > 0 {
@@ -72,7 +72,7 @@ func findContent(doc *goquery.Document, selectors []string) (string, string, boo
 	return "", "", false
 }
 
-// parseCursorDirectory extracts rules from cursor.directory content
+
 func parseCursorDirectory(content []byte, source string) ([]ParsedRule, error) {
 	reader := bytes.NewReader(content)
 	doc, err := goquery.NewDocumentFromReader(reader)
@@ -82,7 +82,7 @@ func parseCursorDirectory(content []byte, source string) ([]ParsedRule, error) {
 
 	var rules []ParsedRule
 
-	// Look for code elements with specific class first
+	
 	codeElements := doc.Find("code.text-sm.block")
 	if codeElements.Length() > 0 {
 		codeElements.Each(func(i int, s *goquery.Selection) {
@@ -99,7 +99,7 @@ func parseCursorDirectory(content []byte, source string) ([]ParsedRule, error) {
 			}
 		})
 	} else {
-		// Fall back to generic code elements
+		
 		codeElements = doc.Find("code")
 		codeElements.Each(func(i int, s *goquery.Selection) {
 			if codeText := strings.TrimSpace(s.Text()); codeText != "" {
@@ -128,7 +128,7 @@ func parseCursorDirectory(content []byte, source string) ([]ParsedRule, error) {
 		})
 	}
 
-	// If no rules found, try common content selectors
+	
 	if len(rules) == 0 {
 		selectors := []string{
 			".prose", ".markdown-body", ".content",
@@ -139,7 +139,7 @@ func parseCursorDirectory(content []byte, source string) ([]ParsedRule, error) {
 		if contentText, _, found := findContent(doc, selectors); found {
 			name := getNameFromSource(source)
 
-			// Try to extract a title from page
+			
 			if title := doc.Find("title").Text(); title != "" {
 				name = title
 			} else if h1 := doc.Find("h1").First().Text(); h1 != "" {
@@ -163,7 +163,7 @@ func parseCursorDirectory(content []byte, source string) ([]ParsedRule, error) {
 	return rules, nil
 }
 
-// ToCursorRule converts a ParsedRule to a CursorRule
+
 func (p *ParsedRule) ToCursorRule() *CursorRule {
 	now := time.Now()
 	return &CursorRule{
@@ -186,9 +186,9 @@ func (p *ParsedRule) ToCursorRule() *CursorRule {
 	}
 }
 
-// Helper functions
 
-// toTitle converts a string to title case
+
+
 func toTitle(s string) string {
 	words := []string{}
 	for _, word := range strings.Fields(strings.ToLower(s)) {
@@ -204,7 +204,7 @@ func toTitle(s string) string {
 	return strings.Join(words, " ")
 }
 
-// getNameFromSource extracts a readable name from a source URL or file
+
 func getNameFromSource(source string) string {
 	base := filepath.Base(source)
 	name := strings.TrimSuffix(base, filepath.Ext(base))
@@ -213,13 +213,13 @@ func getNameFromSource(source string) string {
 	return toTitle(name)
 }
 
-// WebRuleParser implements RuleParser for web-based rules
+
 type WebRuleParser struct {
 	client *http.Client
 	config ParserConfig
 }
 
-// NewWebRuleParser creates a new WebRuleParser
+
 func NewWebRuleParser(config *ParserConfig) *WebRuleParser {
 	cfg := DefaultParserConfig()
 	if config != nil {
@@ -234,7 +234,7 @@ func NewWebRuleParser(config *ParserConfig) *WebRuleParser {
 	}
 }
 
-// Parse implements RuleParser.Parse
+
 func (p *WebRuleParser) Parse(ctx context.Context, path string) (*CursorRule, error) {
 	if !strings.HasPrefix(path, "http://") && !strings.HasPrefix(path, "https://") {
 		return nil, wrapValidationError("url", "invalid URL format")
@@ -255,14 +255,14 @@ func (p *WebRuleParser) Parse(ctx context.Context, path string) (*CursorRule, er
 		return nil, wrapOpError("Parse", path, fmt.Errorf("HTTP %d", resp.StatusCode), "failed to fetch URL")
 	}
 
-	// Limit response size
+	
 	body := http.MaxBytesReader(nil, resp.Body, p.config.MaxResponseSize)
 	content, err := io.ReadAll(body)
 	if err != nil {
 		return nil, wrapOpError("Parse", path, err, "failed to read response body")
 	}
 
-	// Parse the content
+	
 	parsedRules, err := ParseRules(content, path, true)
 	if err != nil {
 		return nil, err
@@ -275,13 +275,13 @@ func (p *WebRuleParser) Parse(ctx context.Context, path string) (*CursorRule, er
 		}
 	}
 
-	// Convert the first parsed rule to a CursorRule
+	
 	return parsedRules[0].ToCursorRule(), nil
 }
 
-// ParseContent implements RuleParser.ParseContent
+
 func (p *WebRuleParser) ParseContent(content []byte) (*CursorRule, error) {
-	// Parse the content as a web-based rule
+	
 	parsedRules, err := ParseRules(content, "inline-content", true)
 	if err != nil {
 		return nil, &OpError{
@@ -298,16 +298,16 @@ func (p *WebRuleParser) ParseContent(content []byte) (*CursorRule, error) {
 		}
 	}
 
-	// Convert the first parsed rule to a CursorRule
+	
 	return parsedRules[0].ToCursorRule(), nil
 }
 
-// FileRuleParser implements RuleParser for file-based rules
+
 type FileRuleParser struct {
 	config ParserConfig
 }
 
-// NewFileRuleParser creates a new FileRuleParser
+
 func NewFileRuleParser(config *ParserConfig) *FileRuleParser {
 	cfg := DefaultParserConfig()
 	if config != nil {
@@ -316,14 +316,14 @@ func NewFileRuleParser(config *ParserConfig) *FileRuleParser {
 	return &FileRuleParser{config: cfg}
 }
 
-// Parse implements RuleParser.Parse for FileRuleParser
+
 func (p *FileRuleParser) Parse(path string) (*CursorRule, error) {
-	// Validate path
+	
 	if !filepath.IsAbs(path) && strings.Contains(path, "..") {
 		return nil, wrapValidationError("path", "invalid file path: must be absolute or not contain parent references")
 	}
 
-	// Check file stats
+	
 	info, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -335,12 +335,12 @@ func (p *FileRuleParser) Parse(path string) (*CursorRule, error) {
 		return nil, wrapOpError("Parse", path, err, "failed to stat file")
 	}
 
-	// Validate file size
+	
 	if info.Size() > p.config.MaxFileSize {
 		return nil, wrapValidationError("size", fmt.Sprintf("file too large: %d bytes (max %d)", info.Size(), p.config.MaxFileSize))
 	}
 
-	// Read and parse file
+	
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return nil, wrapOpError("Parse", path, err, "failed to read file")
@@ -348,7 +348,7 @@ func (p *FileRuleParser) Parse(path string) (*CursorRule, error) {
 
 	utils.Debug(fmt.Sprintf("Parsing file rule | path=%s size=%d", path, len(content)))
 
-	// Parse the content
+	
 	parsedRules, err := ParseRules(content, path, false)
 	if err != nil {
 		return nil, err
@@ -358,16 +358,16 @@ func (p *FileRuleParser) Parse(path string) (*CursorRule, error) {
 		return nil, wrapValidationError("content", "no rules found in file")
 	}
 
-	// Convert to CursorRule
+	
 	return parsedRules[0].ToCursorRule(), nil
 }
 
-// ParseContent implements RuleParser.ParseContent
+
 func (p *FileRuleParser) ParseContent(content []byte) (*CursorRule, error) {
-	// Try to parse as JSON first
+	
 	var rule CursorRule
 	if err := json.Unmarshal(content, &rule); err == nil {
-		// Validate required fields
+		
 		if rule.Metadata.Name == "" {
 			return nil, &ValidationError{
 				Field:   "metadata.name",
@@ -377,7 +377,7 @@ func (p *FileRuleParser) ParseContent(content []byte) (*CursorRule, error) {
 		return &rule, nil
 	}
 
-	// If not JSON, try to parse as a text rule
+	
 	text := strings.TrimSpace(string(content))
 	if text == "" {
 		return nil, &ValidationError{
@@ -386,7 +386,7 @@ func (p *FileRuleParser) ParseContent(content []byte) (*CursorRule, error) {
 		}
 	}
 
-	// Extract name from first line if possible
+	
 	lines := strings.Split(text, "\n")
 	name := filepath.Base(lines[0])
 	description := "File-based rule"
@@ -394,7 +394,7 @@ func (p *FileRuleParser) ParseContent(content []byte) (*CursorRule, error) {
 		description = strings.TrimSpace(lines[1])
 	}
 
-	// Create a basic rule
+	
 	now := time.Now()
 	return &CursorRule{
 		Metadata: RuleMetadata{
@@ -416,14 +416,14 @@ func (p *FileRuleParser) ParseContent(content []byte) (*CursorRule, error) {
 	}, nil
 }
 
-// CompositeRuleParser combines multiple parsers
+
 type CompositeRuleParser struct {
 	fileParser *FileRuleParser
 	webParser  *WebRuleParser
 	config     ParserConfig
 }
 
-// NewCompositeRuleParser creates a new CompositeRuleParser
+
 func NewCompositeRuleParser(config *ParserConfig) *CompositeRuleParser {
 	cfg := DefaultParserConfig()
 	if config != nil {
@@ -436,49 +436,49 @@ func NewCompositeRuleParser(config *ParserConfig) *CompositeRuleParser {
 	}
 }
 
-// Parse implements RuleParser.Parse for CompositeRuleParser
+
 func (p *CompositeRuleParser) Parse(path string) (*CursorRule, error) {
 	utils.Debug(fmt.Sprintf("Attempting to parse rule | path=%s", path))
 
-	// Check if path is a URL
+	
 	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
 		return p.webParser.Parse(context.Background(), path)
 	}
 
-	// Try file parser first
+	
 	rule, fileErr := p.fileParser.Parse(path)
 	if fileErr == nil {
 		return rule, nil
 	}
 
-	// If file parsing fails and path looks like a URL, try web parser
+	
 	if strings.Contains(path, "://") {
 		rule, webErr := p.webParser.Parse(context.Background(), path)
 		if webErr != nil {
-			// Both parsers failed
+			
 			return nil, wrapOpError("Parse", path, fmt.Errorf("file: %v, web: %v", fileErr, webErr), "all parsers failed")
 		}
 		return rule, nil
 	}
 
-	// If path doesn't look like a URL, return the file parser error
+	
 	return nil, fileErr
 }
 
-// ParseContent implements RuleParser.ParseContent for CompositeRuleParser
+
 func (p *CompositeRuleParser) ParseContent(content []byte) (*CursorRule, error) {
 	utils.Debug(fmt.Sprintf("Attempting to parse content | size=%d", len(content)))
 
-	// Try file parser first
+	
 	rule, fileErr := p.fileParser.ParseContent(content)
 	if fileErr == nil {
 		return rule, nil
 	}
 
-	// Try web parser if file parser fails
+	
 	rule, webErr := p.webParser.ParseContent(content)
 	if webErr != nil {
-		// Both parsers failed
+		
 		return nil, wrapOpError("ParseContent", "composite", fmt.Errorf("file: %v, web: %v", fileErr, webErr), "all parsers failed")
 	}
 

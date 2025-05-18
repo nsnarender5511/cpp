@@ -1,9 +1,9 @@
 package agent
 
-// ContextKey represents a strongly typed key for context values
+
 type ContextKey string
 
-// Predefined context keys
+
 const (
 	KeyAgentID        ContextKey = "agent_id"
 	KeyAgentType      ContextKey = "agent_type"

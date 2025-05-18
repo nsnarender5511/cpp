@@ -14,7 +14,7 @@ import (
 	"vibe/internal/utils"
 )
 
-// HandleAgentCmd handles the 'agent' command and its subcommands.
+
 func HandleAgentCmd(initializer *core.AgentInitializer, appPaths utils.AppPaths, verbose bool, args []string) {
 	utils.Debug("Handling agent command")
 	configManager := utils.NewConfigManager()
@@ -24,7 +24,7 @@ func HandleAgentCmd(initializer *core.AgentInitializer, appPaths utils.AppPaths,
 	}
 	config := configManager.GetConfig()
 
-	// Determine the correct rules directory (local project first, then system)
+	
 	chosenDir, err := FindValidRulesDir(config.RulesDirName, config.AgentsDirName)
 	if err != nil {
 		ui.Warning("Error finding rules directory: %v", err)
@@ -71,14 +71,14 @@ func HandleAgentCmd(initializer *core.AgentInitializer, appPaths utils.AppPaths,
 			os.Exit(ExitUsageError)
 		}
 		handleAgentInfoCmd(agentRegistry, filteredArgs[1], verbose)
-	case "run": // Added run command as per PrintAgentUsage
+	case "run": 
 		if len(filteredArgs) < 2 {
 			ui.Error("Missing agent ID/name. Usage: vibe agent run <agent-id | agent-name>")
 			PrintAgentUsage(agentRegistry)
 			os.Exit(ExitUsageError)
 		}
-		// Placeholder for actual run logic, for now, it might be similar to select then execute
-		// This would likely involve agent.NewLoader and agent.LoadAgent etc.
+		
+		
 		ui.Info("Executing agent: %s (run functionality is conceptual in this refactor)", filteredArgs[1])
 		handleAgentRunCmd(agentRegistry, config, appPaths, filteredArgs[1])
 	case "help", "--help", "-h":
@@ -90,7 +90,7 @@ func HandleAgentCmd(initializer *core.AgentInitializer, appPaths utils.AppPaths,
 	}
 }
 
-// displayAgentListCmd shows available agents.
+
 func displayAgentListCmd(registry *agent.Registry) {
 	utils.Debug("Displaying agent list | registry path: " + registry.GetRulesDir())
 	agents := registry.ListAgents()
@@ -121,7 +121,7 @@ func displayAgentListCmd(registry *agent.Registry) {
 	}
 }
 
-// handleAgentSelectCmd handles interactive agent selection.
+
 func handleAgentSelectCmd(registry *agent.Registry, config *utils.Config, appPaths utils.AppPaths) {
 	utils.Debug("Handling agent select command")
 	agents := registry.ListAgents()
@@ -151,7 +151,7 @@ func handleAgentSelectCmd(registry *agent.Registry, config *utils.Config, appPat
 	}
 
 	loader := agent.NewLoader(registry, config)
-	agentCtx := agent.NewAgentContext() // Creates a new context
+	agentCtx := agent.NewAgentContext() 
 	loadedAgent, err := loader.LoadAgentWithContextCancellation(ctx, selectedAgent.ID, agentCtx)
 	if err != nil {
 		HandleCommandError("AgentLoad", err, ExitAgentError)
@@ -188,7 +188,7 @@ func handleAgentSelectCmd(registry *agent.Registry, config *utils.Config, appPat
 	utils.Info("Agent select completed successfully | selected_agent=" + selectedAgent.ID)
 }
 
-// handleAgentInfoCmd displays detailed information about a specific agent.
+
 func handleAgentInfoCmd(registry *agent.Registry, agentParam string, verbose bool) {
 	utils.Debugf("Handling agent info subcommand | agent_param=%s verbose=%t", agentParam, verbose)
 	var agentDef *agent.AgentDefinition
@@ -208,13 +208,13 @@ func handleAgentInfoCmd(registry *agent.Registry, agentParam string, verbose boo
 		}
 		agentDef = agents[index-1]
 	} else {
-		agentDef, err = registry.GetAgent(agentParam) // Get by ID or Name
+		agentDef, err = registry.GetAgent(agentParam) 
 		if err != nil {
-			// Try to find by name as a fallback if ID lookup fails or if param is not a typical ID
+			
 			foundByName := false
-			cleanedParam := cleanAgentNameCmd(agentParam) // No ToLower needed here for cleanedParam if using EqualFold for name
+			cleanedParam := cleanAgentNameCmd(agentParam) 
 			for _, ag := range agents {
-				// Use strings.EqualFold for case-insensitive comparison
+				
 				if strings.EqualFold(cleanAgentNameCmd(ag.Name), cleanedParam) || strings.EqualFold(ag.ID, agentParam) {
 					agentDef = ag
 					foundByName = true
@@ -236,9 +236,9 @@ func handleAgentInfoCmd(registry *agent.Registry, agentParam string, verbose boo
 	}
 }
 
-// handleAgentRunCmd (Conceptual based on 'run' in PrintAgentUsage)
-// This function would encapsulate the logic to directly run an agent.
-// For this refactoring, it's a placeholder showing where such logic would go.
+
+
+
 func handleAgentRunCmd(registry *agent.Registry, config *utils.Config, appPaths utils.AppPaths, agentNameOrID string) {
 	utils.Debugf("Attempting to run agent: %s", agentNameOrID)
 
@@ -250,13 +250,13 @@ func handleAgentRunCmd(registry *agent.Registry, config *utils.Config, appPaths 
 		return
 	}
 
-	// Try to find agent by ID or Name (similar to handleAgentInfoCmd)
+	
 	agentDef, err = registry.GetAgent(agentNameOrID)
 	if err != nil {
 		foundByNameOrID := false
-		cleanedParam := cleanAgentNameCmd(agentNameOrID) // No ToLower needed here for cleanedParam if using EqualFold for name
+		cleanedParam := cleanAgentNameCmd(agentNameOrID) 
 		for _, ag := range agents {
-			// Use strings.EqualFold for case-insensitive comparison
+			
 			if strings.EqualFold(cleanAgentNameCmd(ag.Name), cleanedParam) || strings.EqualFold(ag.ID, agentNameOrID) {
 				agentDef = ag
 				foundByNameOrID = true
@@ -273,24 +273,24 @@ func handleAgentRunCmd(registry *agent.Registry, config *utils.Config, appPaths 
 	ui.Info("Found agent: %s (ID: %s)", agentDef.Name, agentDef.ID)
 	ui.Info("Simulating agent run... (Actual run logic would be implemented here)")
 
-	// Conceptual run logic (would be more complex involving agent execution):
-	// 1. Load the agent (similar to handleAgentSelectCmd)
-	// loader := agent.NewLoader(registry, config)
-	// agentCtx := agent.NewAgentContext()
-	// loadedAgent, loadErr := loader.LoadAgentWithContext(context.Background(), agentDef.ID, agentCtx)
-	// if loadErr != nil {
-	// HandleCommandError("AgentRunLoad", loadErr, ExitAgentError)
-	// return
-	// }
-	// ui.Success("Agent '%s' loaded. Pretending to run...", loadedAgent.Definition.Name)
-	// 2. Execute the agent's task
-	//    This would involve calling a method on `loadedAgent` like `loadedAgent.Execute()` or similar.
-	//    The specifics depend on how agents are designed to be run.
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
-	// For now, just print a message
+	
 	ui.Success("Conceptual run of agent '%s' completed.", agentDef.Name)
 
-	// Update last selected agent if desired
+	
 	config.LastSelectedAgent = agentDef.ID
 	configManager := utils.NewConfigManager()
 	configManager.SetConfig(config)

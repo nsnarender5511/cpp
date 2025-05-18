@@ -4,11 +4,11 @@ import (
 	"fmt"
 )
 
-// OpError represents an operational error with context
+
 type OpError struct {
-	Op   string // Operation that failed
-	Path string // Optional path or identifier related to the error
-	Err  error  // Underlying error
+	Op   string 
+	Path string 
+	Err  error  
 }
 
 func (e *OpError) Error() string {
@@ -22,31 +22,31 @@ func (e *OpError) Unwrap() error {
 	return e.Err
 }
 
-// ValidationError represents a validation error
+
 type ValidationError struct {
-	Field   string // Field that failed validation
-	Message string // Validation error message
+	Field   string 
+	Message string 
 }
 
 func (e *ValidationError) Error() string {
 	return fmt.Sprintf("validation failed for %s: %s", e.Field, e.Message)
 }
 
-// NotFoundError represents a resource not found error
+
 type NotFoundError struct {
-	Resource string // Type of resource not found
-	ID       string // Identifier of the resource
+	Resource string 
+	ID       string 
 }
 
 func (e *NotFoundError) Error() string {
 	return fmt.Sprintf("%s not found: %s", e.Resource, e.ID)
 }
 
-// ParseError represents a parsing error
+
 type ParseError struct {
-	Source string // Source being parsed
-	Line   int    // Optional line number
-	Err    error  // Underlying error
+	Source string 
+	Line   int    
+	Err    error  
 }
 
 func (e *ParseError) Error() string {
@@ -60,10 +60,10 @@ func (e *ParseError) Unwrap() error {
 	return e.Err
 }
 
-// ConfigError represents a configuration error
+
 type ConfigError struct {
-	Key string // Configuration key
-	Err error  // Underlying error
+	Key string 
+	Err error  
 }
 
 func (e *ConfigError) Error() string {
@@ -74,7 +74,7 @@ func (e *ConfigError) Unwrap() error {
 	return e.Err
 }
 
-// wrapOpError creates a new OpError with consistent formatting
+
 func wrapOpError(op, path string, err error, msg string) error {
 	return &OpError{
 		Op:   op,
@@ -83,7 +83,7 @@ func wrapOpError(op, path string, err error, msg string) error {
 	}
 }
 
-// wrapValidationError creates a new ValidationError with consistent formatting
+
 func wrapValidationError(field, msg string) error {
 	return &ValidationError{
 		Field:   field,
@@ -91,7 +91,7 @@ func wrapValidationError(field, msg string) error {
 	}
 }
 
-// wrapNotFoundError creates a new NotFoundError with consistent formatting
+
 func wrapNotFoundError(resource, id string) error {
 	return &NotFoundError{
 		Resource: resource,
@@ -99,7 +99,7 @@ func wrapNotFoundError(resource, id string) error {
 	}
 }
 
-// wrapParseError creates a new ParseError with consistent formatting
+
 func wrapParseError(source string, err error, line int) error {
 	return &ParseError{
 		Source: source,

@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// AgentContextImpl provides a concrete implementation of the AgentContext interface
+
 type AgentContextImpl struct {
 	agentID        string
 	agentType      string
@@ -20,7 +20,7 @@ type AgentContextImpl struct {
 	lastUpdated    time.Time
 }
 
-// CreateAgentContext creates a new agent context with optional data
+
 func CreateAgentContext(agentID string, agentType string, agentVersion string, data map[string]interface{}) AgentContext {
 	ctx := &AgentContextImpl{
 		agentID:      agentID,
@@ -39,64 +39,64 @@ func CreateAgentContext(agentID string, agentType string, agentVersion string, d
 	return ctx
 }
 
-// NewAgentContext creates a new empty agent context
+
 func NewAgentContext() AgentContext {
 	return CreateAgentContext("", "", "", make(map[string]interface{}))
 }
 
-// GetAgentID returns the agent ID
+
 func (c *AgentContextImpl) GetAgentID() string {
 	return c.agentID
 }
 
-// GetAgentType returns the agent type
+
 func (c *AgentContextImpl) GetAgentType() string {
 	return c.agentType
 }
 
-// GetAgentVersion returns the agent version
+
 func (c *AgentContextImpl) GetAgentVersion() string {
 	return c.agentVersion
 }
 
-// GetLastExecution returns the last execution time
+
 func (c *AgentContextImpl) GetLastExecution() time.Time {
 	return c.lastExecution
 }
 
-// GetExecutionCount returns the execution count
+
 func (c *AgentContextImpl) GetExecutionCount() int {
 	return c.executionCount
 }
 
-// GetErrorCount returns the error count
+
 func (c *AgentContextImpl) GetErrorCount() int {
 	return c.errorCount
 }
 
-// IncrementExecutionCount increments the execution counter
+
 func (c *AgentContextImpl) IncrementExecutionCount() {
 	c.executionCount++
 	c.lastExecution = time.Now()
 }
 
-// IncrementErrorCount increments the error counter
+
 func (c *AgentContextImpl) IncrementErrorCount() {
 	c.errorCount++
 }
 
-// SetMetadata sets a metadata value
+
 func (c *AgentContextImpl) SetMetadata(key string, value interface{}) {
 	c.metadata[key] = value
 }
 
-// GetMetadata retrieves a metadata value
+
 func (c *AgentContextImpl) GetMetadata(key string) (interface{}, bool) {
 	value, exists := c.metadata[key]
 	return value, exists
 }
 
-// Set updates a value in the context using a strongly typed key
+
 func (c *AgentContextImpl) Set(key ContextKey, value interface{}) error {
 	switch key {
 	case KeyAgentID:
@@ -141,7 +141,7 @@ func (c *AgentContextImpl) Set(key ContextKey, value interface{}) error {
 	return fmt.Errorf("invalid type for key %s", key)
 }
 
-// Get retrieves a value from the context using a strongly typed key
+
 func (c *AgentContextImpl) Get(key ContextKey) (interface{}, bool) {
 	switch key {
 	case KeyAgentID:
@@ -164,7 +164,7 @@ func (c *AgentContextImpl) Get(key ContextKey) (interface{}, bool) {
 	}
 }
 
-// GetString retrieves a string value from context
+
 func (c *AgentContextImpl) GetString(key ContextKey) (string, error) {
 	value, exists := c.customData[key]
 	if !exists {
@@ -177,7 +177,7 @@ func (c *AgentContextImpl) GetString(key ContextKey) (string, error) {
 	return str, nil
 }
 
-// GetInt retrieves an integer value from context
+
 func (c *AgentContextImpl) GetInt(key ContextKey) (int, error) {
 	value, exists := c.customData[key]
 	if !exists {
@@ -190,7 +190,7 @@ func (c *AgentContextImpl) GetInt(key ContextKey) (int, error) {
 	return num, nil
 }
 
-// ToContextData converts the context to serializable data
+
 func (c *AgentContextImpl) ToContextData() ContextData {
 	return ContextData{
 		AgentID:        c.agentID,
@@ -206,7 +206,7 @@ func (c *AgentContextImpl) ToContextData() ContextData {
 	}
 }
 
-// FromData loads context data from serializable format
+
 func (c *AgentContextImpl) FromData(data *ContextData) {
 	c.agentID = data.AgentID
 	c.agentType = data.AgentType
@@ -236,12 +236,12 @@ func deserializeCustomData(data map[string]interface{}) map[ContextKey]interface
 	return result
 }
 
-// MarshalJSON implements json.Marshaler
+
 func (c *AgentContextImpl) MarshalJSON() ([]byte, error) {
 	return json.Marshal(c.ToContextData())
 }
 
-// UnmarshalJSON implements json.Unmarshaler
+
 func (c *AgentContextImpl) UnmarshalJSON(data []byte) error {
 	var contextData ContextData
 	if err := json.Unmarshal(data, &contextData); err != nil {
@@ -251,18 +251,18 @@ func (c *AgentContextImpl) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// GetData returns the legacy data map
+
 func (c *AgentContextImpl) GetData() map[string]interface{} {
 	return c.data
 }
 
-// SetData updates the legacy data map
+
 func (c *AgentContextImpl) SetData(data map[string]interface{}) {
 	c.data = data
 	c.lastUpdated = time.Now()
 }
 
-// GetLastUpdated returns the last update time
+
 func (c *AgentContextImpl) GetLastUpdated() time.Time {
 	return c.lastUpdated
 }

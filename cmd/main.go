@@ -13,50 +13,50 @@ import (
 )
 
 func main() {
-	cli.SetupFlags() // Defines flags using variables in cli package
-	cli.ParseFlags() // Parses flags
+	cli.SetupFlags() 
+	cli.ParseFlags() 
 
-	// Configure console output based on DebugFlag
+	
 	isDebugSet := cli.DebugFlag != nil && *cli.DebugFlag
 
 	utils.SetDebugConsole(isDebugSet)
-	utils.SetVerbose(isDebugSet)       // Debug implies verbose
-	utils.SetVerboseErrors(isDebugSet) // Debug implies verbose errors
+	utils.SetVerbose(isDebugSet)       
+	utils.SetVerboseErrors(isDebugSet) 
 
-	// Handle version flag
-	if *cli.VersionShortFlag { // Changed from cli.VersionFlag || *cli.VersionShortFlag
+	
+	if *cli.VersionShortFlag { 
 		fmt.Printf("vibe version %s\n", version.GetVersion())
 		os.Exit(0)
 	}
 
-	// Get app paths and initialize logger
+	
 	appName := os.Getenv("APP_NAME")
 	appPaths := utils.GetAppPaths(appName)
-	utils.InitLogger(appPaths) // Assuming InitLogger doesn't depend on flag values directly before this point
+	utils.InitLogger(appPaths) 
 
 	utils.Info("Starting vibe")
 
-	// Check for command arguments. flag.Args() must be called after flag.Parse().
+	
 	args := flag.Args()
 	if len(args) < 1 {
 		utils.Debug("No command provided, showing usage")
-		cli.PrintUsage()            // Use PrintUsage from cli package
-		os.Exit(cli.ExitUsageError) // Use exit code from cli package
+		cli.PrintUsage()            
+		os.Exit(cli.ExitUsageError) 
 	}
 
-	// Display banner for all commands
+	
 	ui.PrintBanner()
 
-	// Create new agent initializer
+	
 	utils.Debug("Initializing agent system")
 	initializer, err := core.NewAgentInitializer()
 	if err != nil {
 		utils.Error("Error initializing agent system: " + err.Error())
-		ui.Error("Error initializing agent system: %v", err) // Using internal/ui for direct error
-		os.Exit(cli.ExitSetupError)                          // Use exit code from cli package
+		ui.Error("Error initializing agent system: %v", err) 
+		os.Exit(cli.ExitSetupError)                          
 	}
 
-	// Set multi-agent mode if flag is provided
+	
 	if cli.MultiAgentModeFlag != nil && *cli.MultiAgentModeFlag {
 		utils.Info("Multi-agent mode explicitly enabled via flag")
 		cm := utils.NewConfigManager()
@@ -67,16 +67,16 @@ func main() {
 		}
 		config := cm.GetConfig()
 		config.MultiAgentEnabled = true
-		cm.SetConfig(config)              // Set the modified config
-		if err := cm.Save(); err != nil { // Then save it
+		cm.SetConfig(config)              
+		if err := cm.Save(); err != nil { 
 			utils.Warn("Failed to save multi-agent configuration: " + err.Error())
 		} else {
 			utils.Info("Multi-agent mode permanently enabled")
 		}
 	}
 
-	// Dispatch the command
-	// DispatchCommand will use flag.Args() internally if it needs them again,
-	// or they can be passed if preferred.
+	
+	
+	
 	cli.DispatchCommand(initializer, appPaths)
 }

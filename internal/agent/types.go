@@ -4,10 +4,10 @@ import (
 	"time"
 )
 
-// AgentType represents the type of an agent
+
 type AgentType string
 
-// AgentContextReader defines read-only operations for agent context
+
 type AgentContextReader interface {
 	GetAgentID() string
 	GetAgentType() string
@@ -23,7 +23,7 @@ type AgentContextReader interface {
 	GetLastUpdated() time.Time
 }
 
-// AgentContextWriter defines write operations for agent context
+
 type AgentContextWriter interface {
 	IncrementExecutionCount()
 	IncrementErrorCount()
@@ -32,13 +32,13 @@ type AgentContextWriter interface {
 	SetData(data map[string]interface{})
 }
 
-// AgentContext combines read and write operations
+
 type AgentContext interface {
 	AgentContextReader
 	AgentContextWriter
 }
 
-// AgentMetadata represents metadata about an agent
+
 type AgentMetadata struct {
 	ID          string                 `json:"id"`
 	Type        string                 `json:"type"`
@@ -50,14 +50,14 @@ type AgentMetadata struct {
 	LastUpdated time.Time              `json:"last_updated"`
 }
 
-// AgentConfig represents configuration for an agent
+
 type AgentConfig struct {
 	Metadata  AgentMetadata          `json:"metadata"`
 	Settings  map[string]interface{} `json:"settings"`
 	Templates []string               `json:"templates"`
 }
 
-// AgentRegistry represents a registry of available agents
+
 type AgentRegistry interface {
 	LoadAgents() error
 	GetAgent(id string) (*AgentConfig, error)
@@ -66,7 +66,7 @@ type AgentRegistry interface {
 	RemoveAgent(id string) error
 }
 
-// AgentDefinition represents a single agent's definition and metadata
+
 type AgentDefinition struct {
 	ID             string                 `json:"id"`
 	Name           string                 `json:"name"`
@@ -80,13 +80,13 @@ type AgentDefinition struct {
 	DefinitionPath string                 `json:"definition_path,omitempty"`
 }
 
-// Agent represents a loaded and initialized agent
+
 type Agent struct {
 	Definition *AgentDefinition
 	Context    AgentContext
 }
 
-// ContextData represents the serializable part of agent context
+
 type ContextData struct {
 	AgentID        string                 `json:"agent_id"`
 	AgentType      string                 `json:"agent_type"`
@@ -100,7 +100,7 @@ type ContextData struct {
 	LastUpdated    time.Time              `json:"last_updated"`
 }
 
-// AgentManager interface defines methods for agent management
+
 type AgentManager interface {
 	ListAgents() ([]*AgentDefinition, error)
 	GetAgent(id string) (*AgentDefinition, bool)
